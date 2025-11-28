@@ -8,6 +8,7 @@ import Budgets from "./pages/Budgets";
 import Savings from "./pages/Savings";
 import Reports from "./pages/Reports";
 import Due from "./pages/Due";
+import BackgroundCircles from "./components/BackgroundCircles";
 
 const AdminDashboard = () => {
   const [activeView, setActiveView] = useState(() => {
@@ -47,69 +48,16 @@ const AdminDashboard = () => {
         return <Transactions />;
       case "wallets":
         return <Wallets />;
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Wallet Analytics
-            </h1>
-            <p className="text-gray-600 mt-4">Analytics for your wallets</p>
-          </div>
-        );
       case "categories":
         return <Categories />;
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Category Report
-            </h1>
-            <p className="text-gray-600 mt-4">Category analytics</p>
-          </div>
-        );
       case "budgets":
         return <Budgets />;
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Budget Tracking
-            </h1>
-            <p className="text-gray-600 mt-4">Track your budgets</p>
-          </div>
-        );
       case "savings":
         return <Savings />;
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Savings Progress
-            </h1>
-            <p className="text-gray-600 mt-4">Track savings progress</p>
-          </div>
-        );
       case "reports":
         return <Reports />;
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">Income Report</h1>
-            <p className="text-gray-600 mt-4">Income analysis</p>
-          </div>
-        );
       case "due":
         return <Due />;
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">
-              Payment Reminders
-            </h1>
-            <p className="text-gray-600 mt-4">Set payment reminders</p>
-          </div>
-        );
-
-        return (
-          <div className="p-8">
-            <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
-            <p className="text-gray-600 mt-4">Account settings</p>
-          </div>
-        );
       default:
         return <Dashboard />;
     }
@@ -117,9 +65,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center p-2 md:p-4 relative">
+      {/* Background Circles */}
+      <BackgroundCircles />
+
       {/* Mobile/Tablet Header */}
       {isTabletOrMobile && (
-        <div className="fixed top-0 left-0 right-0 h-16 bg-white backdrop-blur-xl border-b border-gray-200 flex items-center justify-between px-4 z-40 lg:hidden animate-slideDown">
+        <div className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-gray-200 flex items-center justify-between px-4 z-40 lg:hidden">
           <button
             onClick={() => setIsMobileOpen(true)}
             className="p-2 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 shadow-md active:scale-90 border border-gray-300"
@@ -149,7 +100,7 @@ const AdminDashboard = () => {
 
       {/* Content */}
       <div
-        className={`flex w-full bg-white rounded-3xl md:rounded-3xl shadow-sm sm:shadow-lg border border-gray-200 overflow-hidden relative ${
+        className={`flex w-full bg-white/80 backdrop-blur-sm rounded-3xl md:rounded-3xl shadow-sm sm:shadow-lg border border-gray-200 overflow-hidden relative transition-all duration-300 ${
           isTabletOrMobile ? "mt-16 mb-2 h-[calc(100vh-5rem)]" : "h-[95vh]"
         }`}
       >
@@ -181,7 +132,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Main Content Area */}
-        <div className="flex-1 h-full overflow-auto relative bg-gray-50">
+        <div className="flex-1 h-full overflow-auto relative bg-transparent">
           <div className="p-6">{renderView()}</div>
         </div>
       </div>

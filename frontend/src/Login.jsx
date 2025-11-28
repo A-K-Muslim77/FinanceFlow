@@ -8,16 +8,70 @@ const Login = () => {
   const location = useLocation();
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState({ email: "", password: "", server: "" });
+  const [touched, setTouched] = useState({ email: false, password: false });
+
+  const validateField = (name, value) => {
+    switch (name) {
+      case "email":
+        if (!value) return "Email is required";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Please enter a valid email";
+        return "";
+      case "password":
+        if (!value) return "Password is required";
+        return "";
+      default:
+        return "";
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name, value),
+      server: "",
+    }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    if (touched[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: validateField(name, value),
+        server: "",
+      }));
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Clear previous server errors
+    setErrors((prev) => ({ ...prev, server: "" }));
+
+    // Mark all fields as touched to show errors
+    setTouched({ email: true, password: true });
+
+    const formData = new FormData(e.target);
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    // Validate all fields
+    const emailError = validateField("email", email);
+    const passwordError = validateField("password", password);
+
+    if (emailError || passwordError) {
+      setErrors({ email: emailError, password: passwordError, server: "" });
+      return;
+    }
+
     setLoading(true);
 
     try {
-      const formData = new FormData(e.target);
-      const email = formData.get("email");
-      const password = formData.get("password");
-
       const response = await fetch(`${baseURL}/auth/login`, {
         method: "POST",
         headers: {
@@ -34,10 +88,15 @@ const Login = () => {
         toast.success("Login successful! Welcome back.");
         navigate("/dashboard");
       } else {
-        toast.error(data.message || "Login failed");
+        // Show server error message above the form
+        const errorMessage = data.message || "Email or password is incorrect";
+        setErrors((prev) => ({ ...prev, server: errorMessage }));
+        toast.error(errorMessage);
       }
     } catch (error) {
-      toast.error("Network error. Please try again.");
+      const errorMessage = "Network error. Please try again.";
+      setErrors((prev) => ({ ...prev, server: errorMessage }));
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -57,8 +116,10 @@ const Login = () => {
   }, [location, navigate]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Background Circles is now in App.js - removed from here */}
+
+      <div className="w-full max-w-md relative z-10">
         <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10">
           <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8">
             {/* Logo Section */}
@@ -76,25 +137,63 @@ const Login = () => {
             {/* Title Section */}
             <div className="space-y-2 sm:space-y-3">
               <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
-                Welcome to FinanceFlow v2
+                Welcome to FinanceFlow
               </h1>
-              <p className="text-slate-500 text-sm sm:text-base font-medium">
+              {/* <p className="text-slate-500 text-sm sm:text-base font-medium">
                 Sign in to continue
-              </p>
+              </p> */}
             </div>
 
             {/* Email/Password Form */}
             <div className="w-full">
-              <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
+              <form
+                onSubmit={handleSubmit}
+                className="space-y-4 sm:space-y-5"
+                noValidate
+              >
+                {/* Server Error Message */}
+                {errors.server && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-center gap-2 text-red-800">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="lucide lucide-alert-circle"
+                      >
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <span className="text-sm font-medium">
+                        {errors.server}
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-3 sm:space-y-4">
                   {/* Email Field */}
                   <div className="space-y-1.5">
-                    <label
-                      className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
-                      htmlFor="email"
-                    >
-                      Email
-                    </label>
+                    <div className="flex justify-between items-center">
+                      <label
+                        className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
+                        htmlFor="email"
+                      >
+                        Email
+                      </label>
+                      {touched.email && errors.email && (
+                        <span className="text-red-500 text-xs font-medium">
+                          {errors.email}
+                        </span>
+                      )}
+                    </div>
                     <div className="relative">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -114,23 +213,36 @@ const Login = () => {
                       <input
                         type="email"
                         name="email"
-                        className="flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 focus:border-slate-400 focus:ring-slate-400 rounded-xl placeholder:text-slate-400"
+                        className={`flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl placeholder:text-slate-400 ${
+                          touched.email && errors.email
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "focus:border-slate-400 focus:ring-slate-400"
+                        }`}
                         id="email"
                         placeholder="you@example.com"
                         required
                         disabled={loading}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
                       />
                     </div>
                   </div>
 
                   {/* Password Field with Eye Icon */}
                   <div className="space-y-1.5">
-                    <label
-                      className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
-                      htmlFor="password"
-                    >
-                      Password
-                    </label>
+                    <div className="flex justify-between items-center">
+                      <label
+                        className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
+                        htmlFor="password"
+                      >
+                        Password
+                      </label>
+                      {touched.password && errors.password && (
+                        <span className="text-red-500 text-xs font-medium">
+                          {errors.password}
+                        </span>
+                      )}
+                    </div>
                     <div className="relative">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
@@ -157,11 +269,17 @@ const Login = () => {
                       <input
                         type={showPassword ? "text" : "password"}
                         name="password"
-                        className="flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 focus:border-slate-400 focus:ring-slate-400 rounded-xl placeholder:text-slate-400"
+                        className={`flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl placeholder:text-slate-400 ${
+                          touched.password && errors.password
+                            ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                            : "focus:border-slate-400 focus:ring-slate-400"
+                        }`}
                         id="password"
                         placeholder="••••••••"
                         required
                         disabled={loading}
+                        onBlur={handleBlur}
+                        onChange={handleChange}
                       />
                       {/* Eye Icon */}
                       <button

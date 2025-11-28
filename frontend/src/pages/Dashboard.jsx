@@ -1,7 +1,13 @@
 import React from "react";
+import BackgroundCircles from "../components/BackgroundCircles";
 
 const Dashboard = () => {
-  return <div>Dashboard fin by m.......</div>;
+  return (
+    <div>
+      <BackgroundCircles />
+      Dashboard fin by m.......
+    </div>
+  );
 };
 
 export default Dashboard;

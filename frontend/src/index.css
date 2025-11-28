@@ -1,1 +1,56 @@
 @import "tailwindcss";
+
+/* Soft premium blob motion (a bit slower & smoother) */
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(26px, -32px) scale(1.06);
+  }
+  66% {
+    transform: translate(-18px, 18px) scale(0.96);
+  }
+}
+
+.animate-blob {
+  animation: blob 14s ease-in-out infinite;
+}
+
+/* Subtle floating for rings */
+@keyframes floatRing {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.ring-float {
+  animation: floatRing 18s ease-in-out infinite;
+}
+
+/* Sidebar + scrollbar (unchanged, just grouped) */
+.sidebar-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 2px;
+}
+
+.sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}

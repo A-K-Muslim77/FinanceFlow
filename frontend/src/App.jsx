@@ -11,11 +11,15 @@ import Login from "./Login";
 import Registration from "./Registration";
 import ForgetPassword from "./forgetPassword";
 import AdminDashboard from "./AdminDashboard";
+import BackgroundCircles from "./components/BackgroundCircles";
 
 function App() {
   return (
     <Router>
-      <div className="App">
+      <div className="App relative">
+        {/* Background Circles for all pages */}
+        <BackgroundCircles />
+
         <Routes>
           {/* Redirect root path to login */}
           <Route path="/" element={<Navigate to="/login" replace />} />

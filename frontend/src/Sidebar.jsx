@@ -91,7 +91,7 @@ const Sidebar = ({
     {
       name: "Due/Receivable",
       icon: <FiCalendar />,
-      component: "dues",
+      component: "due",
     },
   ];
 
@@ -116,27 +116,16 @@ const Sidebar = ({
   const handleItemClick = (item) => {
     if (!sidebarOpen && !isTabletOrMobile) {
       setIsOpen(true);
-      if (item.children) {
-        toggleMenu(item.name);
-      } else {
+      setTimeout(() => {
         setActiveView(item.component);
-      }
+      }, 100);
       return;
     }
-    if (item.children) {
-      toggleMenu(item.name);
-    } else {
-      setActiveView(item.component);
-      if (isTabletOrMobile) {
-        setIsMobileOpen(false);
-      }
-    }
-  };
-
-  const handleChildItemClick = (component) => {
-    setActiveView(component);
+    setActiveView(item.component);
     if (isTabletOrMobile) {
-      setIsMobileOpen(false);
+      setTimeout(() => {
+        setIsMobileOpen(false);
+      }, 150);
     }
   };
 
@@ -177,7 +166,7 @@ const Sidebar = ({
           width: isTabletOrMobile ? 256 : isOpen ? 256 : 80,
         }}
         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-        className={`bg-gradient-to-b from-blue-50 to-indigo-50 h-full flex flex-col border-r border-gray-200 shadow-xl overflow-hidden fixed lg:relative z-50 ${
+        className={`bg-gradient-to-b from-blue-50 to-indigo-50 h-full flex flex-col border-r border-gray-200 shadow-xl overflow-hidden fixed lg:relative z-50 sidebar-scrollbar ${
           isTabletOrMobile ? "w-64" : ""
         }`}
       >
@@ -192,6 +181,7 @@ const Sidebar = ({
             <motion.div
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.2 }}
               className="flex flex-col"
             >
               <h1 className="text-xl font-bold text-gray-800">FinanceFlow</h1>
@@ -206,19 +196,15 @@ const Sidebar = ({
           {isTabletOrMobile ? (
             <button
               onClick={() => setIsMobileOpen(false)}
-              className="cursor-pointer rounded-lg text-gray-600 hover:text-gray-900 transition-colors"
+              className="cursor-pointer rounded-lg text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <FiX className="w-5 h-5" />
             </button>
           ) : (
             <motion.button
-              whileHover={{}}
-              animate={{
-                x: isHovered ? (isOpen ? -4 : 4) : 0,
-                scale: isHovered ? 1.2 : 1,
-              }}
-              transition={{ type: "spring", stiffness: 300 }}
-              className="cursor-pointer rounded-lg text-gray-600 transition-colors"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+              className="cursor-pointer rounded-lg text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               {isOpen ? <FiChevronLeft /> : <FiChevronRight />}
             </motion.button>
@@ -226,15 +212,10 @@ const Sidebar = ({
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 overflow-y-auto py-4 px-4">
+        <nav className="flex-1 overflow-y-auto py-4 px-4 sidebar-scrollbar">
           <ul className="space-y-2">
             {financeNavItems.map((item) => {
-              const isParentActive =
-                item.component === activeView ||
-                (item.children &&
-                  item.children.some(
-                    (child) => child.component === activeView
-                  ));
+              const isActive = item.component === activeView;
 
               return (
                 <li key={item.name}>
@@ -242,16 +223,14 @@ const Sidebar = ({
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => handleItemClick(item)}
-                    className={`flex items-center w-full p-4 rounded-xl transition-all ${
+                    className={`flex items-center w-full p-4 rounded-xl transition-all duration-200 ${
                       sidebarOpen
                         ? "justify-between px-4"
                         : "justify-center px-0"
                     } ${
-                      isParentActive
+                      isActive
                         ? "bg-blue-100 text-blue-700 shadow-md border border-blue-200"
-                        : expandedMenus[item.name]
-                        ? "bg-gray-100 text-gray-900"
-                        : "text-gray-700 hover:bg-gray-100"
+                        : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
                     }`}
                   >
                     <div
@@ -263,59 +242,17 @@ const Sidebar = ({
                         {item.icon}
                       </span>
                       {sidebarOpen && (
-                        <span className="capitalize font-medium text-sm md:text-base">
+                        <motion.span
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                          className="capitalize font-medium text-sm md:text-base"
+                        >
                           {item.name}
-                        </span>
+                        </motion.span>
                       )}
                     </div>
-
-                    {sidebarOpen &&
-                      item.children &&
-                      (expandedMenus[item.name] ? (
-                        <FiChevronUp className="w-4 h-4" />
-                      ) : (
-                        <FiChevronDown className="w-4 h-4" />
-                      ))}
                   </motion.button>
-
-                  <AnimatePresence>
-                    {expandedMenus[item.name] &&
-                      sidebarOpen &&
-                      item.children && (
-                        <motion.ul
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden ml-6 border-l border-gray-300 pl-3 mt-2"
-                        >
-                          {item.children.map((child, index) => (
-                            <motion.li
-                              key={child.name}
-                              whileHover={{ x: -2 }}
-                              className="mb-1"
-                            >
-                              <button
-                                onClick={() =>
-                                  handleChildItemClick(child.component)
-                                }
-                                className={`text-sm py-2.5 px-4 w-full text-left rounded-lg transition-colors ${
-                                  activeView === child.component
-                                    ? "bg-blue-600 text-white font-medium shadow-sm"
-                                    : "text-gray-600 hover:bg-blue-50"
-                                } ${index === 0 ? "rounded-t-lg" : ""} ${
-                                  index === item.children.length - 1
-                                    ? "rounded-b-lg"
-                                    : ""
-                                }`}
-                              >
-                                {child.name}
-                              </button>
-                            </motion.li>
-                          ))}
-                        </motion.ul>
-                      )}
-                  </AnimatePresence>
                 </li>
               );
             })}
@@ -326,6 +263,7 @@ const Sidebar = ({
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
               className="mt-6 mx-2 p-4 bg-gradient-to-r from-green-500/10 to-blue-500/10 rounded-xl border border-green-500/20"
             >
               <div className="flex items-center gap-2 mb-2">
@@ -355,6 +293,7 @@ const Sidebar = ({
               <motion.div
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
                 className="flex-1 min-w-0 ml-3"
               >
                 <div className="flex items-center justify-between">
@@ -366,7 +305,7 @@ const Sidebar = ({
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
                       onClick={handleLogout}
-                      className="p-1 rounded-md hover:bg-gray-100 cursor-pointer transition-colors"
+                      className="p-1 rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200"
                       title="Logout"
                     >
                       <FiLogOut className="w-4 h-4 text-gray-500 hover:text-red-500" />
@@ -416,7 +355,7 @@ const Sidebar = ({
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setShowLogoutConfirm(false)}
-                    className="px-5 py-2.5 text-sm font-medium rounded-lg cursor-pointer bg-gray-500 text-white hover:bg-gray-600 transition-all shadow-sm"
+                    className="px-5 py-2.5 text-sm font-medium rounded-lg cursor-pointer bg-gray-500 text-white hover:bg-gray-600 transition-all duration-200 shadow-sm"
                   >
                     Cancel
                   </motion.button>
@@ -425,7 +364,7 @@ const Sidebar = ({
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={confirmLogout}
-                    className="px-5 py-2.5 text-sm font-medium rounded-lg bg-red-500 cursor-pointer text-white hover:bg-red-600 transition-all shadow-sm"
+                    className="px-5 py-2.5 text-sm font-medium rounded-lg bg-red-500 cursor-pointer text-white hover:bg-red-600 transition-all duration-200 shadow-sm"
                   >
                     Logout
                   </motion.button>

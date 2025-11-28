@@ -13,10 +13,105 @@ const ForgetPassword = () => {
   const [step, setStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [errors, setErrors] = useState({
+    email: "",
+    otp: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [touched, setTouched] = useState({
+    email: false,
+    otp: false,
+    newPassword: false,
+    confirmPassword: false,
+  });
+
+  const validateField = (name, value, formData = {}) => {
+    switch (name) {
+      case "email":
+        if (!value) return "Email is required";
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+          return "Please enter a valid email";
+        return "";
+      case "otp":
+        if (!value) return "OTP is required";
+        if (!/^\d{6}$/.test(value)) return "OTP must be 6 digits";
+        return "";
+      case "newPassword":
+        if (!value) return "Password is required";
+        if (value.length < 8) return "Password must be at least 8 characters";
+        return "";
+      case "confirmPassword":
+        if (!value) return "Please confirm your password";
+        if (value !== formData.newPassword) return "Passwords do not match";
+        return "";
+      default:
+        return "";
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
+    setTouched((prev) => ({ ...prev, [name]: true }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name, value, { newPassword }),
+    }));
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    if (touched[name]) {
+      setErrors((prev) => ({
+        ...prev,
+        [name]: validateField(name, value, { newPassword }),
+      }));
+    }
+
+    // Update state
+    switch (name) {
+      case "email":
+        setEmail(value);
+        break;
+      case "otp":
+        // Only allow numbers and limit to 6 digits
+        const numericValue = value.replace(/\D/g, "").slice(0, 6);
+        setOtp(numericValue);
+        break;
+      case "newPassword":
+        setNewPassword(value);
+        // If password changes, re-validate confirm password
+        if (touched.confirmPassword) {
+          setErrors((prev) => ({
+            ...prev,
+            confirmPassword: validateField("confirmPassword", confirmPassword, {
+              newPassword: value,
+            }),
+          }));
+        }
+        break;
+      case "confirmPassword":
+        setConfirmPassword(value);
+        break;
+      default:
+        break;
+    }
+  };
 
   // Step 1: Send OTP to email
   const handleSendOtp = async (e) => {
     e.preventDefault();
+
+    // Mark field as touched to show errors
+    setTouched((prev) => ({ ...prev, email: true }));
+
+    const emailError = validateField("email", email);
+    if (emailError) {
+      setErrors((prev) => ({ ...prev, email: emailError }));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -47,6 +142,16 @@ const ForgetPassword = () => {
   // Step 2: Verify OTP
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+
+    // Mark field as touched to show errors
+    setTouched((prev) => ({ ...prev, otp: true }));
+
+    const otpError = validateField("otp", otp);
+    if (otpError) {
+      setErrors((prev) => ({ ...prev, otp: otpError }));
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -77,19 +182,29 @@ const ForgetPassword = () => {
   // Step 3: Reset Password
   const handleResetPassword = async (e) => {
     e.preventDefault();
+
+    // Mark all fields as touched to show errors
+    setTouched({
+      newPassword: true,
+      confirmPassword: true,
+    });
+
+    const newPasswordError = validateField("newPassword", newPassword);
+    const confirmPasswordError = validateField(
+      "confirmPassword",
+      confirmPassword,
+      { newPassword }
+    );
+
+    if (newPasswordError || confirmPasswordError) {
+      setErrors({
+        newPassword: newPasswordError,
+        confirmPassword: confirmPasswordError,
+      });
+      return;
+    }
+
     setLoading(true);
-
-    if (newPassword !== confirmPassword) {
-      toast.error("Passwords do not match");
-      setLoading(false);
-      return;
-    }
-
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters");
-      setLoading(false);
-      return;
-    }
 
     try {
       const response = await fetch(`${baseURL}/auth/reset-password`, {
@@ -124,14 +239,25 @@ const ForgetPassword = () => {
 
   // Render different steps
   const renderStep1 = () => (
-    <form onSubmit={handleSendOtp} className="space-y-4 sm:space-y-5">
+    <form
+      onSubmit={handleSendOtp}
+      className="space-y-4 sm:space-y-5"
+      noValidate
+    >
       <div className="space-y-1.5">
-        <label
-          htmlFor="email"
-          className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
-        >
-          Email
-        </label>
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="email"
+            className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
+          >
+            Email
+          </label>
+          {touched.email && errors.email && (
+            <span className="text-red-500 text-xs font-medium">
+              {errors.email}
+            </span>
+          )}
+        </div>
         <div className="relative">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -150,12 +276,18 @@ const ForgetPassword = () => {
           </svg>
           <input
             type="email"
-            className="flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 h-10 sm:h-11 bg-slate-50/50 border-slate-200 focus:border-slate-400 focus:ring-slate-400 rounded-xl placeholder:text-slate-400"
+            name="email"
+            className={`flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl placeholder:text-slate-400 ${
+              touched.email && errors.email
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "focus:border-slate-400 focus:ring-slate-400"
+            }`}
             id="email"
             placeholder="you@example.com"
             required
             value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            onChange={handleChange}
+            onBlur={handleBlur}
             disabled={loading}
           />
         </div>
@@ -164,7 +296,7 @@ const ForgetPassword = () => {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 w-full h-10 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200 disabled:bg-slate-400"
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 w-full h-11 sm:h-12 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200 disabled:bg-slate-400"
       >
         {loading ? (
           <>
@@ -198,14 +330,25 @@ const ForgetPassword = () => {
   );
 
   const renderStep2 = () => (
-    <form onSubmit={handleVerifyOtp} className="space-y-4 sm:space-y-5">
+    <form
+      onSubmit={handleVerifyOtp}
+      className="space-y-4 sm:space-y-5"
+      noValidate
+    >
       <div className="space-y-1.5">
-        <label
-          htmlFor="otp"
-          className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
-        >
-          Enter OTP
-        </label>
+        <div className="flex justify-between items-center">
+          <label
+            htmlFor="otp"
+            className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
+          >
+            Enter OTP
+          </label>
+          {touched.otp && errors.otp && (
+            <span className="text-red-500 text-xs font-medium">
+              {errors.otp}
+            </span>
+          )}
+        </div>
         <div className="relative">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -224,12 +367,18 @@ const ForgetPassword = () => {
           </svg>
           <input
             type="text"
-            className="flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 h-10 sm:h-11 bg-slate-50/50 border-slate-200 focus:border-slate-400 focus:ring-slate-400 rounded-xl placeholder:text-slate-400"
+            name="otp"
+            className={`flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl placeholder:text-slate-400 ${
+              touched.otp && errors.otp
+                ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                : "focus:border-slate-400 focus:ring-slate-400"
+            }`}
             id="otp"
             placeholder="Enter 6-digit OTP"
             required
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
+            onChange={handleChange}
+            onBlur={handleBlur}
             disabled={loading}
             maxLength={6}
           />
@@ -242,7 +391,7 @@ const ForgetPassword = () => {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 w-full h-10 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200 disabled:bg-slate-400"
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 w-full h-11 sm:h-12 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200 disabled:bg-slate-400"
       >
         {loading ? (
           <>
@@ -276,15 +425,26 @@ const ForgetPassword = () => {
   );
 
   const renderStep3 = () => (
-    <form onSubmit={handleResetPassword} className="space-y-4 sm:space-y-5">
-      <div className="space-y-3">
+    <form
+      onSubmit={handleResetPassword}
+      className="space-y-4 sm:space-y-5"
+      noValidate
+    >
+      <div className="space-y-3 sm:space-y-4">
         <div className="space-y-1.5">
-          <label
-            htmlFor="newPassword"
-            className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
-          >
-            New Password
-          </label>
+          <div className="flex justify-between items-center">
+            <label
+              htmlFor="newPassword"
+              className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
+            >
+              New Password
+            </label>
+            {touched.newPassword && errors.newPassword && (
+              <span className="text-red-500 text-xs font-medium">
+                {errors.newPassword}
+              </span>
+            )}
+          </div>
           <div className="relative">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -303,12 +463,18 @@ const ForgetPassword = () => {
             </svg>
             <input
               type={showPassword ? "text" : "password"}
-              className="flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10 h-10 sm:h-11 bg-slate-50/50 border-slate-200 focus:border-slate-400 focus:ring-slate-400 rounded-xl placeholder:text-slate-400"
+              name="newPassword"
+              className={`flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl placeholder:text-slate-400 ${
+                touched.newPassword && errors.newPassword
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  : "focus:border-slate-400 focus:ring-slate-400"
+              }`}
               id="newPassword"
               placeholder="Enter new password"
               required
               value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
+              onChange={handleChange}
+              onBlur={handleBlur}
               disabled={loading}
             />
             <button
@@ -357,12 +523,19 @@ const ForgetPassword = () => {
         </div>
 
         <div className="space-y-1.5">
-          <label
-            htmlFor="confirmPassword"
-            className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
-          >
-            Confirm New Password
-          </label>
+          <div className="flex justify-between items-center">
+            <label
+              htmlFor="confirmPassword"
+              className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-medium text-slate-700"
+            >
+              Confirm New Password
+            </label>
+            {touched.confirmPassword && errors.confirmPassword && (
+              <span className="text-red-500 text-xs font-medium">
+                {errors.confirmPassword}
+              </span>
+            )}
+          </div>
           <div className="relative">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -381,12 +554,18 @@ const ForgetPassword = () => {
             </svg>
             <input
               type={showConfirmPassword ? "text" : "password"}
-              className="flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10 h-10 sm:h-11 bg-slate-50/50 border-slate-200 focus:border-slate-400 focus:ring-slate-400 rounded-xl placeholder:text-slate-400"
+              name="confirmPassword"
+              className={`flex w-full border px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm pl-10 pr-10 h-11 sm:h-12 bg-slate-50/50 border-slate-200 rounded-xl placeholder:text-slate-400 ${
+                touched.confirmPassword && errors.confirmPassword
+                  ? "border-red-500 focus:border-red-500 focus:ring-red-500"
+                  : "focus:border-slate-400 focus:ring-slate-400"
+              }`}
               id="confirmPassword"
               placeholder="Confirm new password"
               required
               value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
+              onChange={handleChange}
+              onBlur={handleBlur}
               disabled={loading}
             />
             <button
@@ -438,7 +617,7 @@ const ForgetPassword = () => {
       <button
         type="submit"
         disabled={loading}
-        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 w-full h-10 sm:h-11 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200 disabled:bg-slate-400"
+        className="inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 px-4 py-2 w-full h-11 sm:h-12 bg-slate-900 hover:bg-slate-800 text-white font-medium shadow-sm rounded-xl transition-all duration-200 disabled:bg-slate-400"
       >
         {loading ? (
           <>
@@ -498,12 +677,18 @@ const ForgetPassword = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
+      {/* Background Circles */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-1/2 -right-1/2 w-full h-full bg-gradient-to-br from-blue-50/30 to-purple-50/30 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-1/2 -left-1/2 w-full h-full bg-gradient-to-tr from-slate-50/30 to-gray-50/30 rounded-full blur-3xl"></div>
+      </div>
+
+      <div className="w-full max-w-md relative z-10">
+        <div className="bg-white rounded-2xl shadow-xl p-8 sm:p-10 md:pt-12 md:pb-10 md:px-10">
           <div className="flex flex-col items-center text-center space-y-6 sm:space-y-8">
-            <div className="w-full">
-              {/* Back button */}
+            {/* Back Button */}
+            <div className="w-full text-left">
               <Link
                 to="/login"
                 className="flex items-center gap-2 text-sm text-slate-500 hover:text-slate-700 font-medium transition-colors -mb-2"
@@ -525,34 +710,35 @@ const ForgetPassword = () => {
                 </svg>
                 Back to sign in
               </Link>
+            </div>
 
-              {/* Logo */}
-              <div className="flex justify-center mb-4">
-                <span className="flex shrink-0 overflow-hidden rounded-full h-16 w-16 shadow-lg ring-4 ring-white/50">
-                  <img
-                    className="aspect-square h-full w-full object-cover"
-                    alt="FinanceFlow v2 logo"
-                    src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691f62bda3a8f458a93490c4/daca4f53c_1000008238.png"
-                  />
-                </span>
-              </div>
+            {/* Logo Section */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-200 to-slate-300 rounded-full blur-xl opacity-30 group-hover:opacity-40 transition-opacity duration-300"></div>
+              <span className="flex shrink-0 overflow-hidden rounded-full relative h-20 w-20 sm:h-24 sm:w-24 shadow-lg ring-4 ring-white/50 group-hover:shadow-xl transition-all duration-300">
+                <img
+                  className="aspect-square h-full w-full object-cover"
+                  alt="FinanceFlow v2 logo"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691f62bda3a8f458a93490c4/daca4f53c_1000008238.png"
+                />
+              </span>
+            </div>
 
-              {/* Header */}
-              <div className="space-y-4 sm:space-y-6">
-                <div className="text-center space-y-2">
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900">
-                    {getStepTitle()}
-                  </h2>
-                  <p className="text-slate-600 text-sm sm:text-base">
-                    {getStepDescription()}
-                  </p>
-                </div>
+            {/* Title Section */}
+            <div className="space-y-2 sm:space-y-3">
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight">
+                {getStepTitle()}
+              </h1>
+              <p className="text-slate-500 text-sm sm:text-base font-medium">
+                {getStepDescription()}
+              </p>
+            </div>
 
-                {/* Form Steps */}
-                {step === 1 && renderStep1()}
-                {step === 2 && renderStep2()}
-                {step === 3 && renderStep3()}
-              </div>
+            {/* Form Steps */}
+            <div className="w-full">
+              {step === 1 && renderStep1()}
+              {step === 2 && renderStep2()}
+              {step === 3 && renderStep3()}
             </div>
           </div>
         </div>
