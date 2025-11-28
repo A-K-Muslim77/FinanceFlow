@@ -66,76 +66,33 @@ const Sidebar = ({
     {
       name: "Wallets",
       icon: <FiDollarSign />,
-      children: [
-        { name: "My Wallets", component: "myWallets" },
-        { name: "Add Wallet", component: "addWallet" },
-        { name: "Wallet Analytics", component: "walletAnalytics" },
-      ],
+      component: "wallets",
     },
     {
       name: "Categories",
       icon: <FiPieChart />,
-      children: [
-        { name: "All Categories", component: "allCategories" },
-        { name: "Add Category", component: "addCategory" },
-        { name: "Category Report", component: "categoryReport" },
-      ],
+      component: "categories",
     },
     {
       name: "Budgets",
       icon: <FiTarget />,
-      children: [
-        { name: "Budget Overview", component: "budgetOverview" },
-        { name: "Create Budget", component: "createBudget" },
-        { name: "Budget Tracking", component: "budgetTracking" },
-      ],
+      component: "budgets",
     },
     {
       name: "Savings",
       icon: <FiTrendingUp />,
-      children: [
-        { name: "Savings Goals", component: "savingsGoals" },
-        { name: "Add Savings", component: "addSavings" },
-        { name: "Savings Progress", component: "savingsProgress" },
-      ],
+      component: "savings",
     },
     {
       name: "Reports",
       icon: <FiFileText />,
-      children: [
-        { name: "Financial Report", component: "financialReport" },
-        { name: "Expense Report", component: "expenseReport" },
-        { name: "Income Report", component: "incomeReport" },
-      ],
+      component: "reports",
     },
     {
       name: "Due/Receivable",
       icon: <FiCalendar />,
-      children: [
-        { name: "Due Payments", component: "duePayments" },
-        { name: "Receivables", component: "receivables" },
-        { name: "Payment Reminders", component: "paymentReminders" },
-      ],
+      component: "dues",
     },
-    {
-      name: "Notifications",
-      icon: (
-        <div className="relative">
-          <FiBell />
-          {notificationCount > 0 && (
-            <motion.span
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white"
-            >
-              {Math.min(notificationCount, 99)}
-            </motion.span>
-          )}
-        </div>
-      ),
-      component: "notifications",
-    },
-    { name: "Settings", icon: <FiSettings />, component: "settings" },
   ];
 
   const toggleMenu = (menuName) => {
@@ -207,7 +164,7 @@ const Sidebar = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+          className="fixed inset-0  bg-opacity-50 z-40 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}

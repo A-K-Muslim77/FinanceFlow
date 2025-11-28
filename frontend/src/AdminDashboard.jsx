@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
+import Dashboard from "./pages/Dashboard";
+import Transactions from "./pages/Transactions";
+import Wallets from "./pages/Wallets";
+import Categories from "./pages/Categories";
+import Budgets from "./pages/Budgets";
+import Savings from "./pages/Savings";
+import Reports from "./pages/Reports";
+import Due from "./pages/Due";
 
 const AdminDashboard = () => {
   const [activeView, setActiveView] = useState(() => {
@@ -31,148 +39,80 @@ const AdminDashboard = () => {
     localStorage.setItem("financeActiveView", activeView);
   }, [activeView]);
 
-  // Simple placeholder components for testing
   const renderView = () => {
-    const views = {
-      dashboard: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
-          <p className="text-gray-600 mt-4">
-            Welcome to your financial dashboard
-          </p>
-        </div>
-      ),
-      transactions: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Transactions</h1>
-          <p className="text-gray-600 mt-4">Your transaction history</p>
-        </div>
-      ),
-      myWallets: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">My Wallets</h1>
-          <p className="text-gray-600 mt-4">Manage your wallets</p>
-        </div>
-      ),
-      addWallet: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Add Wallet</h1>
-          <p className="text-gray-600 mt-4">Create a new wallet</p>
-        </div>
-      ),
-      walletAnalytics: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Wallet Analytics</h1>
-          <p className="text-gray-600 mt-4">Analytics for your wallets</p>
-        </div>
-      ),
-      allCategories: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">All Categories</h1>
-          <p className="text-gray-600 mt-4">View all categories</p>
-        </div>
-      ),
-      addCategory: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Add Category</h1>
-          <p className="text-gray-600 mt-4">Create new category</p>
-        </div>
-      ),
-      categoryReport: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Category Report</h1>
-          <p className="text-gray-600 mt-4">Category analytics</p>
-        </div>
-      ),
-      budgetOverview: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Budget Overview</h1>
-          <p className="text-gray-600 mt-4">Your budget summary</p>
-        </div>
-      ),
-      createBudget: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Create Budget</h1>
-          <p className="text-gray-600 mt-4">Set up new budget</p>
-        </div>
-      ),
-      budgetTracking: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Budget Tracking</h1>
-          <p className="text-gray-600 mt-4">Track your budgets</p>
-        </div>
-      ),
-      savingsGoals: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Savings Goals</h1>
-          <p className="text-gray-600 mt-4">Your savings targets</p>
-        </div>
-      ),
-      addSavings: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Add Savings</h1>
-          <p className="text-gray-600 mt-4">Add new savings</p>
-        </div>
-      ),
-      savingsProgress: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Savings Progress</h1>
-          <p className="text-gray-600 mt-4">Track savings progress</p>
-        </div>
-      ),
-      financialReport: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Financial Report</h1>
-          <p className="text-gray-600 mt-4">Complete financial report</p>
-        </div>
-      ),
-      expenseReport: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Expense Report</h1>
-          <p className="text-gray-600 mt-4">Expense analysis</p>
-        </div>
-      ),
-      incomeReport: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Income Report</h1>
-          <p className="text-gray-600 mt-4">Income analysis</p>
-        </div>
-      ),
-      duePayments: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Due Payments</h1>
-          <p className="text-gray-600 mt-4">Upcoming payments</p>
-        </div>
-      ),
-      receivables: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Receivables</h1>
-          <p className="text-gray-600 mt-4">Money owed to you</p>
-        </div>
-      ),
-      paymentReminders: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">
-            Payment Reminders
-          </h1>
-          <p className="text-gray-600 mt-4">Set payment reminders</p>
-        </div>
-      ),
-      notifications: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Notifications</h1>
-          <p className="text-gray-600 mt-4">Your notifications</p>
-        </div>
-      ),
-      settings: (
-        <div className="p-8">
-          <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
-          <p className="text-gray-600 mt-4">Account settings</p>
-        </div>
-      ),
-    };
+    switch (activeView) {
+      case "dashboard":
+        return <Dashboard />;
+      case "transactions":
+        return <Transactions />;
+      case "wallets":
+        return <Wallets />;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Wallet Analytics
+            </h1>
+            <p className="text-gray-600 mt-4">Analytics for your wallets</p>
+          </div>
+        );
+      case "categories":
+        return <Categories />;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Category Report
+            </h1>
+            <p className="text-gray-600 mt-4">Category analytics</p>
+          </div>
+        );
+      case "budgets":
+        return <Budgets />;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Budget Tracking
+            </h1>
+            <p className="text-gray-600 mt-4">Track your budgets</p>
+          </div>
+        );
+      case "savings":
+        return <Savings />;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Savings Progress
+            </h1>
+            <p className="text-gray-600 mt-4">Track savings progress</p>
+          </div>
+        );
+      case "reports":
+        return <Reports />;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">Income Report</h1>
+            <p className="text-gray-600 mt-4">Income analysis</p>
+          </div>
+        );
+      case "due":
+        return <Due />;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">
+              Payment Reminders
+            </h1>
+            <p className="text-gray-600 mt-4">Set payment reminders</p>
+          </div>
+        );
 
-    return views[activeView] || views.dashboard;
+        return (
+          <div className="p-8">
+            <h1 className="text-3xl font-bold text-gray-800">Settings</h1>
+            <p className="text-gray-600 mt-4">Account settings</p>
+          </div>
+        );
+      default:
+        return <Dashboard />;
+    }
   };
 
   return (
