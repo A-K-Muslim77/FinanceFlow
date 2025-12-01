@@ -17,13 +17,14 @@ const TransactionForm = ({
     from_wallet_id: "",
     to_wallet_id: "",
     category_id: "",
-    date: new Date().toISOString().slice(0, 16), // Current date-time in local format
+    date: new Date().toISOString().slice(0, 16),
     notes: "",
   });
 
   // Prefill form when editData changes
   useEffect(() => {
     if (isEdit && editData) {
+      console.log("Edit data received:", editData);
       setFormData({
         type: editData.type || "income",
         amount: editData.amount || "",
@@ -73,6 +74,16 @@ const TransactionForm = ({
       return;
     }
 
+    // Prepare submission data
+    const submitData = {
+      type: formData.type,
+      amount: parseFloat(formData.amount),
+      from_wallet_id: formData.from_wallet_id,
+      date: formData.date,
+      notes: formData.notes || "",
+    };
+
+    // Handle conditional fields based on transaction type
     if (formData.type === "transfer") {
       if (!formData.to_wallet_id) {
         toast.error("Please select a to wallet for transfer");
@@ -82,47 +93,47 @@ const TransactionForm = ({
         toast.error("From wallet and To wallet cannot be the same");
         return;
       }
+      submitData.to_wallet_id = formData.to_wallet_id;
+      // CRITICAL: For transfers, explicitly set category_id to null
+      submitData.category_id = null;
     } else {
       if (!formData.category_id) {
         toast.error("Please select a category");
         return;
       }
+      submitData.category_id = formData.category_id;
+      // CRITICAL: For income/expense, explicitly set to_wallet_id to null
+      submitData.to_wallet_id = null;
     }
 
-    // Convert amount to number
-    const submitData = {
-      ...formData,
-      amount: parseFloat(formData.amount),
-    };
-
+    console.log("Submitting data:", submitData);
     onSubmit(submitData);
   };
 
   const handleInputChange = (field, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-
-    // If type changes, reset category and to_wallet
     if (field === "type") {
+      // When type changes, reset dependent fields
       setFormData((prev) => ({
         ...prev,
         type: value,
         category_id: value === "transfer" ? "" : prev.category_id,
-        to_wallet_id: value === "transfer" ? prev.to_wallet_id : "",
+        to_wallet_id: value !== "transfer" ? "" : prev.to_wallet_id,
       }));
-    }
-
-    // If from_wallet changes and it's transfer, reset to_wallet if same
-    if (field === "from_wallet_id" && formData.type === "transfer") {
-      if (value === formData.to_wallet_id) {
-        setFormData((prev) => ({
-          ...prev,
-          from_wallet_id: value,
-          to_wallet_id: "",
-        }));
-      }
+    } else if (field === "from_wallet_id") {
+      setFormData((prev) => ({
+        ...prev,
+        from_wallet_id: value,
+        // If it's a transfer and we're changing from_wallet to the current to_wallet, clear to_wallet
+        to_wallet_id:
+          prev.type === "transfer" && value === prev.to_wallet_id
+            ? ""
+            : prev.to_wallet_id,
+      }));
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [field]: value,
+      }));
     }
   };
 
@@ -161,6 +172,13 @@ const TransactionForm = ({
           <h2 className="text-lg font-semibold leading-none tracking-tight">
             {isEdit ? "Edit Transaction" : "Add Transaction"}
           </h2>
+          {isEdit && (
+            <p className="text-sm text-slate-500">
+              Editing{" "}
+              {formData.type === "transfer" ? "transfer" : formData.type}{" "}
+              transaction
+            </p>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -172,7 +190,7 @@ const TransactionForm = ({
             <div className="mt-1">
               <div
                 role="tablist"
-                className="h-9 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground grid w-full grid-cols-3"
+                className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-white"
               >
                 <button
                   type="button"
@@ -180,7 +198,7 @@ const TransactionForm = ({
                   onClick={() => handleInputChange("type", "income")}
                   className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                     formData.type === "income"
-                      ? "bg-white text-foreground shadow"
+                      ? "bg-green-500 text-white shadow"
                       : ""
                   }`}
                 >
@@ -192,7 +210,7 @@ const TransactionForm = ({
                   onClick={() => handleInputChange("type", "expense")}
                   className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                     formData.type === "expense"
-                      ? "bg-white text-foreground shadow"
+                      ? "bg-green-500 text-white shadow"
                       : ""
                   }`}
                 >
@@ -204,7 +222,7 @@ const TransactionForm = ({
                   onClick={() => handleInputChange("type", "transfer")}
                   className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                     formData.type === "transfer"
-                      ? "bg-white text-foreground shadow"
+                      ? "bg-green-500 text-white shadow"
                       : ""
                   }`}
                 >
@@ -249,6 +267,7 @@ const TransactionForm = ({
                 handleInputChange("from_wallet_id", e.target.value)
               }
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+              required
             >
               <option value="">Select from wallet</option>
               {wallets.map((wallet) => (
@@ -276,13 +295,9 @@ const TransactionForm = ({
                   handleInputChange("to_wallet_id", e.target.value)
                 }
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
-                disabled={availableToWallets.length === 0}
+                required={formData.type === "transfer"}
               >
-                <option value="">
-                  {availableToWallets.length === 0
-                    ? "No other wallets available"
-                    : "Select to wallet"}
-                </option>
+                <option value="">Select to wallet</option>
                 {availableToWallets.map((wallet) => (
                   <option key={wallet._id} value={wallet._id}>
                     {wallet.name}
@@ -306,13 +321,9 @@ const TransactionForm = ({
                   handleInputChange("category_id", e.target.value)
                 }
                 className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
-                disabled={filteredCategories.length === 0}
+                required={formData.type !== "transfer"}
               >
-                <option value="">
-                  {filteredCategories.length === 0
-                    ? "No categories available for this type"
-                    : "Select category"}
-                </option>
+                <option value="">Select category</option>
                 {filteredCategories.map((category) => (
                   <option key={category._id} value={category._id}>
                     {category.name}

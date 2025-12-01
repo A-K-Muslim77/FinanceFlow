@@ -19,6 +19,8 @@ import {
   Car,
   Utensils,
   Paperclip,
+  ChevronDown,
+  Calendar,
 } from "lucide-react";
 
 // Delete Confirmation Modal Component
@@ -95,6 +97,7 @@ const Transactions = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -240,13 +243,28 @@ const Transactions = () => {
     }
   };
 
+  const getTimeFilterLabel = (value) => {
+    switch (value) {
+      case "all":
+        return "All Time";
+      case "today":
+        return "Today";
+      case "week":
+        return "This Week";
+      case "month":
+        return "This Month";
+      default:
+        return "All Time";
+    }
+  };
+
   const filteredTransactions = transactions.filter((transaction) => {
     // Filter by type
     if (activeTypeTab !== "all" && transaction.type !== activeTypeTab) {
       return false;
     }
 
-    // Filter by time (simplified - you can implement actual date filtering)
+    // Filter by time
     if (activeTimeTab !== "all") {
       const transactionDate = new Date(transaction.date);
       const now = new Date();
@@ -421,6 +439,15 @@ const Transactions = () => {
     setError(null);
   };
 
+  const handleTypeTabClick = (type) => {
+    setActiveTypeTab(type);
+  };
+
+  const handleTimeFilterSelect = (timeFilter) => {
+    setActiveTimeTab(timeFilter);
+    setShowTimeDropdown(false);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen relative">
@@ -537,51 +564,51 @@ const Transactions = () => {
           </div>
         </div>
 
-        {/* Filter Tabs */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        {/* Filter Section */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           {/* Type Tabs */}
           <div className="flex-1">
-            <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4 bg-slate-100">
+            <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4 bg-white">
               <button
                 type="button"
-                onClick={() => setActiveTypeTab("all")}
+                onClick={() => handleTypeTabClick("all")}
                 className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                   activeTypeTab === "all"
-                    ? "bg-white text-foreground shadow"
-                    : ""
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
                 }`}
               >
                 All
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTypeTab("income")}
+                onClick={() => handleTypeTabClick("income")}
                 className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                   activeTypeTab === "income"
-                    ? "bg-white text-foreground shadow"
-                    : ""
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
                 }`}
               >
                 Income
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTypeTab("expense")}
+                onClick={() => handleTypeTabClick("expense")}
                 className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                   activeTypeTab === "expense"
-                    ? "bg-white text-foreground shadow"
-                    : ""
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
                 }`}
               >
                 Expense
               </button>
               <button
                 type="button"
-                onClick={() => setActiveTypeTab("transfer")}
+                onClick={() => handleTypeTabClick("transfer")}
                 className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                   activeTypeTab === "transfer"
-                    ? "bg-white text-foreground shadow"
-                    : ""
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
                 }`}
               >
                 Transfer
@@ -589,56 +616,85 @@ const Transactions = () => {
             </div>
           </div>
 
-          {/* Time Tabs */}
-          <div className="flex-1">
-            <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4 bg-slate-100">
-              <button
-                type="button"
-                onClick={() => setActiveTimeTab("all")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTimeTab === "all"
-                    ? "bg-white text-foreground shadow"
-                    : ""
-                }`}
-              >
-                All Time
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTimeTab("today")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTimeTab === "today"
-                    ? "bg-white text-foreground shadow"
-                    : ""
-                }`}
-              >
-                Today
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTimeTab("week")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTimeTab === "week"
-                    ? "bg-white text-foreground shadow"
-                    : ""
-                }`}
-              >
-                Week
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTimeTab("month")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTimeTab === "month"
-                    ? "bg-white text-foreground shadow"
-                    : ""
-                }`}
-              >
-                Month
-              </button>
-            </div>
+          {/* Time Filter Dropdown (positioned to the right) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowTimeDropdown(!showTimeDropdown)}
+              className="inline-flex items-center justify-between whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 w-48"
+            >
+              <span className="flex items-center">
+                <Calendar className="h-4 w-4 mr-2 text-slate-500" />
+                {getTimeFilterLabel(activeTimeTab)}
+              </span>
+              <ChevronDown className="h-4 w-4 opacity-50" />
+            </button>
+
+            {/* Dropdown Menu */}
+            {showTimeDropdown && (
+              <div className="absolute z-10 mt-1 w-48 right-0 rounded-md border bg-white shadow-lg">
+                <div className="py-1">
+                  <button
+                    type="button"
+                    onClick={() => handleTimeFilterSelect("all")}
+                    className={`flex w-full items-center px-4 py-2 text-sm ${
+                      activeTimeTab === "all"
+                        ? "bg-green-50 text-green-700"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    All Time
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTimeFilterSelect("today")}
+                    className={`flex w-full items-center px-4 py-2 text-sm ${
+                      activeTimeTab === "today"
+                        ? "bg-green-50 text-green-700"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    Today
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTimeFilterSelect("week")}
+                    className={`flex w-full items-center px-4 py-2 text-sm ${
+                      activeTimeTab === "week"
+                        ? "bg-green-50 text-green-700"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    This Week
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTimeFilterSelect("month")}
+                    className={`flex w-full items-center px-4 py-2 text-sm ${
+                      activeTimeTab === "month"
+                        ? "bg-green-50 text-green-700"
+                        : "text-slate-700 hover:bg-slate-100"
+                    }`}
+                  >
+                    This Month
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
+
+        {/* Filter Info */}
+        {activeTypeTab !== "all" && (
+          <div className="text-sm text-slate-600 bg-white rounded-lg p-3 border-0 shadow-sm">
+            Showing{" "}
+            {activeTimeTab !== "all"
+              ? getTimeFilterLabel(activeTimeTab).toLowerCase()
+              : "all"}{" "}
+            <span className="font-medium capitalize">{activeTypeTab}</span>{" "}
+            transactions
+          </div>
+        )}
 
         {/* Transactions List */}
         <div className="space-y-3">
@@ -790,7 +846,9 @@ const Transactions = () => {
               <p className="text-slate-400 mt-2">
                 {activeTypeTab === "all"
                   ? "Get started by creating your first transaction"
-                  : `No ${activeTypeTab} transactions found`}
+                  : `No ${activeTypeTab} transactions found for ${getTimeFilterLabel(
+                      activeTimeTab
+                    ).toLowerCase()}`}
               </p>
               {activeTypeTab === "all" && (
                 <button
