@@ -133,7 +133,7 @@ const Categories = () => {
 
       if (response.ok && result.success) {
         setCategories(result.data);
-        toast.success("Categories loaded successfully");
+        //toast.success("Categories loaded successfully");
       } else {
         throw new Error(result.error || "Failed to fetch categories");
       }

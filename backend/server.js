@@ -5,6 +5,8 @@ require("dotenv").config();
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const categoryRoutes = require("./routes/categories");
+const walletRoutes = require("./routes/walletRoutes");
+const transactionRoutes = require("./routes/transactionRoutes");
 
 const app = express();
 
@@ -18,6 +20,8 @@ app.use(express.json());
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
+app.use("/api/wallets", walletRoutes);
+app.use("/api/transactions", transactionRoutes);
 
 // Health check route
 app.get("/api/health", (req, res) => {
