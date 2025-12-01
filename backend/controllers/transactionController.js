@@ -8,7 +8,8 @@ exports.getAllTransactions = async (req, res) => {
     const transactions = await Transaction.find({
       userId: req.user._id,
     })
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color")
       .sort({ date: -1 });
 
@@ -41,7 +42,8 @@ exports.getTransactionById = async (req, res) => {
       _id: req.params.id,
       userId: req.user._id,
     })
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color");
 
     if (!transaction) {
@@ -67,13 +69,21 @@ exports.getTransactionById = async (req, res) => {
 // Create new transaction for the logged-in user
 exports.createTransaction = async (req, res) => {
   try {
-    const { type, amount, wallet_id, category_id, date, notes } = req.body;
+    const {
+      type,
+      amount,
+      from_wallet_id,
+      to_wallet_id,
+      category_id,
+      date,
+      notes,
+    } = req.body;
 
     // Validate required fields
-    if (!type || !amount || !wallet_id) {
+    if (!type || !amount || !from_wallet_id) {
       return res.status(400).json({
         success: false,
-        error: "Type, amount, and wallet are required",
+        error: "Type, amount, and from wallet are required",
       });
     }
 
@@ -85,49 +95,90 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
-    // Check if wallet belongs to user
-    const wallet = await Wallet.findOne({
-      _id: wallet_id,
+    // Check if from_wallet belongs to user
+    const fromWallet = await Wallet.findOne({
+      _id: from_wallet_id,
       userId: req.user._id,
     });
 
-    if (!wallet) {
+    if (!fromWallet) {
       return res.status(404).json({
         success: false,
-        error: "Wallet not found or you don't have permission to use it",
+        error: "From wallet not found or you don't have permission to use it",
       });
     }
 
-    // For income/expense, validate category
-    if (type !== "transfer" && !category_id) {
-      return res.status(400).json({
-        success: false,
-        error: "Category is required for income and expense transactions",
+    let toWallet = null;
+
+    // For transfers, validate to_wallet
+    if (type === "transfer") {
+      if (!to_wallet_id) {
+        return res.status(400).json({
+          success: false,
+          error: "To wallet is required for transfers",
+        });
+      }
+
+      // Check if to_wallet belongs to user
+      toWallet = await Wallet.findOne({
+        _id: to_wallet_id,
+        userId: req.user._id,
       });
+
+      if (!toWallet) {
+        return res.status(404).json({
+          success: false,
+          error: "To wallet not found or you don't have permission to use it",
+        });
+      }
+
+      // Check if from and to wallets are different
+      if (from_wallet_id === to_wallet_id) {
+        return res.status(400).json({
+          success: false,
+          error: "From wallet and To wallet cannot be the same",
+        });
+      }
+    } else {
+      // For income/expense, validate category
+      if (!category_id) {
+        return res.status(400).json({
+          success: false,
+          error: "Category is required for income and expense transactions",
+        });
+      }
     }
 
     const transaction = await Transaction.create({
       type,
       amount,
-      wallet_id,
-      category_id: type === "transfer" ? null : category_id,
+      from_wallet_id,
+      to_wallet_id: type === "transfer" ? to_wallet_id : null,
+      category_id: type !== "transfer" ? category_id : null,
       date: date || Date.now(),
       notes: notes || "",
       userId: req.user._id,
     });
 
-    // Update wallet balance
+    // Update wallet balances
     if (type === "income") {
-      wallet.balance += amount;
+      fromWallet.balance += amount;
+      await fromWallet.save();
     } else if (type === "expense") {
-      wallet.balance -= amount;
+      fromWallet.balance -= amount;
+      await fromWallet.save();
+    } else if (type === "transfer") {
+      // For transfer: deduct from from_wallet, add to to_wallet
+      fromWallet.balance -= amount;
+      toWallet.balance += amount;
+      await fromWallet.save();
+      await toWallet.save();
     }
-    // Transfer doesn't affect single wallet balance (requires two wallets)
-    await wallet.save();
 
     // Populate the transaction with wallet and category data
     const populatedTransaction = await Transaction.findById(transaction._id)
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color");
 
     res.status(201).json({
@@ -176,34 +227,79 @@ exports.updateTransaction = async (req, res) => {
       });
     }
 
-    const { type, amount, wallet_id, category_id, date, notes } = req.body;
+    const {
+      type,
+      amount,
+      from_wallet_id,
+      to_wallet_id,
+      category_id,
+      date,
+      notes,
+    } = req.body;
 
-    // First, revert the old transaction's effect on wallet balance
-    const oldWallet = await Wallet.findById(transaction.wallet_id);
-    if (oldWallet) {
+    // First, revert the old transaction's effect on wallet balances
+    const oldFromWallet = await Wallet.findById(transaction.from_wallet_id);
+    const oldToWallet = transaction.to_wallet_id
+      ? await Wallet.findById(transaction.to_wallet_id)
+      : null;
+
+    if (oldFromWallet) {
       if (transaction.type === "income") {
-        oldWallet.balance -= transaction.amount;
+        oldFromWallet.balance -= transaction.amount;
       } else if (transaction.type === "expense") {
-        oldWallet.balance += transaction.amount;
+        oldFromWallet.balance += transaction.amount;
+      } else if (transaction.type === "transfer" && oldToWallet) {
+        oldFromWallet.balance += transaction.amount; // Revert deduction
+        oldToWallet.balance -= transaction.amount; // Revert addition
+        await oldToWallet.save();
       }
-      await oldWallet.save();
+      await oldFromWallet.save();
     }
 
-    // Check if new wallet belongs to user (if wallet_id is being changed)
-    let newWallet = oldWallet;
+    // Check if new from_wallet belongs to user (if from_wallet_id is being changed)
+    let newFromWallet = oldFromWallet;
     if (
-      wallet_id &&
-      wallet_id.toString() !== transaction.wallet_id.toString()
+      from_wallet_id &&
+      from_wallet_id.toString() !== transaction.from_wallet_id.toString()
     ) {
-      newWallet = await Wallet.findOne({
-        _id: wallet_id,
+      newFromWallet = await Wallet.findOne({
+        _id: from_wallet_id,
         userId: req.user._id,
       });
 
-      if (!newWallet) {
+      if (!newFromWallet) {
         return res.status(404).json({
           success: false,
-          error: "Wallet not found or you don't have permission to use it",
+          error: "From wallet not found or you don't have permission to use it",
+        });
+      }
+    }
+
+    let newToWallet = oldToWallet;
+    // For transfers, check if new to_wallet belongs to user
+    if ((type || transaction.type) === "transfer" && to_wallet_id) {
+      if (
+        !oldToWallet ||
+        to_wallet_id.toString() !== transaction.to_wallet_id?.toString()
+      ) {
+        newToWallet = await Wallet.findOne({
+          _id: to_wallet_id,
+          userId: req.user._id,
+        });
+
+        if (!newToWallet) {
+          return res.status(404).json({
+            success: false,
+            error: "To wallet not found or you don't have permission to use it",
+          });
+        }
+      }
+
+      // Check if from and to wallets are different
+      if (from_wallet_id && to_wallet_id && from_wallet_id === to_wallet_id) {
+        return res.status(400).json({
+          success: false,
+          error: "From wallet and To wallet cannot be the same",
         });
       }
     }
@@ -217,14 +313,23 @@ exports.updateTransaction = async (req, res) => {
     }
 
     // For income/expense, validate category if type is not transfer
-    if (
-      (type || transaction.type) !== "transfer" &&
-      !category_id &&
-      !transaction.category_id
-    ) {
+    const finalType = type || transaction.type;
+    if (finalType !== "transfer" && !category_id && !transaction.category_id) {
       return res.status(400).json({
         success: false,
         error: "Category is required for income and expense transactions",
+      });
+    }
+
+    // For transfer, validate to_wallet
+    if (
+      finalType === "transfer" &&
+      !to_wallet_id &&
+      !transaction.to_wallet_id
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "To wallet is required for transfers",
       });
     }
 
@@ -232,12 +337,16 @@ exports.updateTransaction = async (req, res) => {
     const updateFields = {};
     if (type) updateFields.type = type;
     if (amount) updateFields.amount = amount;
-    if (wallet_id) updateFields.wallet_id = wallet_id;
-    if (type === "transfer") {
+    if (from_wallet_id) updateFields.from_wallet_id = from_wallet_id;
+
+    if (finalType === "transfer") {
       updateFields.category_id = null;
-    } else if (category_id !== undefined) {
-      updateFields.category_id = category_id;
+      if (to_wallet_id !== undefined) updateFields.to_wallet_id = to_wallet_id;
+    } else {
+      updateFields.to_wallet_id = null;
+      if (category_id !== undefined) updateFields.category_id = category_id;
     }
+
     if (date) updateFields.date = date;
     if (notes !== undefined) updateFields.notes = notes;
 
@@ -246,20 +355,25 @@ exports.updateTransaction = async (req, res) => {
       { $set: updateFields },
       { new: true, runValidators: true }
     )
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color");
 
-    // Apply new transaction's effect on wallet balance
-    const finalWallet = newWallet || oldWallet;
-    const finalType = type || transaction.type;
+    // Apply new transaction's effect on wallet balances
+    const finalFromWallet = newFromWallet || oldFromWallet;
+    const finalToWallet = newToWallet || oldToWallet;
     const finalAmount = amount || transaction.amount;
 
     if (finalType === "income") {
-      finalWallet.balance += finalAmount;
+      finalFromWallet.balance += finalAmount;
     } else if (finalType === "expense") {
-      finalWallet.balance -= finalAmount;
+      finalFromWallet.balance -= finalAmount;
+    } else if (finalType === "transfer") {
+      finalFromWallet.balance -= finalAmount;
+      finalToWallet.balance += finalAmount;
+      await finalToWallet.save();
     }
-    await finalWallet.save();
+    await finalFromWallet.save();
 
     res.status(200).json({
       success: true,
@@ -307,15 +421,23 @@ exports.deleteTransaction = async (req, res) => {
       });
     }
 
-    // Revert the transaction's effect on wallet balance
-    const wallet = await Wallet.findById(transaction.wallet_id);
-    if (wallet) {
+    // Revert the transaction's effect on wallet balances
+    const fromWallet = await Wallet.findById(transaction.from_wallet_id);
+    const toWallet = transaction.to_wallet_id
+      ? await Wallet.findById(transaction.to_wallet_id)
+      : null;
+
+    if (fromWallet) {
       if (transaction.type === "income") {
-        wallet.balance -= transaction.amount;
+        fromWallet.balance -= transaction.amount;
       } else if (transaction.type === "expense") {
-        wallet.balance += transaction.amount;
+        fromWallet.balance += transaction.amount;
+      } else if (transaction.type === "transfer" && toWallet) {
+        fromWallet.balance += transaction.amount; // Revert deduction
+        toWallet.balance -= transaction.amount; // Revert addition
+        await toWallet.save();
       }
-      await wallet.save();
+      await fromWallet.save();
     }
 
     await Transaction.findByIdAndDelete(req.params.id);
@@ -350,7 +472,8 @@ exports.getTransactionsByType = async (req, res) => {
       type,
       userId: req.user._id,
     })
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color")
       .sort({ date: -1 });
 
@@ -394,10 +517,11 @@ exports.getTransactionsByWallet = async (req, res) => {
     }
 
     const transactions = await Transaction.find({
-      wallet_id: walletId,
+      $or: [{ from_wallet_id: walletId }, { to_wallet_id: walletId }],
       userId: req.user._id,
     })
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color")
       .sort({ date: -1 });
 
@@ -431,7 +555,8 @@ exports.getTransactionsByCategory = async (req, res) => {
       category_id: categoryId,
       userId: req.user._id,
     })
-      .populate("wallet_id", "name type icon color")
+      .populate("from_wallet_id", "name type icon color")
+      .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color")
       .sort({ date: -1 });
 

@@ -306,7 +306,9 @@ const Transactions = () => {
     // Prepare edit data with proper IDs
     const editData = {
       ...transaction,
-      wallet_id: transaction.wallet_id?._id || transaction.wallet_id,
+      from_wallet_id:
+        transaction.from_wallet_id?._id || transaction.from_wallet_id,
+      to_wallet_id: transaction.to_wallet_id?._id || transaction.to_wallet_id,
       category_id: transaction.category_id?._id || transaction.category_id,
     };
     setEditingTransaction(editData);
@@ -642,7 +644,8 @@ const Transactions = () => {
         <div className="space-y-3">
           {filteredTransactions.map((transaction) => {
             const category = transaction.category_id;
-            const wallet = transaction.wallet_id;
+            const fromWallet = transaction.from_wallet_id;
+            const toWallet = transaction.to_wallet_id;
 
             const isIncome = transaction.type === "income";
             const isExpense = transaction.type === "expense";
@@ -677,8 +680,12 @@ const Transactions = () => {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-slate-900 truncate">
-                          {/* Show category name first if it exists */}
-                          {category?.name || "Uncategorized"}
+                          {/* Show category name for income/expense, show transfer description for transfers */}
+                          {isTransfer
+                            ? `${fromWallet?.name || "Wallet"} → ${
+                                toWallet?.name || "Wallet"
+                              }`
+                            : category?.name || "Uncategorized"}
                         </h3>
                         {/* Type badge */}
                         <div
@@ -702,7 +709,7 @@ const Transactions = () => {
                           </span>
                         </div>
                       </div>
-                      {/* Show notes if they exist, otherwise show nothing */}
+                      {/* Show notes if they exist */}
                       {transaction.notes && (
                         <p className="text-xs text-slate-600 mt-1.5 line-clamp-1">
                           {transaction.notes}
@@ -711,10 +718,21 @@ const Transactions = () => {
 
                       <div className="flex items-center gap-3 text-xs text-slate-500 py-2">
                         <span>{formatDate(transaction.date)}</span>
-                        {wallet && (
+                        {isTransfer ? (
+                          <>
+                            <span className="flex items-center gap-1">
+                              <WalletIcon className="w-3 h-3" />
+                              From: {fromWallet?.name || "Wallet"}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <WalletIcon className="w-3 h-3" />
+                              To: {toWallet?.name || "Wallet"}
+                            </span>
+                          </>
+                        ) : (
                           <span className="flex items-center gap-1">
                             <WalletIcon className="w-3 h-3" />
-                            {wallet.name}
+                            {fromWallet?.name || "Wallet"}
                           </span>
                         )}
                         {transaction.attachment && (
@@ -818,8 +836,11 @@ const Transactions = () => {
         onConfirm={handleDeleteConfirm}
         transactionName={
           deletingTransaction?.notes ||
-          deletingTransaction?.category_id?.name ||
-          "Transaction"
+          (deletingTransaction?.type === "transfer"
+            ? `Transfer from ${
+                deletingTransaction?.from_wallet_id?.name || "Wallet"
+              } to ${deletingTransaction?.to_wallet_id?.name || "Wallet"}`
+            : deletingTransaction?.category_id?.name || "Transaction")
         }
       />
     </div>

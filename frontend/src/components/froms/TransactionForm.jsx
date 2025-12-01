@@ -14,7 +14,8 @@ const TransactionForm = ({
   const [formData, setFormData] = useState({
     type: "income",
     amount: "",
-    wallet_id: "",
+    from_wallet_id: "",
+    to_wallet_id: "",
     category_id: "",
     date: new Date().toISOString().slice(0, 16), // Current date-time in local format
     notes: "",
@@ -26,7 +27,8 @@ const TransactionForm = ({
       setFormData({
         type: editData.type || "income",
         amount: editData.amount || "",
-        wallet_id: editData.wallet_id || "",
+        from_wallet_id: editData.from_wallet_id || "",
+        to_wallet_id: editData.to_wallet_id || "",
         category_id: editData.category_id || "",
         date: editData.date
           ? new Date(editData.date).toISOString().slice(0, 16)
@@ -38,7 +40,8 @@ const TransactionForm = ({
       setFormData({
         type: "income",
         amount: "",
-        wallet_id: "",
+        from_wallet_id: "",
+        to_wallet_id: "",
         category_id: "",
         date: new Date().toISOString().slice(0, 16),
         notes: "",
@@ -51,6 +54,11 @@ const TransactionForm = ({
     (category) => category.type === formData.type
   );
 
+  // Filter available to_wallets (exclude selected from_wallet)
+  const availableToWallets = wallets.filter(
+    (wallet) => wallet._id !== formData.from_wallet_id
+  );
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
@@ -60,14 +68,25 @@ const TransactionForm = ({
       return;
     }
 
-    if (!formData.wallet_id) {
-      toast.error("Please select a wallet");
+    if (!formData.from_wallet_id) {
+      toast.error("Please select a from wallet");
       return;
     }
 
-    if (!formData.category_id) {
-      toast.error("Please select a category");
-      return;
+    if (formData.type === "transfer") {
+      if (!formData.to_wallet_id) {
+        toast.error("Please select a to wallet for transfer");
+        return;
+      }
+      if (formData.from_wallet_id === formData.to_wallet_id) {
+        toast.error("From wallet and To wallet cannot be the same");
+        return;
+      }
+    } else {
+      if (!formData.category_id) {
+        toast.error("Please select a category");
+        return;
+      }
     }
 
     // Convert amount to number
@@ -85,13 +104,25 @@ const TransactionForm = ({
       [field]: value,
     }));
 
-    // If type changes, reset category selection
+    // If type changes, reset category and to_wallet
     if (field === "type") {
       setFormData((prev) => ({
         ...prev,
         type: value,
-        category_id: "",
+        category_id: value === "transfer" ? "" : prev.category_id,
+        to_wallet_id: value === "transfer" ? prev.to_wallet_id : "",
       }));
+    }
+
+    // If from_wallet changes and it's transfer, reset to_wallet if same
+    if (field === "from_wallet_id" && formData.type === "transfer") {
+      if (value === formData.to_wallet_id) {
+        setFormData((prev) => ({
+          ...prev,
+          from_wallet_id: value,
+          to_wallet_id: "",
+        }));
+      }
     }
   };
 
@@ -99,7 +130,8 @@ const TransactionForm = ({
     setFormData({
       type: "income",
       amount: "",
-      wallet_id: "",
+      from_wallet_id: "",
+      to_wallet_id: "",
       category_id: "",
       date: new Date().toISOString().slice(0, 16),
       notes: "",
@@ -202,21 +234,23 @@ const TransactionForm = ({
             />
           </div>
 
-          {/* Wallet Selection */}
+          {/* From Wallet Selection */}
           <div>
             <label
-              htmlFor="wallet_id"
+              htmlFor="from_wallet_id"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              Wallet
+              From Wallet
             </label>
             <select
-              id="wallet_id"
-              value={formData.wallet_id}
-              onChange={(e) => handleInputChange("wallet_id", e.target.value)}
+              id="from_wallet_id"
+              value={formData.from_wallet_id}
+              onChange={(e) =>
+                handleInputChange("from_wallet_id", e.target.value)
+              }
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
             >
-              <option value="">Select wallet</option>
+              <option value="">Select from wallet</option>
               {wallets.map((wallet) => (
                 <option key={wallet._id} value={wallet._id}>
                   {wallet.name}
@@ -225,33 +259,68 @@ const TransactionForm = ({
             </select>
           </div>
 
-          {/* Category Selection */}
-          <div>
-            <label
-              htmlFor="category_id"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-            >
-              Category
-            </label>
-            <select
-              id="category_id"
-              value={formData.category_id}
-              onChange={(e) => handleInputChange("category_id", e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
-              disabled={filteredCategories.length === 0}
-            >
-              <option value="">
-                {filteredCategories.length === 0
-                  ? "No categories available for this type"
-                  : "Select category"}
-              </option>
-              {filteredCategories.map((category) => (
-                <option key={category._id} value={category._id}>
-                  {category.name}
+          {/* Conditional Fields based on type */}
+          {formData.type === "transfer" ? (
+            /* To Wallet Selection (for transfers) */
+            <div>
+              <label
+                htmlFor="to_wallet_id"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                To Wallet
+              </label>
+              <select
+                id="to_wallet_id"
+                value={formData.to_wallet_id}
+                onChange={(e) =>
+                  handleInputChange("to_wallet_id", e.target.value)
+                }
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+                disabled={availableToWallets.length === 0}
+              >
+                <option value="">
+                  {availableToWallets.length === 0
+                    ? "No other wallets available"
+                    : "Select to wallet"}
                 </option>
-              ))}
-            </select>
-          </div>
+                {availableToWallets.map((wallet) => (
+                  <option key={wallet._id} value={wallet._id}>
+                    {wallet.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          ) : (
+            /* Category Selection (for income/expense) */
+            <div>
+              <label
+                htmlFor="category_id"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Category
+              </label>
+              <select
+                id="category_id"
+                value={formData.category_id}
+                onChange={(e) =>
+                  handleInputChange("category_id", e.target.value)
+                }
+                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
+                disabled={filteredCategories.length === 0}
+              >
+                <option value="">
+                  {filteredCategories.length === 0
+                    ? "No categories available for this type"
+                    : "Select category"}
+                </option>
+                {filteredCategories.map((category) => (
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {/* Date & Time */}
           <div>

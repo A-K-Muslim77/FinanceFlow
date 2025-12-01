@@ -16,10 +16,17 @@ const transactionSchema = new mongoose.Schema(
       required: [true, "Amount is required"],
       min: [0.01, "Amount must be greater than 0"],
     },
-    wallet_id: {
+    from_wallet_id: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Wallet",
       required: true,
+    },
+    to_wallet_id: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Wallet",
+      required: function () {
+        return this.type === "transfer";
+      },
     },
     category_id: {
       type: mongoose.Schema.Types.ObjectId,
@@ -55,7 +62,8 @@ const transactionSchema = new mongoose.Schema(
 
 // Index for better query performance
 transactionSchema.index({ type: 1, userId: 1 });
-transactionSchema.index({ wallet_id: 1 });
+transactionSchema.index({ from_wallet_id: 1 });
+transactionSchema.index({ to_wallet_id: 1 });
 transactionSchema.index({ category_id: 1 });
 transactionSchema.index({ date: -1, userId: 1 });
 
