@@ -3,7 +3,21 @@ const router = express.Router();
 const transactionController = require("../controllers/transactionController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 
-// GET /api/transactions - Get all transactions
+// GET /api/transactions/monthly - Get transactions for specific month/year
+router.get(
+  "/monthly",
+  authMiddleware,
+  transactionController.getMonthlyTransactions
+);
+
+// GET /api/transactions/months - Get available months with transactions
+router.get(
+  "/months",
+  authMiddleware,
+  transactionController.getTransactionMonths
+);
+
+// GET /api/transactions - Get all transactions (deprecated - use monthly instead)
 router.get("/", authMiddleware, transactionController.getAllTransactions);
 
 // GET /api/transactions/:id - Get single transaction

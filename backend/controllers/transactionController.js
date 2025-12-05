@@ -2,7 +2,174 @@ const Transaction = require("../models/Transaction");
 const Wallet = require("../models/Wallet");
 const mongoose = require("mongoose");
 
-// Get all transactions for the logged-in user
+exports.getMonthlyTransactions = async (req, res) => {
+  try {
+    const { month, year, type, walletId } = req.query;
+
+    const currentDate = new Date();
+    const selectedMonth = month ? parseInt(month) : currentDate.getMonth() + 1;
+    const selectedYear = year ? parseInt(year) : currentDate.getFullYear();
+
+    if (selectedMonth < 1 || selectedMonth > 12 || isNaN(selectedMonth)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid month. Must be between 1 and 12",
+      });
+    }
+
+    if (selectedYear < 2000 || selectedYear > 2100 || isNaN(selectedYear)) {
+      return res.status(400).json({
+        success: false,
+        error: "Invalid year",
+      });
+    }
+
+    const startDate = new Date(selectedYear, selectedMonth - 1, 1);
+    const endDate = new Date(selectedYear, selectedMonth, 0);
+    startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(23, 59, 59, 999);
+
+    const query = {
+      userId: req.user._id,
+      date: {
+        $gte: startDate,
+        $lte: endDate,
+      },
+    };
+
+    if (type && ["income", "expense", "transfer"].includes(type)) {
+      query.type = type;
+    }
+
+    if (walletId && mongoose.Types.ObjectId.isValid(walletId)) {
+      query.$or = [{ from_wallet_id: walletId }, { to_wallet_id: walletId }];
+    }
+
+    const transactions = await Transaction.find(query)
+      .populate(
+        "from_wallet_id",
+        "name type icon color month year openingBalance closingBalance"
+      )
+      .populate(
+        "to_wallet_id",
+        "name type icon color month year openingBalance closingBalance"
+      )
+      .populate("category_id", "name type icon color")
+      .sort({ date: -1 })
+      .lean();
+
+    const incomeTotal = transactions
+      .filter((t) => t.type === "income")
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const expenseTotal = transactions
+      .filter((t) => t.type === "expense")
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const transferTotal = transactions
+      .filter((t) => t.type === "transfer")
+      .reduce((sum, t) => sum + (t.amount || 0), 0);
+
+    const netBalance = incomeTotal - expenseTotal;
+
+    res.status(200).json({
+      success: true,
+      data: {
+        transactions,
+        totals: {
+          income: incomeTotal,
+          expense: expenseTotal,
+          transfer: transferTotal,
+          netBalance: netBalance,
+        },
+        count: transactions.length,
+        month: selectedMonth,
+        year: selectedYear,
+        monthName: new Date(selectedYear, selectedMonth - 1, 1).toLocaleString(
+          "default",
+          { month: "long" }
+        ),
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Server Error: " + error.message,
+    });
+  }
+};
+
+exports.getTransactionMonths = async (req, res) => {
+  try {
+    const months = await Transaction.aggregate([
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(req.user._id),
+        },
+      },
+      {
+        $group: {
+          _id: {
+            year: { $year: "$date" },
+            month: { $month: "$date" },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      {
+        $sort: {
+          "_id.year": -1,
+          "_id.month": -1,
+        },
+      },
+      {
+        $project: {
+          year: "$_id.year",
+          month: "$_id.month",
+          monthName: {
+            $let: {
+              vars: {
+                monthsInString: [
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December",
+                ],
+              },
+              in: {
+                $arrayElemAt: [
+                  "$$monthsInString",
+                  { $subtract: ["$_id.month", 1] },
+                ],
+              },
+            },
+          },
+          transactionCount: "$count",
+          _id: 0,
+        },
+      },
+    ]);
+
+    res.status(200).json({
+      success: true,
+      data: months,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: "Server Error",
+    });
+  }
+};
+
 exports.getAllTransactions = async (req, res) => {
   try {
     const transactions = await Transaction.find({
@@ -19,7 +186,6 @@ exports.getAllTransactions = async (req, res) => {
       data: transactions,
     });
   } catch (error) {
-    console.error("Error fetching transactions:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -27,10 +193,8 @@ exports.getAllTransactions = async (req, res) => {
   }
 };
 
-// Get single transaction by ID - only if user owns it
 exports.getTransactionById = async (req, res) => {
   try {
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
@@ -58,7 +222,6 @@ exports.getTransactionById = async (req, res) => {
       data: transaction,
     });
   } catch (error) {
-    console.error("Error fetching transaction:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -66,7 +229,6 @@ exports.getTransactionById = async (req, res) => {
   }
 };
 
-// Create new transaction for the logged-in user
 exports.createTransaction = async (req, res) => {
   try {
     const {
@@ -79,7 +241,6 @@ exports.createTransaction = async (req, res) => {
       notes,
     } = req.body;
 
-    // Validate required fields
     if (!type || !amount || !from_wallet_id) {
       return res.status(400).json({
         success: false,
@@ -87,7 +248,6 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
-    // Validate amount
     if (amount <= 0) {
       return res.status(400).json({
         success: false,
@@ -95,7 +255,6 @@ exports.createTransaction = async (req, res) => {
       });
     }
 
-    // Check if from_wallet belongs to user
     const fromWallet = await Wallet.findOne({
       _id: from_wallet_id,
       userId: req.user._id,
@@ -109,8 +268,8 @@ exports.createTransaction = async (req, res) => {
     }
 
     let toWallet = null;
+    let finalToWalletId = null;
 
-    // For transfers, validate to_wallet
     if (type === "transfer") {
       if (!to_wallet_id) {
         return res.status(400).json({
@@ -119,7 +278,6 @@ exports.createTransaction = async (req, res) => {
         });
       }
 
-      // Check if to_wallet belongs to user
       toWallet = await Wallet.findOne({
         _id: to_wallet_id,
         userId: req.user._id,
@@ -132,53 +290,82 @@ exports.createTransaction = async (req, res) => {
         });
       }
 
-      // Check if from and to wallets are different
       if (from_wallet_id === to_wallet_id) {
         return res.status(400).json({
           success: false,
           error: "From wallet and To wallet cannot be the same",
         });
       }
-    } else {
-      // For income/expense, validate category
-      if (!category_id) {
+
+      finalToWalletId = to_wallet_id;
+    } else if (type === "income") {
+      toWallet = fromWallet;
+      finalToWalletId = from_wallet_id;
+    }
+
+    const transactionDate = new Date(date || Date.now());
+    const transactionMonth = transactionDate.getMonth() + 1;
+    const transactionYear = transactionDate.getFullYear();
+
+    if (
+      fromWallet.month !== transactionMonth ||
+      fromWallet.year !== transactionYear
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: `Transaction date must be in ${fromWallet.month}/${fromWallet.year}. Wallet is for this month/year only.`,
+      });
+    }
+
+    if (type === "transfer" && toWallet) {
+      if (
+        toWallet.month !== transactionMonth ||
+        toWallet.year !== transactionYear
+      ) {
         return res.status(400).json({
           success: false,
-          error: "Category is required for income and expense transactions",
+          error: `Both wallets must be in the same month/year (${transactionMonth}/${transactionYear})`,
         });
       }
     }
 
     const transaction = await Transaction.create({
-      type,
-      amount,
-      from_wallet_id,
-      to_wallet_id: type === "transfer" ? to_wallet_id : null,
+      type: type,
+      amount: amount,
+      from_wallet_id: from_wallet_id,
+      to_wallet_id: finalToWalletId,
       category_id: type !== "transfer" ? category_id : null,
       date: date || Date.now(),
-      notes: notes || "",
+      notes: notes,
       userId: req.user._id,
     });
 
-    // Update wallet balances
     if (type === "income") {
-      fromWallet.balance += amount;
+      fromWallet.closingBalance =
+        (fromWallet.closingBalance || fromWallet.openingBalance || 0) + amount;
       await fromWallet.save();
     } else if (type === "expense") {
-      fromWallet.balance -= amount;
+      fromWallet.closingBalance =
+        (fromWallet.closingBalance || fromWallet.openingBalance || 0) - amount;
       await fromWallet.save();
-    } else if (type === "transfer") {
-      // For transfer: deduct from from_wallet, add to to_wallet
-      fromWallet.balance -= amount;
-      toWallet.balance += amount;
+    } else if (type === "transfer" && toWallet) {
+      fromWallet.closingBalance =
+        (fromWallet.closingBalance || fromWallet.openingBalance || 0) - amount;
+      toWallet.closingBalance =
+        (toWallet.closingBalance || toWallet.openingBalance || 0) + amount;
       await fromWallet.save();
       await toWallet.save();
     }
 
-    // Populate the transaction with wallet and category data
     const populatedTransaction = await Transaction.findById(transaction._id)
-      .populate("from_wallet_id", "name type icon color")
-      .populate("to_wallet_id", "name type icon color")
+      .populate(
+        "from_wallet_id",
+        "name type icon color month year openingBalance closingBalance"
+      )
+      .populate(
+        "to_wallet_id",
+        "name type icon color month year openingBalance closingBalance"
+      )
       .populate("category_id", "name type icon color");
 
     res.status(201).json({
@@ -186,8 +373,6 @@ exports.createTransaction = async (req, res) => {
       data: populatedTransaction,
     });
   } catch (error) {
-    console.error("Error creating transaction:", error);
-
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
       return res.status(400).json({
@@ -198,15 +383,13 @@ exports.createTransaction = async (req, res) => {
 
     res.status(500).json({
       success: false,
-      error: "Server Error",
+      error: "Server Error: " + error.message,
     });
   }
 };
 
-// Update transaction - only if user owns it
 exports.updateTransaction = async (req, res) => {
   try {
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
@@ -237,9 +420,6 @@ exports.updateTransaction = async (req, res) => {
       notes,
     } = req.body;
 
-    console.log("Update request body:", req.body);
-
-    // Validate amount if provided
     if (amount && amount <= 0) {
       return res.status(400).json({
         success: false,
@@ -247,73 +427,95 @@ exports.updateTransaction = async (req, res) => {
       });
     }
 
-    // First, revert the old transaction's effect on wallet balances
-    const oldFromWallet = await Wallet.findById(transaction.from_wallet_id);
-    const oldToWallet = transaction.to_wallet_id
-      ? await Wallet.findById(transaction.to_wallet_id)
+    const oldType = transaction.type;
+    const oldAmount = transaction.amount;
+    const oldFromWalletId = transaction.from_wallet_id;
+    const oldToWalletId = transaction.to_wallet_id;
+
+    const oldFromWallet = await Wallet.findById(oldFromWalletId);
+    const oldToWallet = oldToWalletId
+      ? await Wallet.findById(oldToWalletId)
       : null;
 
     if (oldFromWallet) {
-      if (transaction.type === "income") {
-        oldFromWallet.balance -= transaction.amount;
-      } else if (transaction.type === "expense") {
-        oldFromWallet.balance += transaction.amount;
-      } else if (transaction.type === "transfer" && oldToWallet) {
-        oldFromWallet.balance += transaction.amount; // Revert deduction
-        oldToWallet.balance -= transaction.amount; // Revert addition
+      if (oldType === "income") {
+        oldFromWallet.closingBalance =
+          (oldFromWallet.closingBalance || oldFromWallet.openingBalance || 0) -
+          oldAmount;
+      } else if (oldType === "expense") {
+        oldFromWallet.closingBalance =
+          (oldFromWallet.closingBalance || oldFromWallet.openingBalance || 0) +
+          oldAmount;
+      } else if (oldType === "transfer" && oldToWallet) {
+        oldFromWallet.closingBalance =
+          (oldFromWallet.closingBalance || oldFromWallet.openingBalance || 0) +
+          oldAmount;
+
+        oldToWallet.closingBalance =
+          (oldToWallet.closingBalance || oldToWallet.openingBalance || 0) -
+          oldAmount;
+
         await oldToWallet.save();
       }
       await oldFromWallet.save();
     }
 
-    // Build update object - include all fields that should be updated
     const updateFields = {};
     if (type !== undefined) updateFields.type = type;
     if (amount !== undefined) updateFields.amount = amount;
     if (from_wallet_id !== undefined)
       updateFields.from_wallet_id = from_wallet_id;
 
-    // CRITICAL: Always include category_id and to_wallet_id in updates
     if (category_id !== undefined) {
-      updateFields.category_id = category_id === null ? null : category_id;
+      updateFields.category_id = category_id;
     }
     if (to_wallet_id !== undefined) {
-      updateFields.to_wallet_id = to_wallet_id === null ? null : to_wallet_id;
+      updateFields.to_wallet_id = to_wallet_id;
     }
 
     if (date !== undefined) updateFields.date = date;
     if (notes !== undefined) updateFields.notes = notes;
 
-    console.log("Update fields being sent to database:", updateFields);
-
-    // Update the transaction
     transaction = await Transaction.findByIdAndUpdate(
       req.params.id,
       { $set: updateFields },
-      { new: true, runValidators: false } // TEMPORARILY disable validators to test
+      { new: true, runValidators: true }
     )
       .populate("from_wallet_id", "name type icon color")
       .populate("to_wallet_id", "name type icon color")
       .populate("category_id", "name type icon color");
 
-    // Apply new transaction's effect on wallet balances
     const finalAmount = amount || transaction.amount;
     const finalType = type || transaction.type;
+    const finalFromWalletId = from_wallet_id || transaction.from_wallet_id;
+    const finalToWalletId = to_wallet_id || transaction.to_wallet_id;
 
-    // Get updated wallet references
-    const finalFromWallet = await Wallet.findById(transaction.from_wallet_id);
-    const finalToWallet = transaction.to_wallet_id
-      ? await Wallet.findById(transaction.to_wallet_id)
+    const finalFromWallet = await Wallet.findById(finalFromWalletId);
+    const finalToWallet = finalToWalletId
+      ? await Wallet.findById(finalToWalletId)
       : null;
 
     if (finalFromWallet) {
       if (finalType === "income") {
-        finalFromWallet.balance += finalAmount;
+        finalFromWallet.closingBalance =
+          (finalFromWallet.closingBalance ||
+            finalFromWallet.openingBalance ||
+            0) + finalAmount;
       } else if (finalType === "expense") {
-        finalFromWallet.balance -= finalAmount;
+        finalFromWallet.closingBalance =
+          (finalFromWallet.closingBalance ||
+            finalFromWallet.openingBalance ||
+            0) - finalAmount;
       } else if (finalType === "transfer" && finalToWallet) {
-        finalFromWallet.balance -= finalAmount;
-        finalToWallet.balance += finalAmount;
+        finalFromWallet.closingBalance =
+          (finalFromWallet.closingBalance ||
+            finalFromWallet.openingBalance ||
+            0) - finalAmount;
+
+        finalToWallet.closingBalance =
+          (finalToWallet.closingBalance || finalToWallet.openingBalance || 0) +
+          finalAmount;
+
         await finalToWallet.save();
       }
       await finalFromWallet.save();
@@ -324,8 +526,6 @@ exports.updateTransaction = async (req, res) => {
       data: transaction,
     });
   } catch (error) {
-    console.error("Error updating transaction:", error);
-
     if (error.name === "ValidationError") {
       const messages = Object.values(error.errors).map((val) => val.message);
       return res.status(400).json({
@@ -341,10 +541,8 @@ exports.updateTransaction = async (req, res) => {
   }
 };
 
-// Delete transaction - only if user owns it
 exports.deleteTransaction = async (req, res) => {
   try {
-    // Validate ObjectId
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({
         success: false,
@@ -365,7 +563,6 @@ exports.deleteTransaction = async (req, res) => {
       });
     }
 
-    // Revert the transaction's effect on wallet balances
     const fromWallet = await Wallet.findById(transaction.from_wallet_id);
     const toWallet = transaction.to_wallet_id
       ? await Wallet.findById(transaction.to_wallet_id)
@@ -373,12 +570,22 @@ exports.deleteTransaction = async (req, res) => {
 
     if (fromWallet) {
       if (transaction.type === "income") {
-        fromWallet.balance -= transaction.amount;
+        fromWallet.closingBalance =
+          (fromWallet.closingBalance || fromWallet.openingBalance || 0) -
+          transaction.amount;
       } else if (transaction.type === "expense") {
-        fromWallet.balance += transaction.amount;
+        fromWallet.closingBalance =
+          (fromWallet.closingBalance || fromWallet.openingBalance || 0) +
+          transaction.amount;
       } else if (transaction.type === "transfer" && toWallet) {
-        fromWallet.balance += transaction.amount; // Revert deduction
-        toWallet.balance -= transaction.amount; // Revert addition
+        fromWallet.closingBalance =
+          (fromWallet.closingBalance || fromWallet.openingBalance || 0) +
+          transaction.amount;
+
+        toWallet.closingBalance =
+          (toWallet.closingBalance || toWallet.openingBalance || 0) -
+          transaction.amount;
+
         await toWallet.save();
       }
       await fromWallet.save();
@@ -392,7 +599,6 @@ exports.deleteTransaction = async (req, res) => {
       message: "Transaction deleted successfully",
     });
   } catch (error) {
-    console.error("Error deleting transaction:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -400,7 +606,6 @@ exports.deleteTransaction = async (req, res) => {
   }
 };
 
-// Get transactions by type for the logged-in user
 exports.getTransactionsByType = async (req, res) => {
   try {
     const { type } = req.params;
@@ -427,7 +632,6 @@ exports.getTransactionsByType = async (req, res) => {
       data: transactions,
     });
   } catch (error) {
-    console.error("Error fetching transactions by type:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -435,7 +639,6 @@ exports.getTransactionsByType = async (req, res) => {
   }
 };
 
-// Get transactions by wallet for the logged-in user
 exports.getTransactionsByWallet = async (req, res) => {
   try {
     const { walletId } = req.params;
@@ -447,7 +650,6 @@ exports.getTransactionsByWallet = async (req, res) => {
       });
     }
 
-    // Check if wallet belongs to user
     const wallet = await Wallet.findOne({
       _id: walletId,
       userId: req.user._id,
@@ -475,7 +677,6 @@ exports.getTransactionsByWallet = async (req, res) => {
       data: transactions,
     });
   } catch (error) {
-    console.error("Error fetching transactions by wallet:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",
@@ -483,7 +684,6 @@ exports.getTransactionsByWallet = async (req, res) => {
   }
 };
 
-// Get transactions by category for the logged-in user
 exports.getTransactionsByCategory = async (req, res) => {
   try {
     const { categoryId } = req.params;
@@ -510,7 +710,6 @@ exports.getTransactionsByCategory = async (req, res) => {
       data: transactions,
     });
   } catch (error) {
-    console.error("Error fetching transactions by category:", error);
     res.status(500).json({
       success: false,
       error: "Server Error",

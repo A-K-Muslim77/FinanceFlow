@@ -10,6 +10,8 @@ const TransactionForm = ({
   isEdit = false,
   wallets = [],
   categories = [],
+  selectedMonth,
+  selectedYear,
 }) => {
   const [formData, setFormData] = useState({
     type: "income",
@@ -21,10 +23,8 @@ const TransactionForm = ({
     notes: "",
   });
 
-  // Prefill form when editData changes
   useEffect(() => {
     if (isEdit && editData) {
-      console.log("Edit data received:", editData);
       setFormData({
         type: editData.type || "income",
         amount: editData.amount || "",
@@ -37,7 +37,6 @@ const TransactionForm = ({
         notes: editData.notes || "",
       });
     } else {
-      // Reset form for create mode
       setFormData({
         type: "income",
         amount: "",
@@ -50,31 +49,28 @@ const TransactionForm = ({
     }
   }, [isEdit, editData]);
 
-  // Filter categories by type (income/expense)
   const filteredCategories = categories.filter(
     (category) => category.type === formData.type
-  );
-
-  // Filter available to_wallets (exclude selected from_wallet)
-  const availableToWallets = wallets.filter(
-    (wallet) => wallet._id !== formData.from_wallet_id
   );
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate form data
     if (!formData.amount || parseFloat(formData.amount) <= 0) {
       toast.error("Please enter a valid amount");
       return;
     }
 
     if (!formData.from_wallet_id) {
-      toast.error("Please select a from wallet");
+      toast.error("Please select a wallet");
       return;
     }
 
-    // Prepare submission data
+    if (formData.type !== "transfer" && !formData.category_id) {
+      toast.error("Please select a category");
+      return;
+    }
+
     const submitData = {
       type: formData.type,
       amount: parseFloat(formData.amount),
@@ -83,7 +79,10 @@ const TransactionForm = ({
       notes: formData.notes || "",
     };
 
-    // Handle conditional fields based on transaction type
+    if (formData.type !== "transfer") {
+      submitData.category_id = formData.category_id;
+    }
+
     if (formData.type === "transfer") {
       if (!formData.to_wallet_id) {
         toast.error("Please select a to wallet for transfer");
@@ -94,25 +93,15 @@ const TransactionForm = ({
         return;
       }
       submitData.to_wallet_id = formData.to_wallet_id;
-      // CRITICAL: For transfers, explicitly set category_id to null
-      submitData.category_id = null;
-    } else {
-      if (!formData.category_id) {
-        toast.error("Please select a category");
-        return;
-      }
-      submitData.category_id = formData.category_id;
-      // CRITICAL: For income/expense, explicitly set to_wallet_id to null
-      submitData.to_wallet_id = null;
+    } else if (formData.type === "income") {
+      submitData.to_wallet_id = formData.from_wallet_id;
     }
 
-    console.log("Submitting data:", submitData);
     onSubmit(submitData);
   };
 
   const handleInputChange = (field, value) => {
     if (field === "type") {
-      // When type changes, reset dependent fields
       setFormData((prev) => ({
         ...prev,
         type: value,
@@ -123,7 +112,6 @@ const TransactionForm = ({
       setFormData((prev) => ({
         ...prev,
         from_wallet_id: value,
-        // If it's a transfer and we're changing from_wallet to the current to_wallet, clear to_wallet
         to_wallet_id:
           prev.type === "transfer" && value === prev.to_wallet_id
             ? ""
@@ -152,13 +140,39 @@ const TransactionForm = ({
 
   if (!isOpen) return null;
 
+  if (wallets.length === 0) {
+    return (
+      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+        <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <X className="w-8 h-8 text-red-600" />
+            </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              No Wallets Found
+            </h3>
+            <p className="text-slate-600 mb-4">
+              You need to create wallets for {selectedMonth}/{selectedYear}{" "}
+              before adding transactions.
+            </p>
+            <button
+              onClick={onClose}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-red-600 text-white shadow hover:bg-red-700 h-9 px-4 py-2"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div
         className="relative w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -167,7 +181,6 @@ const TransactionForm = ({
           <span className="sr-only">Close</span>
         </button>
 
-        {/* Header */}
         <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
           <h2 className="text-lg font-semibold leading-none tracking-tight">
             {isEdit ? "Edit Transaction" : "Add Transaction"}
@@ -182,7 +195,6 @@ const TransactionForm = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Type Selection */}
           <div>
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Type
@@ -232,7 +244,6 @@ const TransactionForm = ({
             </div>
           </div>
 
-          {/* Amount */}
           <div>
             <label
               htmlFor="amount"
@@ -252,13 +263,12 @@ const TransactionForm = ({
             />
           </div>
 
-          {/* From Wallet Selection */}
           <div>
             <label
               htmlFor="from_wallet_id"
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
             >
-              From Wallet
+              {formData.type === "income" ? "Receiving Wallet" : "From Wallet"}
             </label>
             <select
               id="from_wallet_id"
@@ -269,18 +279,16 @@ const TransactionForm = ({
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
               required
             >
-              <option value="">Select from wallet</option>
+              <option value="">Select wallet</option>
               {wallets.map((wallet) => (
                 <option key={wallet._id} value={wallet._id}>
-                  {wallet.name}
+                  {wallet.name} (Balance: ৳{wallet.monthlyBalance || 0})
                 </option>
               ))}
             </select>
           </div>
 
-          {/* Conditional Fields based on type */}
           {formData.type === "transfer" ? (
-            /* To Wallet Selection (for transfers) */
             <div>
               <label
                 htmlFor="to_wallet_id"
@@ -298,15 +306,16 @@ const TransactionForm = ({
                 required={formData.type === "transfer"}
               >
                 <option value="">Select to wallet</option>
-                {availableToWallets.map((wallet) => (
-                  <option key={wallet._id} value={wallet._id}>
-                    {wallet.name}
-                  </option>
-                ))}
+                {wallets
+                  .filter((wallet) => wallet._id !== formData.from_wallet_id)
+                  .map((wallet) => (
+                    <option key={wallet._id} value={wallet._id}>
+                      {wallet.name} (Balance: ৳{wallet.monthlyBalance || 0})
+                    </option>
+                  ))}
               </select>
             </div>
           ) : (
-            /* Category Selection (for income/expense) */
             <div>
               <label
                 htmlFor="category_id"
@@ -333,7 +342,6 @@ const TransactionForm = ({
             </div>
           )}
 
-          {/* Date & Time */}
           <div>
             <label
               htmlFor="date"
@@ -351,7 +359,6 @@ const TransactionForm = ({
             />
           </div>
 
-          {/* Notes */}
           <div>
             <label
               htmlFor="notes"
@@ -369,7 +376,6 @@ const TransactionForm = ({
             />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
             <button
               type="button"

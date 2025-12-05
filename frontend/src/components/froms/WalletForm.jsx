@@ -40,22 +40,21 @@ const WalletForm = ({
   ];
 
   const colors = [
-    "#3b82f6", // blue-500
-    "#10b981", // emerald-500
-    "#f59e0b", // amber-500
-    "#ef4444", // red-500
-    "#8b5cf6", // violet-500
-    "#ec4899", // pink-500
-    "#14b8a6", // teal-500
-    "#f97316", // orange-500
-    "#6366f1", // indigo-500
-    "#84cc16", // lime-500
-    "#06b6d4", // cyan-500
-    "#d946ef", // fuchsia-500
-    "#f43f5e", // rose-500
+    "#3b82f6",
+    "#10b981",
+    "#f59e0b",
+    "#ef4444",
+    "#8b5cf6",
+    "#ec4899",
+    "#14b8a6",
+    "#f97316",
+    "#6366f1",
+    "#84cc16",
+    "#06b6d4",
+    "#d946ef",
+    "#f43f5e",
   ];
 
-  // Prefill form when editData changes
   useEffect(() => {
     if (isEdit && editData) {
       setFormData({
@@ -67,7 +66,6 @@ const WalletForm = ({
         description: editData.description || "",
       });
     } else {
-      // Reset form for create mode
       setFormData({
         name: "",
         type: "cash",
@@ -82,13 +80,11 @@ const WalletForm = ({
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate form data
     if (!formData.name.trim()) {
       toast.error("Please enter a wallet name");
       return;
     }
 
-    // Convert balance to number
     const submitData = {
       ...formData,
       balance: parseFloat(formData.balance) || 0,
@@ -124,7 +120,6 @@ const WalletForm = ({
         className="relative w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Close Button */}
         <button
           onClick={handleClose}
           className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
@@ -133,7 +128,6 @@ const WalletForm = ({
           <span className="sr-only">Close</span>
         </button>
 
-        {/* Header */}
         <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
           <h2 className="text-lg font-semibold leading-none tracking-tight">
             {isEdit ? "Edit Wallet" : "Create New Wallet"}
@@ -141,7 +135,6 @@ const WalletForm = ({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Wallet Name */}
           <div>
             <label
               htmlFor="name"
@@ -160,7 +153,6 @@ const WalletForm = ({
             />
           </div>
 
-          {/* Type Selection */}
           <div>
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Type
@@ -178,7 +170,6 @@ const WalletForm = ({
             </select>
           </div>
 
-          {/* Initial Balance */}
           <div>
             <label
               htmlFor="balance"
@@ -197,7 +188,6 @@ const WalletForm = ({
             />
           </div>
 
-          {/* Icon Selection */}
           <div>
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Icon
@@ -220,7 +210,6 @@ const WalletForm = ({
             </div>
           </div>
 
-          {/* Color Selection */}
           <div>
             <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
               Color
@@ -242,7 +231,6 @@ const WalletForm = ({
             </div>
           </div>
 
-          {/* Description */}
           <div>
             <label
               htmlFor="description"
@@ -260,7 +248,6 @@ const WalletForm = ({
             />
           </div>
 
-          {/* Action Buttons */}
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
             <button
               type="button"
@@ -282,7 +269,6 @@ const WalletForm = ({
   );
 };
 
-// Wallet-specific Icon Components
 const WalletIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -422,7 +408,6 @@ const CoinsIcon = () => (
   </svg>
 );
 
-// Reuse existing SmartphoneIcon from CategoryForm
 const SmartphoneIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"

@@ -34,25 +34,45 @@ const walletSchema = new mongoose.Schema(
       required: true,
       default: "#3b82f6",
     },
-    balance: {
-      type: Number,
-      required: true,
-      default: 0,
-      min: [0, "Balance cannot be negative"],
-    },
     description: {
       type: String,
       default: "",
       trim: true,
     },
-    isDefault: {
-      type: Boolean,
-      default: false,
+    // REMOVED: balance field since it will be monthly specific
+    // REMOVED: isDefault field since wallets are month-specific
+
+    // ADDED: Month and year when wallet was created/active
+    month: {
+      type: Number,
+      required: true,
+      min: 1,
+      max: 12,
     },
+    year: {
+      type: Number,
+      required: true,
+      min: 2000,
+      max: 2100,
+    },
+
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+
+    // ADDED: Opening balance for this month (always 0 initially)
+    openingBalance: {
+      type: Number,
+      default: 0,
+      required: true,
+    },
+
+    // ADDED: Will be calculated based on transactions
+    closingBalance: {
+      type: Number,
+      default: 0,
     },
   },
   {
@@ -60,9 +80,9 @@ const walletSchema = new mongoose.Schema(
   }
 );
 
-// Index for better query performance
-walletSchema.index({ type: 1, userId: 1 });
-walletSchema.index({ userId: 1, isDefault: 1 });
+// Index for better query performance - now includes month/year
+walletSchema.index({ userId: 1, month: 1, year: 1 });
+walletSchema.index({ userId: 1, name: 1, month: 1, year: 1 }, { unique: true });
 
 const Wallet = mongoose.model("Wallet", walletSchema);
 

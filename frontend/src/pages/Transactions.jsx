@@ -21,9 +21,9 @@ import {
   Paperclip,
   ChevronDown,
   Calendar,
+  AlertCircle,
 } from "lucide-react";
 
-// Delete Confirmation Modal Component
 const DeleteConfirmationModal = ({
   isOpen,
   onClose,
@@ -35,7 +35,6 @@ const DeleteConfirmationModal = ({
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
       <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95">
-        {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -50,7 +49,6 @@ const DeleteConfirmationModal = ({
           </div>
         </div>
 
-        {/* Message */}
         <div className="mb-6">
           <p className="text-slate-700">
             Are you sure you want to delete the transaction{" "}
@@ -61,7 +59,6 @@ const DeleteConfirmationModal = ({
           </p>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-3">
           <button
             type="button"
@@ -84,9 +81,92 @@ const DeleteConfirmationModal = ({
   );
 };
 
+const MonthYearSelector = ({
+  selectedMonth,
+  selectedYear,
+  onMonthChange,
+  onYearChange,
+  isLoading,
+}) => {
+  const months = [
+    { value: 1, label: "January" },
+    { value: 2, label: "February" },
+    { value: 3, label: "March" },
+    { value: 4, label: "April" },
+    { value: 5, label: "May" },
+    { value: 6, label: "June" },
+    { value: 7, label: "July" },
+    { value: 8, label: "August" },
+    { value: 9, label: "September" },
+    { value: 10, label: "October" },
+    { value: 11, label: "November" },
+    { value: 12, label: "December" },
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-4 bg-white rounded-xl p-4 border-0 shadow-sm">
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Select Month
+        </label>
+        <div className="relative">
+          <select
+            value={selectedMonth}
+            onChange={(e) => onMonthChange(parseInt(e.target.value))}
+            disabled={isLoading}
+            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {months.map((month) => (
+              <option key={month.value} value={month.value}>
+                {month.label}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        </div>
+      </div>
+
+      <div className="flex-1">
+        <label className="block text-sm font-medium text-slate-700 mb-1">
+          Select Year
+        </label>
+        <div className="relative">
+          <select
+            value={selectedYear}
+            onChange={(e) => onYearChange(parseInt(e.target.value))}
+            disabled={isLoading}
+            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {years.map((year) => (
+              <option key={year} value={year}>
+                {year}
+              </option>
+            ))}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+        </div>
+      </div>
+
+      <div className="flex items-end gap-3">
+        <div className="flex items-center gap-2 text-slate-600">
+          <Calendar className="w-5 h-5" />
+          <span className="text-sm font-medium">
+            {months.find((m) => m.value === selectedMonth)?.label}{" "}
+            {selectedYear}
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const Transactions = () => {
   const [activeTypeTab, setActiveTypeTab] = useState("all");
-  const [activeTimeTab, setActiveTimeTab] = useState("all");
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -97,21 +177,23 @@ const Transactions = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showTimeDropdown, setShowTimeDropdown] = useState(false);
+  const [availableMonths, setAvailableMonths] = useState([]);
+  const [monthlyData, setMonthlyData] = useState(null);
+  const [showNoWalletWarning, setShowNoWalletWarning] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
-  // Get auth token from localStorage
   const getAuthToken = () => {
     return localStorage.getItem("token");
   };
 
-  // Fetch data from API
   useEffect(() => {
-    fetchAllData();
-  }, []);
+    fetchMonthlyTransactions();
+    fetchAvailableMonths();
+    fetchWalletsAndCategories();
+  }, [selectedMonth, selectedYear, activeTypeTab]);
 
-  const fetchAllData = async () => {
+  const fetchMonthlyTransactions = async () => {
     try {
       setLoading(true);
       setError(null);
@@ -123,43 +205,92 @@ const Transactions = () => {
         return;
       }
 
-      // Fetch transactions
-      const transactionsResponse = await fetch(`${BASE_URL}/transactions`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      const transactionsResult = await transactionsResponse.json();
-
-      if (transactionsResponse.ok && transactionsResult.success) {
-        setTransactions(transactionsResult.data);
-      } else {
-        throw new Error(
-          transactionsResult.error || "Failed to fetch transactions"
-        );
+      let url = `${BASE_URL}/transactions/monthly?month=${selectedMonth}&year=${selectedYear}`;
+      if (activeTypeTab !== "all") {
+        url += `&type=${activeTypeTab}`;
       }
 
-      // Fetch wallets
-      const walletsResponse = await fetch(`${BASE_URL}/wallets`, {
+      const response = await fetch(url, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        setTransactions(result.data.transactions);
+        setMonthlyData({
+          totals: result.data.totals,
+          month: result.data.month,
+          year: result.data.year,
+          monthName: result.data.monthName,
+          count: result.data.count,
+        });
+      } else {
+        throw new Error(result.error || "Failed to fetch transactions");
+      }
+    } catch (error) {
+      setError(error.message || "Failed to load transactions");
+      toast.error(error.message || "Failed to load transactions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchAvailableMonths = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const response = await fetch(`${BASE_URL}/transactions/months`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      const result = await response.json();
+      if (response.ok && result.success) {
+        setAvailableMonths(result.data);
+      }
+    } catch (error) {
+      // Silently fail for this endpoint
+    }
+  };
+
+  const fetchWalletsAndCategories = async () => {
+    try {
+      const token = getAuthToken();
+      if (!token) return;
+
+      const walletsResponse = await fetch(
+        `${BASE_URL}/wallets/monthly?month=${selectedMonth}&year=${selectedYear}`,
+        {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       const walletsResult = await walletsResponse.json();
-
       if (walletsResponse.ok && walletsResult.success) {
-        setWallets(walletsResult.data);
+        setWallets(walletsResult.data.wallets || []);
+        if (walletsResult.data.wallets.length === 0) {
+          setShowNoWalletWarning(true);
+        } else {
+          setShowNoWalletWarning(false);
+        }
       } else {
-        throw new Error(walletsResult.error || "Failed to fetch wallets");
+        setWallets([]);
+        setShowNoWalletWarning(true);
       }
 
-      // Fetch categories
       const categoriesResponse = await fetch(`${BASE_URL}/categories`, {
         method: "GET",
         headers: {
@@ -169,32 +300,17 @@ const Transactions = () => {
       });
 
       const categoriesResult = await categoriesResponse.json();
-
       if (categoriesResponse.ok && categoriesResult.success) {
         setCategories(categoriesResult.data);
       } else {
-        throw new Error(categoriesResult.error || "Failed to fetch categories");
+        setCategories([]);
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
-      const errorMessage = error.message || "Failed to load data";
-      setError(errorMessage);
-      toast.error(errorMessage);
-    } finally {
-      setLoading(false);
+      setWallets([]);
+      setCategories([]);
+      setShowNoWalletWarning(true);
     }
   };
-
-  // Calculate totals
-  const incomeTotal = transactions
-    .filter((t) => t.type === "income")
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-  const expenseTotal = transactions
-    .filter((t) => t.type === "expense")
-    .reduce((sum, t) => sum + (t.amount || 0), 0);
-
-  const netBalance = incomeTotal - expenseTotal;
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat("en-BD", {
@@ -243,48 +359,23 @@ const Transactions = () => {
     }
   };
 
-  const getTimeFilterLabel = (value) => {
-    switch (value) {
-      case "all":
-        return "All Time";
-      case "today":
-        return "Today";
-      case "week":
-        return "This Week";
-      case "month":
-        return "This Month";
-      default:
-        return "All Time";
-    }
+  const getMonthName = (monthNumber) => {
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+    return months[monthNumber - 1];
   };
-
-  const filteredTransactions = transactions.filter((transaction) => {
-    // Filter by type
-    if (activeTypeTab !== "all" && transaction.type !== activeTypeTab) {
-      return false;
-    }
-
-    // Filter by time
-    if (activeTimeTab !== "all") {
-      const transactionDate = new Date(transaction.date);
-      const now = new Date();
-
-      switch (activeTimeTab) {
-        case "today":
-          return transactionDate.toDateString() === now.toDateString();
-        case "week":
-          const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          return transactionDate >= weekAgo;
-        case "month":
-          const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          return transactionDate >= monthAgo;
-        default:
-          return true;
-      }
-    }
-
-    return true;
-  });
 
   const handleCreateTransaction = async (transactionData) => {
     try {
@@ -292,6 +383,14 @@ const Transactions = () => {
 
       if (!token) {
         toast.error("No authentication token found. Please login again.");
+        return;
+      }
+
+      if (wallets.length === 0) {
+        toast.error(
+          "No wallets found for this month. Please create wallets first."
+        );
+        setIsCreateModalOpen(false);
         return;
       }
 
@@ -307,21 +406,19 @@ const Transactions = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        setTransactions((prev) => [result.data, ...prev]);
+        fetchMonthlyTransactions();
+        fetchWalletsAndCategories();
         setIsCreateModalOpen(false);
         toast.success("Transaction created successfully");
       } else {
         throw new Error(result.error || "Failed to create transaction");
       }
     } catch (error) {
-      console.error("Error creating transaction:", error);
-      const errorMessage = error.message || "Failed to create transaction";
-      toast.error(errorMessage);
+      toast.error(error.message || "Failed to create transaction");
     }
   };
 
   const handleEditTransaction = (transaction) => {
-    // Prepare edit data with proper IDs
     const editData = {
       ...transaction,
       from_wallet_id:
@@ -357,13 +454,8 @@ const Transactions = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        setTransactions((prev) =>
-          prev.map((transaction) =>
-            transaction._id === editingTransaction._id
-              ? result.data
-              : transaction
-          )
-        );
+        fetchMonthlyTransactions();
+        fetchWalletsAndCategories();
         setIsEditModalOpen(false);
         setEditingTransaction(null);
         toast.success("Transaction updated successfully");
@@ -371,9 +463,7 @@ const Transactions = () => {
         throw new Error(result.error || "Failed to update transaction");
       }
     } catch (error) {
-      console.error("Error updating transaction:", error);
-      const errorMessage = error.message || "Failed to update transaction";
-      toast.error(errorMessage);
+      toast.error(error.message || "Failed to update transaction");
     }
   };
 
@@ -407,11 +497,8 @@ const Transactions = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        setTransactions((prev) =>
-          prev.filter(
-            (transaction) => transaction._id !== deletingTransaction._id
-          )
-        );
+        fetchMonthlyTransactions();
+        fetchWalletsAndCategories();
         setIsDeleteModalOpen(false);
         setDeletingTransaction(null);
         toast.success("Transaction deleted successfully");
@@ -419,9 +506,7 @@ const Transactions = () => {
         throw new Error(result.error || "Failed to delete transaction");
       }
     } catch (error) {
-      console.error("Error deleting transaction:", error);
-      const errorMessage = error.message || "Failed to delete transaction";
-      toast.error(errorMessage);
+      toast.error(error.message || "Failed to delete transaction");
     }
   };
 
@@ -443,9 +528,22 @@ const Transactions = () => {
     setActiveTypeTab(type);
   };
 
-  const handleTimeFilterSelect = (timeFilter) => {
-    setActiveTimeTab(timeFilter);
-    setShowTimeDropdown(false);
+  const handleMonthChange = (month) => {
+    setSelectedMonth(month);
+  };
+
+  const handleYearChange = (year) => {
+    setSelectedYear(year);
+  };
+
+  const handleCreateTransactionClick = () => {
+    if (wallets.length === 0) {
+      toast.error(
+        "No wallets found for this month. Please create wallets first."
+      );
+      return;
+    }
+    setIsCreateModalOpen(true);
   };
 
   if (loading) {
@@ -466,7 +564,6 @@ const Transactions = () => {
 
   return (
     <div className="min-h-screen relative">
-      {/* Toast Container */}
       <ToastContainer
         position="top-right"
         autoClose={5000}
@@ -480,13 +577,11 @@ const Transactions = () => {
         theme="light"
       />
 
-      {/* BackgroundCircles with lower z-index so it doesn't overlay text */}
       <div className="fixed inset-0 z-0">
         <BackgroundCircles />
       </div>
 
       <div className="space-y-6 pb-20 lg:pb-6 relative z-10">
-        {/* Error Message */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
             <div className="flex justify-between items-center">
@@ -501,7 +596,31 @@ const Transactions = () => {
           </div>
         )}
 
-        {/* Header */}
+        {showNoWalletWarning && (
+          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+              <div className="flex-1">
+                <p className="font-medium">
+                  No wallets found for {getMonthName(selectedMonth)}{" "}
+                  {selectedYear}
+                </p>
+                <p className="text-sm mt-1">
+                  You need to create wallets for this month before adding
+                  transactions. Go to the{" "}
+                  <a
+                    href="/wallets"
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Wallets page
+                  </a>{" "}
+                  to create wallets first.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">Transactions</h1>
@@ -510,195 +629,206 @@ const Transactions = () => {
             </p>
           </div>
           <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+            onClick={handleCreateTransactionClick}
+            disabled={wallets.length === 0}
+            className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
+              wallets.length === 0
+                ? "bg-gray-400 text-white cursor-not-allowed"
+                : "bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+            }`}
           >
             <Plus className="w-4 h-4 mr-2" />
             Add Transaction
           </button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Income Card */}
-          <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-green-700">Income</p>
-                <TrendingUp className="w-5 h-5 text-green-600" />
-              </div>
-              <p className="text-2xl font-bold text-green-900">
-                {formatCurrency(incomeTotal)}
-              </p>
+        <MonthYearSelector
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
+          onMonthChange={handleMonthChange}
+          onYearChange={handleYearChange}
+          isLoading={loading}
+        />
+
+        {availableMonths.length > 0 && (
+          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <h3 className="text-sm font-semibold text-slate-900 mb-3">
+              Available Months
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {availableMonths
+                .map((monthData) => {
+                  let month, year, monthName, transactionCount;
+
+                  if (typeof monthData === "object" && monthData !== null) {
+                    month = monthData.month;
+                    year = monthData.year;
+                    monthName =
+                      monthData.monthName || getMonthName(monthData.month);
+                    transactionCount = monthData.transactionCount || 0;
+                  } else {
+                    return null;
+                  }
+
+                  if (!month || isNaN(month) || month < 1 || month > 12) {
+                    return null;
+                  }
+
+                  if (!year || isNaN(year) || year < 2000 || year > 2100) {
+                    return null;
+                  }
+
+                  return (
+                    <button
+                      key={`${year}-${month}`}
+                      onClick={() => {
+                        setSelectedMonth(month);
+                        setSelectedYear(year);
+                      }}
+                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        selectedMonth === month && selectedYear === year
+                          ? "bg-green-100 text-green-800 border-green-300"
+                          : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                      }`}
+                    >
+                      {monthName} {year}
+                      {transactionCount > 0 && (
+                        <span className="ml-2 text-xs bg-slate-200 px-1.5 py-0.5 rounded">
+                          {transactionCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })
+                .filter(Boolean)}
             </div>
-          </div>
-
-          {/* Expense Card */}
-          <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-red-700">Expense</p>
-                <TrendingDown className="w-5 h-5 text-red-600" />
-              </div>
-              <p className="text-2xl font-bold text-red-900">
-                {formatCurrency(expenseTotal)}
-              </p>
-            </div>
-          </div>
-
-          {/* Net Balance Card */}
-          <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-            <div className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-blue-700">Net Balance</p>
-                <ArrowLeftRight className="w-5 h-5 text-blue-600" />
-              </div>
-              <p
-                className={`text-2xl font-bold ${
-                  netBalance >= 0 ? "text-blue-900" : "text-red-900"
-                }`}
-              >
-                {formatCurrency(netBalance)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          {/* Type Tabs */}
-          <div className="flex-1">
-            <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4 bg-white">
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("all")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTypeTab === "all"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("income")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTypeTab === "income"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                Income
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("expense")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTypeTab === "expense"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                Expense
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("transfer")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTypeTab === "transfer"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                Transfer
-              </button>
-            </div>
-          </div>
-
-          {/* Time Filter Dropdown (positioned to the right) */}
-          <div className="relative">
-            <button
-              type="button"
-              onClick={() => setShowTimeDropdown(!showTimeDropdown)}
-              className="inline-flex items-center justify-between whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-white hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 w-48"
-            >
-              <span className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-slate-500" />
-                {getTimeFilterLabel(activeTimeTab)}
-              </span>
-              <ChevronDown className="h-4 w-4 opacity-50" />
-            </button>
-
-            {/* Dropdown Menu */}
-            {showTimeDropdown && (
-              <div className="absolute z-10 mt-1 w-48 right-0 rounded-md border bg-white shadow-lg">
-                <div className="py-1">
-                  <button
-                    type="button"
-                    onClick={() => handleTimeFilterSelect("all")}
-                    className={`flex w-full items-center px-4 py-2 text-sm ${
-                      activeTimeTab === "all"
-                        ? "bg-green-50 text-green-700"
-                        : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    All Time
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTimeFilterSelect("today")}
-                    className={`flex w-full items-center px-4 py-2 text-sm ${
-                      activeTimeTab === "today"
-                        ? "bg-green-50 text-green-700"
-                        : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    Today
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTimeFilterSelect("week")}
-                    className={`flex w-full items-center px-4 py-2 text-sm ${
-                      activeTimeTab === "week"
-                        ? "bg-green-50 text-green-700"
-                        : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    This Week
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTimeFilterSelect("month")}
-                    className={`flex w-full items-center px-4 py-2 text-sm ${
-                      activeTimeTab === "month"
-                        ? "bg-green-50 text-green-700"
-                        : "text-slate-700 hover:bg-slate-100"
-                    }`}
-                  >
-                    This Month
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Filter Info */}
-        {activeTypeTab !== "all" && (
-          <div className="text-sm text-slate-600 bg-white rounded-lg p-3 border-0 shadow-sm">
-            Showing{" "}
-            {activeTimeTab !== "all"
-              ? getTimeFilterLabel(activeTimeTab).toLowerCase()
-              : "all"}{" "}
-            <span className="font-medium capitalize">{activeTypeTab}</span>{" "}
-            transactions
           </div>
         )}
 
-        {/* Transactions List */}
+        {monthlyData && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-green-700">Income</p>
+                  <TrendingUp className="w-5 h-5 text-green-600" />
+                </div>
+                <p className="text-2xl font-bold text-green-900">
+                  {formatCurrency(monthlyData.totals?.income || 0)}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-red-700">Expense</p>
+                  <TrendingDown className="w-5 h-5 text-red-600" />
+                </div>
+                <p className="text-2xl font-bold text-red-900">
+                  {formatCurrency(monthlyData.totals?.expense || 0)}
+                </p>
+              </div>
+            </div>
+
+            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-sm font-medium text-blue-700">
+                    Net Balance
+                  </p>
+                  <ArrowLeftRight className="w-5 h-5 text-blue-600" />
+                </div>
+                <p
+                  className={`text-2xl font-bold ${
+                    (monthlyData.totals?.netBalance || 0) >= 0
+                      ? "text-blue-900"
+                      : "text-red-900"
+                  }`}
+                >
+                  {formatCurrency(monthlyData.totals?.netBalance || 0)}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {monthlyData && (
+          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {monthlyData.monthName} {monthlyData.year}
+                </h3>
+                <p className="text-sm text-slate-600">
+                  {transactions.length === 0
+                    ? "No transactions for this month"
+                    : `Showing ${transactions.length} transaction${
+                        transactions.length !== 1 ? "s" : ""
+                      } for this month`}
+                </p>
+              </div>
+              {wallets.length === 0 && (
+                <div className="text-sm text-yellow-600">
+                  <AlertCircle className="w-4 h-4 inline mr-1" />
+                  No wallets for this month
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+          <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4">
+            <button
+              type="button"
+              onClick={() => handleTypeTabClick("all")}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                activeTypeTab === "all"
+                  ? "bg-green-500 text-white shadow"
+                  : "hover:bg-slate-100"
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeTabClick("income")}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                activeTypeTab === "income"
+                  ? "bg-green-500 text-white shadow"
+                  : "hover:bg-slate-100"
+              }`}
+            >
+              Income
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeTabClick("expense")}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                activeTypeTab === "expense"
+                  ? "bg-green-500 text-white shadow"
+                  : "hover:bg-slate-100"
+              }`}
+            >
+              Expense
+            </button>
+            <button
+              type="button"
+              onClick={() => handleTypeTabClick("transfer")}
+              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                activeTypeTab === "transfer"
+                  ? "bg-green-500 text-white shadow"
+                  : "hover:bg-slate-100"
+              }`}
+            >
+              Transfer
+            </button>
+          </div>
+        </div>
+
         <div className="space-y-3">
-          {filteredTransactions.map((transaction) => {
+          {transactions.map((transaction) => {
             const category = transaction.category_id;
             const fromWallet = transaction.from_wallet_id;
             const toWallet = transaction.to_wallet_id;
@@ -707,6 +837,8 @@ const Transactions = () => {
             const isExpense = transaction.type === "expense";
             const isTransfer = transaction.type === "transfer";
 
+            const displayType = transaction.type;
+
             return (
               <div
                 key={transaction._id}
@@ -714,7 +846,6 @@ const Transactions = () => {
               >
                 <div className="p-4">
                   <div className="flex items-center gap-4">
-                    {/* Icon */}
                     <div
                       className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
                       style={{
@@ -732,40 +863,34 @@ const Transactions = () => {
                       )}
                     </div>
 
-                    {/* Transaction Info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <h3 className="font-semibold text-slate-900 truncate">
-                          {/* Show category name for income/expense, show transfer description for transfers */}
                           {isTransfer
                             ? `${fromWallet?.name || "Wallet"} → ${
                                 toWallet?.name || "Wallet"
                               }`
                             : category?.name || "Uncategorized"}
                         </h3>
-                        {/* Type badge */}
                         <div
                           className={`inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-xs ${
-                            isIncome
+                            displayType === "income"
                               ? "text-green-600 bg-green-50 border-green-200"
-                              : isExpense
+                              : displayType === "expense"
                               ? "text-red-600 bg-red-50 border-red-200"
                               : "text-blue-600 bg-blue-50 border-blue-200"
                           }`}
                         >
-                          {isIncome ? (
+                          {displayType === "income" ? (
                             <ArrowDownLeft className="w-4 h-4" />
-                          ) : isExpense ? (
+                          ) : displayType === "expense" ? (
                             <ArrowUpRight className="w-4 h-4" />
                           ) : (
                             <ArrowRightLeft className="w-4 h-4" />
                           )}
-                          <span className="ml-1 capitalize">
-                            {transaction.type}
-                          </span>
+                          <span className="ml-1 capitalize">{displayType}</span>
                         </div>
                       </div>
-                      {/* Show notes if they exist */}
                       {transaction.notes && (
                         <p className="text-xs text-slate-600 mt-1.5 line-clamp-1">
                           {transaction.notes}
@@ -800,19 +925,22 @@ const Transactions = () => {
                       </div>
                     </div>
 
-                    {/* Amount and Actions */}
                     <div className="flex items-center gap-3">
                       <div className="text-right">
                         <p
                           className={`text-lg font-bold ${
-                            isIncome
+                            displayType === "income"
                               ? "text-green-600"
-                              : isExpense
+                              : displayType === "expense"
                               ? "text-red-600"
                               : "text-blue-600"
                           }`}
                         >
-                          {isIncome ? "+" : isExpense ? "-" : ""}
+                          {displayType === "income"
+                            ? "+"
+                            : displayType === "expense"
+                            ? "-"
+                            : ""}
                           {formatCurrency(transaction.amount)}
                         </p>
                       </div>
@@ -838,33 +966,41 @@ const Transactions = () => {
           })}
         </div>
 
-        {/* Empty State */}
-        {filteredTransactions.length === 0 && (
+        {transactions.length === 0 && (
           <div className="text-center py-12">
             <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
               <p className="text-slate-500 text-lg">No transactions found</p>
               <p className="text-slate-400 mt-2">
                 {activeTypeTab === "all"
-                  ? "Get started by creating your first transaction"
-                  : `No ${activeTypeTab} transactions found for ${getTimeFilterLabel(
-                      activeTimeTab
-                    ).toLowerCase()}`}
+                  ? `No transactions for ${getMonthName(
+                      selectedMonth
+                    )} ${selectedYear}`
+                  : `No ${activeTypeTab} transactions found for ${getMonthName(
+                      selectedMonth
+                    )} ${selectedYear}`}
               </p>
-              {activeTypeTab === "all" && (
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Transaction
-                </button>
+              <button
+                onClick={handleCreateTransactionClick}
+                disabled={wallets.length === 0}
+                className={`mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
+                  wallets.length === 0
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+                }`}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Create Your First Transaction
+              </button>
+              {wallets.length === 0 && (
+                <p className="text-sm text-red-600 mt-2">
+                  You need to create wallets for this month first
+                </p>
               )}
             </div>
           </div>
         )}
       </div>
 
-      {/* Create Transaction Modal */}
       <TransactionForm
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
@@ -872,9 +1008,10 @@ const Transactions = () => {
         wallets={wallets}
         categories={categories}
         isEdit={false}
+        selectedMonth={selectedMonth}
+        selectedYear={selectedYear}
       />
 
-      {/* Edit Transaction Modal */}
       {isEditModalOpen && (
         <TransactionForm
           isOpen={isEditModalOpen}
@@ -884,10 +1021,11 @@ const Transactions = () => {
           wallets={wallets}
           categories={categories}
           isEdit={true}
+          selectedMonth={selectedMonth}
+          selectedYear={selectedYear}
         />
       )}
 
-      {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         onClose={closeDeleteModal}
