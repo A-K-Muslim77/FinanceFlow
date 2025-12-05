@@ -960,6 +960,16 @@ const Wallets = () => {
       toast.info("Wallets already exist for this month");
       return;
     }
+
+    // Add this check to ensure there's actually a previous month with data
+    const currentYear = new Date().getFullYear();
+    const hasPreviousMonth = selectedMonth > 1 || selectedYear > currentYear;
+
+    if (!hasPreviousMonth) {
+      toast.info("No previous month data available to copy");
+      return;
+    }
+
     setShowCopyModal(true);
   };
 
@@ -1026,15 +1036,6 @@ const Wallets = () => {
               <Plus className="w-4 h-4 mr-2" />
               Add Wallet
             </button>
-            {wallets.length === 0 && selectedMonth > 1 && (
-              <button
-                onClick={handleShowCopyModal}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-blue-600 text-white hover:bg-white hover:text-blue-600 border border-transparent hover:border-blue-600"
-              >
-                <Copy className="w-4 h-4 mr-2" />
-                Copy from Previous Month
-              </button>
-            )}
           </div>
         </div>
 
@@ -1155,10 +1156,11 @@ const Wallets = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Create New Wallet
                 </button>
-                {selectedMonth > 1 && (
+                {(selectedMonth > 1 ||
+                  selectedYear > new Date().getFullYear()) && (
                   <button
                     onClick={handleShowCopyModal}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-blue-600 text-white hover:bg-white hover:text-blue-600 border border-transparent hover:border-blue-600"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-gray-600 text-white hover:bg-white hover:text-gray-600 border border-transparent hover:border-gray-600"
                   >
                     <Copy className="w-4 h-4 mr-2" />
                     Copy from Previous Month
