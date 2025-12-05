@@ -89,76 +89,38 @@ const MonthYearSelector = ({
   isLoading,
 }) => {
   const months = [
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
+    { value: 1, label: "Jan" },
+    { value: 2, label: "Feb" },
+    { value: 3, label: "Mar" },
+    { value: 4, label: "Apr" },
     { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
+    { value: 6, label: "Jun" },
+    { value: 7, label: "Jul" },
+    { value: 8, label: "Aug" },
+    { value: 9, label: "Sep" },
+    { value: 10, label: "Oct" },
+    { value: 11, label: "Nov" },
+    { value: 12, label: "Dec" },
   ];
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 bg-white rounded-xl p-4 border-0 shadow-sm">
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Select Month
-        </label>
-        <div className="relative">
-          <select
-            value={selectedMonth}
-            onChange={(e) => onMonthChange(parseInt(e.target.value))}
-            disabled={isLoading}
-            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {months.map((month) => (
-              <option key={month.value} value={month.value}>
-                {month.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
-      </div>
-
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Select Year
-        </label>
-        <div className="relative">
-          <select
-            value={selectedYear}
-            onChange={(e) => onYearChange(parseInt(e.target.value))}
-            disabled={isLoading}
-            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
-      </div>
-
-      <div className="flex items-end gap-3">
-        <div className="flex items-center gap-2 text-slate-600">
-          <Calendar className="w-5 h-5" />
-          <span className="text-sm font-medium">
-            {months.find((m) => m.value === selectedMonth)?.label}{" "}
-            {selectedYear}
-          </span>
-        </div>
-      </div>
+    <div className="relative">
+      <select
+        value={selectedMonth}
+        onChange={(e) => onMonthChange(parseInt(e.target.value))}
+        disabled={isLoading}
+        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+      >
+        {months.map((month) => (
+          <option key={month.value} value={month.value}>
+            {month.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
     </div>
   );
 };
@@ -581,424 +543,467 @@ const Transactions = () => {
         <BackgroundCircles />
       </div>
 
-      <div className="space-y-6 pb-20 lg:pb-6 relative z-10">
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span>{error}</span>
+      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+        <div className="space-y-6 pb-20">
+          {/* Header with Controls in One Line */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">
+                Transactions
+              </h1>
+              <p className="text-sm text-slate-600 mt-0.5">
+                Financial transactions for {getMonthName(selectedMonth)}{" "}
+                {selectedYear}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Month Selector */}
+              <div className="w-32">
+                <MonthYearSelector
+                  selectedMonth={selectedMonth}
+                  selectedYear={selectedYear}
+                  onMonthChange={handleMonthChange}
+                  onYearChange={handleYearChange}
+                  isLoading={loading}
+                />
+              </div>
+
+              {/* Year Selector */}
+              <div className="w-28">
+                <div className="relative">
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    disabled={loading}
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - 2 + i;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Add Transaction Button */}
               <button
-                onClick={clearError}
-                className="text-red-500 hover:text-red-700 text-lg font-bold"
+                onClick={handleCreateTransactionClick}
+                disabled={wallets.length === 0}
+                className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
+                  wallets.length === 0
+                    ? "bg-gray-400 text-white cursor-not-allowed"
+                    : "bg-green-600 text-white hover:bg-green-700"
+                }`}
               >
-                ×
+                <Plus className="w-4 h-4 mr-2" />
+                Add Transaction
               </button>
             </div>
           </div>
-        )}
 
-        {showNoWalletWarning && (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-medium">
-                  No wallets found for {getMonthName(selectedMonth)}{" "}
-                  {selectedYear}
-                </p>
-                <p className="text-sm mt-1">
-                  You need to create wallets for this month before adding
-                  transactions. Go to the{" "}
-                  <a
-                    href="/wallets"
-                    className="text-blue-600 hover:underline font-medium"
-                  >
-                    Wallets page
-                  </a>{" "}
-                  to create wallets first.
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Transactions</h1>
-            <p className="text-slate-600 mt-1">
-              Track your income and expenses
-            </p>
-          </div>
-          <button
-            onClick={handleCreateTransactionClick}
-            disabled={wallets.length === 0}
-            className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
-              wallets.length === 0
-                ? "bg-gray-400 text-white cursor-not-allowed"
-                : "bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
-            }`}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Transaction
-          </button>
-        </div>
-
-        <MonthYearSelector
-          selectedMonth={selectedMonth}
-          selectedYear={selectedYear}
-          onMonthChange={handleMonthChange}
-          onYearChange={handleYearChange}
-          isLoading={loading}
-        />
-
-        {availableMonths.length > 0 && (
-          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-            <h3 className="text-sm font-semibold text-slate-900 mb-3">
-              Available Months
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {availableMonths
-                .map((monthData) => {
-                  let month, year, monthName, transactionCount;
-
-                  if (typeof monthData === "object" && monthData !== null) {
-                    month = monthData.month;
-                    year = monthData.year;
-                    monthName =
-                      monthData.monthName || getMonthName(monthData.month);
-                    transactionCount = monthData.transactionCount || 0;
-                  } else {
-                    return null;
-                  }
-
-                  if (!month || isNaN(month) || month < 1 || month > 12) {
-                    return null;
-                  }
-
-                  if (!year || isNaN(year) || year < 2000 || year > 2100) {
-                    return null;
-                  }
-
-                  return (
-                    <button
-                      key={`${year}-${month}`}
-                      onClick={() => {
-                        setSelectedMonth(month);
-                        setSelectedYear(year);
-                      }}
-                      className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
-                        selectedMonth === month && selectedYear === year
-                          ? "bg-green-100 text-green-800 border-green-300"
-                          : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
-                      }`}
-                    >
-                      {monthName} {year}
-                      {transactionCount > 0 && (
-                        <span className="ml-2 text-xs bg-slate-200 px-1.5 py-0.5 rounded">
-                          {transactionCount}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })
-                .filter(Boolean)}
-            </div>
-          </div>
-        )}
-
-        {monthlyData && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-green-700">Income</p>
-                  <TrendingUp className="w-5 h-5 text-green-600" />
-                </div>
-                <p className="text-2xl font-bold text-green-900">
-                  {formatCurrency(monthlyData.totals?.income || 0)}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-red-700">Expense</p>
-                  <TrendingDown className="w-5 h-5 text-red-600" />
-                </div>
-                <p className="text-2xl font-bold text-red-900">
-                  {formatCurrency(monthlyData.totals?.expense || 0)}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-6">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-blue-700">
-                    Net Balance
-                  </p>
-                  <ArrowLeftRight className="w-5 h-5 text-blue-600" />
-                </div>
-                <p
-                  className={`text-2xl font-bold ${
-                    (monthlyData.totals?.netBalance || 0) >= 0
-                      ? "text-blue-900"
-                      : "text-red-900"
-                  }`}
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">{error}</span>
+                <button
+                  onClick={clearError}
+                  className="text-red-500 hover:text-red-700 text-lg font-bold"
                 >
-                  {formatCurrency(monthlyData.totals?.netBalance || 0)}
-                </p>
+                  ×
+                </button>
               </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {monthlyData && (
-          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {monthlyData.monthName} {monthlyData.year}
-                </h3>
-                <p className="text-sm text-slate-600">
-                  {transactions.length === 0
-                    ? "No transactions for this month"
-                    : `Showing ${transactions.length} transaction${
-                        transactions.length !== 1 ? "s" : ""
-                      } for this month`}
-                </p>
-              </div>
-              {wallets.length === 0 && (
-                <div className="text-sm text-yellow-600">
-                  <AlertCircle className="w-4 h-4 inline mr-1" />
-                  No wallets for this month
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-
-        <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-          <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4">
-            <button
-              type="button"
-              onClick={() => handleTypeTabClick("all")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTypeTab === "all"
-                  ? "bg-green-500 text-white shadow"
-                  : "hover:bg-slate-100"
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeTabClick("income")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTypeTab === "income"
-                  ? "bg-green-500 text-white shadow"
-                  : "hover:bg-slate-100"
-              }`}
-            >
-              Income
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeTabClick("expense")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTypeTab === "expense"
-                  ? "bg-green-500 text-white shadow"
-                  : "hover:bg-slate-100"
-              }`}
-            >
-              Expense
-            </button>
-            <button
-              type="button"
-              onClick={() => handleTypeTabClick("transfer")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTypeTab === "transfer"
-                  ? "bg-green-500 text-white shadow"
-                  : "hover:bg-slate-100"
-              }`}
-            >
-              Transfer
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          {transactions.map((transaction) => {
-            const category = transaction.category_id;
-            const fromWallet = transaction.from_wallet_id;
-            const toWallet = transaction.to_wallet_id;
-
-            const isIncome = transaction.type === "income";
-            const isExpense = transaction.type === "expense";
-            const isTransfer = transaction.type === "transfer";
-
-            const displayType = transaction.type;
-
-            return (
-              <div
-                key={transaction._id}
-                className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-md transition-all duration-200 border-0"
-              >
-                <div className="p-4">
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                      style={{
-                        backgroundColor: isTransfer
-                          ? "rgb(241, 245, 249)"
-                          : category?.color
-                          ? `${category.color}20`
-                          : "rgba(132, 204, 22, 0.082)",
-                      }}
+          {showNoWalletWarning && (
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="font-medium">
+                    No wallets found for {getMonthName(selectedMonth)}{" "}
+                    {selectedYear}
+                  </p>
+                  <p className="text-sm mt-1">
+                    You need to create wallets for this month before adding
+                    transactions. Go to the{" "}
+                    <a
+                      href="/wallets"
+                      className="text-blue-600 hover:underline font-medium"
                     >
-                      {isTransfer ? (
-                        <ArrowRightLeft className="w-6 h-6 text-slate-500" />
-                      ) : (
-                        getIconComponent(category)
-                      )}
-                    </div>
+                      Wallets page
+                    </a>{" "}
+                    to create wallets first.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h3 className="font-semibold text-slate-900 truncate">
-                          {isTransfer
-                            ? `${fromWallet?.name || "Wallet"} → ${
-                                toWallet?.name || "Wallet"
-                              }`
-                            : category?.name || "Uncategorized"}
-                        </h3>
-                        <div
-                          className={`inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-xs ${
-                            displayType === "income"
-                              ? "text-green-600 bg-green-50 border-green-200"
-                              : displayType === "expense"
-                              ? "text-red-600 bg-red-50 border-red-200"
-                              : "text-blue-600 bg-blue-50 border-blue-200"
-                          }`}
-                        >
-                          {displayType === "income" ? (
-                            <ArrowDownLeft className="w-4 h-4" />
-                          ) : displayType === "expense" ? (
-                            <ArrowUpRight className="w-4 h-4" />
+          {/* Available Months */}
+          {availableMonths.length > 0 && (
+            <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">
+                Available Months
+              </h3>
+              <div className="flex flex-wrap gap-2">
+                {availableMonths
+                  .map((monthData) => {
+                    let month, year, monthName, transactionCount;
+
+                    if (typeof monthData === "object" && monthData !== null) {
+                      month = monthData.month;
+                      year = monthData.year;
+                      monthName =
+                        monthData.monthName || getMonthName(monthData.month);
+                      transactionCount = monthData.transactionCount || 0;
+                    } else {
+                      return null;
+                    }
+
+                    if (!month || isNaN(month) || month < 1 || month > 12) {
+                      return null;
+                    }
+
+                    if (!year || isNaN(year) || year < 2000 || year > 2100) {
+                      return null;
+                    }
+
+                    return (
+                      <button
+                        key={`${year}-${month}`}
+                        onClick={() => {
+                          setSelectedMonth(month);
+                          setSelectedYear(year);
+                        }}
+                        className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                          selectedMonth === month && selectedYear === year
+                            ? "bg-green-100 text-green-800 border-green-300"
+                            : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
+                        }`}
+                      >
+                        {monthName} {year}
+                        {transactionCount > 0 && (
+                          <span className="ml-2 text-xs bg-slate-200 px-1.5 py-0.5 rounded">
+                            {transactionCount}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })
+                  .filter(Boolean)}
+              </div>
+            </div>
+          )}
+
+          {/* Monthly Summary Cards */}
+          {monthlyData && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-green-700">Income</p>
+                    <TrendingUp className="w-5 h-5 text-green-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-green-900">
+                    {formatCurrency(monthlyData.totals?.income || 0)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-red-700">Expense</p>
+                    <TrendingDown className="w-5 h-5 text-red-600" />
+                  </div>
+                  <p className="text-2xl font-bold text-red-900">
+                    {formatCurrency(monthlyData.totals?.expense || 0)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-sm font-medium text-blue-700">
+                      Net Balance
+                    </p>
+                    <ArrowLeftRight className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <p
+                    className={`text-2xl font-bold ${
+                      (monthlyData.totals?.netBalance || 0) >= 0
+                        ? "text-blue-900"
+                        : "text-red-900"
+                    }`}
+                  >
+                    {formatCurrency(monthlyData.totals?.netBalance || 0)}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Month Info */}
+          {monthlyData && (
+            <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    {monthlyData.monthName} {monthlyData.year}
+                  </h3>
+                  <p className="text-sm text-slate-600">
+                    {transactions.length === 0
+                      ? "No transactions for this month"
+                      : `Showing ${transactions.length} transaction${
+                          transactions.length !== 1 ? "s" : ""
+                        } for this month`}
+                  </p>
+                </div>
+                {wallets.length === 0 && (
+                  <div className="text-sm text-yellow-600">
+                    <AlertCircle className="w-4 h-4 inline mr-1" />
+                    No wallets for this month
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Type Tabs */}
+          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4">
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("all")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTypeTab === "all"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("income")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTypeTab === "income"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
+                }`}
+              >
+                Income
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("expense")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTypeTab === "expense"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
+                }`}
+              >
+                Expense
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("transfer")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTypeTab === "transfer"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-100"
+                }`}
+              >
+                Transfer
+              </button>
+            </div>
+          </div>
+
+          {/* Transactions List */}
+          <div className="space-y-3">
+            {transactions.map((transaction) => {
+              const category = transaction.category_id;
+              const fromWallet = transaction.from_wallet_id;
+              const toWallet = transaction.to_wallet_id;
+
+              const isIncome = transaction.type === "income";
+              const isExpense = transaction.type === "expense";
+              const isTransfer = transaction.type === "transfer";
+
+              const displayType = transaction.type;
+
+              return (
+                <div
+                  key={transaction._id}
+                  className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-md transition-all duration-200 border-0"
+                >
+                  <div className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                        style={{
+                          backgroundColor: isTransfer
+                            ? "rgb(241, 245, 249)"
+                            : category?.color
+                            ? `${category.color}20`
+                            : "rgba(132, 204, 22, 0.082)",
+                        }}
+                      >
+                        {isTransfer ? (
+                          <ArrowRightLeft className="w-6 h-6 text-slate-500" />
+                        ) : (
+                          getIconComponent(category)
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-slate-900 truncate">
+                            {isTransfer
+                              ? `${fromWallet?.name || "Wallet"} → ${
+                                  toWallet?.name || "Wallet"
+                                }`
+                              : category?.name || "Uncategorized"}
+                          </h3>
+                          <div
+                            className={`inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 text-xs ${
+                              displayType === "income"
+                                ? "text-green-600 bg-green-50 border-green-200"
+                                : displayType === "expense"
+                                ? "text-red-600 bg-red-50 border-red-200"
+                                : "text-blue-600 bg-blue-50 border-blue-200"
+                            }`}
+                          >
+                            {displayType === "income" ? (
+                              <ArrowDownLeft className="w-4 h-4" />
+                            ) : displayType === "expense" ? (
+                              <ArrowUpRight className="w-4 h-4" />
+                            ) : (
+                              <ArrowRightLeft className="w-4 h-4" />
+                            )}
+                            <span className="ml-1 capitalize">
+                              {displayType}
+                            </span>
+                          </div>
+                        </div>
+                        {transaction.notes && (
+                          <p className="text-xs text-slate-600 mt-1.5 line-clamp-1">
+                            {transaction.notes}
+                          </p>
+                        )}
+
+                        <div className="flex items-center gap-3 text-xs text-slate-500 py-2">
+                          <span>{formatDate(transaction.date)}</span>
+                          {isTransfer ? (
+                            <>
+                              <span className="flex items-center gap-1">
+                                <WalletIcon className="w-3 h-3" />
+                                From: {fromWallet?.name || "Wallet"}
+                              </span>
+                              <span className="flex items-center gap-1">
+                                <WalletIcon className="w-3 h-3" />
+                                To: {toWallet?.name || "Wallet"}
+                              </span>
+                            </>
                           ) : (
-                            <ArrowRightLeft className="w-4 h-4" />
+                            <span className="flex items-center gap-1">
+                              <WalletIcon className="w-3 h-3" />
+                              {fromWallet?.name || "Wallet"}
+                            </span>
                           )}
-                          <span className="ml-1 capitalize">{displayType}</span>
+                          {transaction.attachment && (
+                            <span className="flex items-center gap-1 text-blue-600">
+                              <Paperclip className="w-3 h-3" />
+                              Attached
+                            </span>
+                          )}
                         </div>
                       </div>
-                      {transaction.notes && (
-                        <p className="text-xs text-slate-600 mt-1.5 line-clamp-1">
-                          {transaction.notes}
-                        </p>
-                      )}
 
-                      <div className="flex items-center gap-3 text-xs text-slate-500 py-2">
-                        <span>{formatDate(transaction.date)}</span>
-                        {isTransfer ? (
-                          <>
-                            <span className="flex items-center gap-1">
-                              <WalletIcon className="w-3 h-3" />
-                              From: {fromWallet?.name || "Wallet"}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <WalletIcon className="w-3 h-3" />
-                              To: {toWallet?.name || "Wallet"}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="flex items-center gap-1">
-                            <WalletIcon className="w-3 h-3" />
-                            {fromWallet?.name || "Wallet"}
-                          </span>
-                        )}
-                        {transaction.attachment && (
-                          <span className="flex items-center gap-1 text-blue-600">
-                            <Paperclip className="w-3 h-3" />
-                            Attached
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p
-                          className={`text-lg font-bold ${
-                            displayType === "income"
-                              ? "text-green-600"
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p
+                            className={`text-lg font-bold ${
+                              displayType === "income"
+                                ? "text-green-600"
+                                : displayType === "expense"
+                                ? "text-red-600"
+                                : "text-blue-600"
+                            }`}
+                          >
+                            {displayType === "income"
+                              ? "+"
                               : displayType === "expense"
-                              ? "text-red-600"
-                              : "text-blue-600"
-                          }`}
-                        >
-                          {displayType === "income"
-                            ? "+"
-                            : displayType === "expense"
-                            ? "-"
-                            : ""}
-                          {formatCurrency(transaction.amount)}
-                        </p>
-                      </div>
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => handleEditTransaction(transaction)}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                        >
-                          <SquarePen className="w-4 h-4 text-slate-600" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(transaction)}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
+                              ? "-"
+                              : ""}
+                            {formatCurrency(transaction.amount)}
+                          </p>
+                        </div>
+                        <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <button
+                            onClick={() => handleEditTransaction(transaction)}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          >
+                            <SquarePen className="w-4 h-4 text-slate-600" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(transaction)}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          >
+                            <Trash2 className="w-4 h-4 text-red-500" />
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {transactions.length === 0 && (
-          <div className="text-center py-12">
-            <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
-              <p className="text-slate-500 text-lg">No transactions found</p>
-              <p className="text-slate-400 mt-2">
-                {activeTypeTab === "all"
-                  ? `No transactions for ${getMonthName(
-                      selectedMonth
-                    )} ${selectedYear}`
-                  : `No ${activeTypeTab} transactions found for ${getMonthName(
-                      selectedMonth
-                    )} ${selectedYear}`}
-              </p>
-              <button
-                onClick={handleCreateTransactionClick}
-                disabled={wallets.length === 0}
-                className={`mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
-                  wallets.length === 0
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
-                }`}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Create Your First Transaction
-              </button>
-              {wallets.length === 0 && (
-                <p className="text-sm text-red-600 mt-2">
-                  You need to create wallets for this month first
-                </p>
-              )}
-            </div>
+              );
+            })}
           </div>
-        )}
+
+          {transactions.length === 0 && (
+            <div className="text-center py-12">
+              <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
+                <p className="text-slate-500 text-lg">No transactions found</p>
+                <p className="text-slate-400 mt-2">
+                  {activeTypeTab === "all"
+                    ? `No transactions for ${getMonthName(
+                        selectedMonth
+                      )} ${selectedYear}`
+                    : `No ${activeTypeTab} transactions found for ${getMonthName(
+                        selectedMonth
+                      )} ${selectedYear}`}
+                </p>
+                <button
+                  onClick={handleCreateTransactionClick}
+                  disabled={wallets.length === 0}
+                  className={`mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
+                    wallets.length === 0
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  }`}
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Your First Transaction
+                </button>
+                {wallets.length === 0 && (
+                  <p className="text-sm text-red-600 mt-2">
+                    You need to create wallets for this month first
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       <TransactionForm

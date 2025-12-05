@@ -188,7 +188,7 @@ const Sidebar = ({
               <p className="text-xs text-gray-600">Financial Management</p>
             </motion.div>
           ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-md">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
               F
             </div>
           )}
@@ -285,8 +285,8 @@ const Sidebar = ({
             className="flex items-center"
             whileHover={sidebarOpen ? { scale: 1.005 } : {}}
           >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-md">
-              {user?.name?.charAt(0)?.toUpperCase() || "U"}
+            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
+              {user?.name?.charAt(0)?.toUpperCase() || "F"}
             </div>
 
             {sidebarOpen && (

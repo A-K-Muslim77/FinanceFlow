@@ -92,8 +92,8 @@ const AdminDashboard = () => {
 
           <h1 className="text-lg font-bold text-gray-800">FinanceFlow</h1>
 
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-600 text-white flex items-center justify-center font-bold shadow-md">
-            U
+          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
+            F
           </div>
         </div>
       )}

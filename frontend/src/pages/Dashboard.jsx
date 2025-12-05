@@ -53,6 +53,8 @@ import {
   Car,
   Home,
   Gift,
+  Sun,
+  Moon,
 } from "lucide-react";
 
 const MonthYearSelector = ({
@@ -63,106 +65,73 @@ const MonthYearSelector = ({
   isLoading,
 }) => {
   const months = [
-    { value: 1, label: "January" },
-    { value: 2, label: "February" },
-    { value: 3, label: "March" },
-    { value: 4, label: "April" },
+    { value: 1, label: "Jan" },
+    { value: 2, label: "Feb" },
+    { value: 3, label: "Mar" },
+    { value: 4, label: "Apr" },
     { value: 5, label: "May" },
-    { value: 6, label: "June" },
-    { value: 7, label: "July" },
-    { value: 8, label: "August" },
-    { value: 9, label: "September" },
-    { value: 10, label: "October" },
-    { value: 11, label: "November" },
-    { value: 12, label: "December" },
+    { value: 6, label: "Jun" },
+    { value: 7, label: "Jul" },
+    { value: 8, label: "Aug" },
+    { value: 9, label: "Sep" },
+    { value: 10, label: "Oct" },
+    { value: 11, label: "Nov" },
+    { value: 12, label: "Dec" },
   ];
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 10 }, (_, i) => currentYear - 5 + i);
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   return (
-    <div className="flex flex-col sm:flex-row gap-4 bg-white rounded-xl p-4 border-0 shadow-sm">
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Select Month
-        </label>
-        <div className="relative">
-          <select
-            value={selectedMonth}
-            onChange={(e) => onMonthChange(parseInt(e.target.value))}
-            disabled={isLoading}
-            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {months.map((month) => (
-              <option key={month.value} value={month.value}>
-                {month.label}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
-      </div>
-
-      <div className="flex-1">
-        <label className="block text-sm font-medium text-slate-700 mb-1">
-          Select Year
-        </label>
-        <div className="relative">
-          <select
-            value={selectedYear}
-            onChange={(e) => onYearChange(parseInt(e.target.value))}
-            disabled={isLoading}
-            className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2.5 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {years.map((year) => (
-              <option key={year} value={year}>
-                {year}
-              </option>
-            ))}
-          </select>
-          <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-        </div>
-      </div>
-
-      <div className="flex items-end gap-3">
-        <div className="flex items-center gap-2 text-slate-600">
-          <Calendar className="w-5 h-5" />
-          <span className="text-sm font-medium">
-            {months.find((m) => m.value === selectedMonth)?.label}{" "}
-            {selectedYear}
-          </span>
-        </div>
-      </div>
+    <div className="relative">
+      <select
+        value={selectedMonth}
+        onChange={(e) => onMonthChange(parseInt(e.target.value))}
+        disabled={isLoading}
+        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+      >
+        {months.map((month) => (
+          <option key={month.value} value={month.value}>
+            {month.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
     </div>
   );
 };
 
 const StatCard = ({ title, value, icon: Icon, color, trend, isLoading }) => (
-  <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-    <div className="flex items-center justify-between mb-4">
-      <div className={`p-2 rounded-lg ${color} bg-opacity-10`}>
-        <Icon className={`w-6 h-6 ${color.replace("text-", "")}`} />
+  <div className="bg-white rounded-xl p-5 border-0 shadow-sm hover:shadow-md transition-shadow">
+    <div className="flex items-start justify-between">
+      <div className="flex-1">
+        <p className="text-sm text-slate-500 mb-2">{title}</p>
+        {isLoading ? (
+          <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+        ) : (
+          <p className="text-2xl font-bold text-slate-900">{value}</p>
+        )}
       </div>
-      {trend && (
+      <div className={`p-2.5 rounded-lg ${color} bg-opacity-10`}>
+        <Icon className={`w-5 h-5 ${color.replace("text-", "")}`} />
+      </div>
+    </div>
+    {trend && (
+      <div className="mt-3 flex items-center gap-1 text-sm">
         <div
-          className={`flex items-center gap-1 text-sm ${
+          className={`flex items-center gap-1 ${
             trend.value >= 0 ? "text-green-600" : "text-red-600"
           }`}
         >
           {trend.value >= 0 ? (
-            <TrendingUpIcon className="w-4 h-4" />
+            <TrendingUpIcon className="w-3.5 h-3.5" />
           ) : (
-            <TrendingDownIcon className="w-4 h-4" />
+            <TrendingDownIcon className="w-3.5 h-3.5" />
           )}
           <span>{Math.abs(trend.value)}%</span>
         </div>
-      )}
-    </div>
-    <p className="text-sm text-slate-500 mb-1">{title}</p>
-    {isLoading ? (
-      <div className="h-8 bg-slate-200 rounded animate-pulse"></div>
-    ) : (
-      <p className="text-2xl font-bold text-slate-900">{value}</p>
+        <span className="text-slate-400 text-xs ml-2">vs last month</span>
+      </div>
     )}
   </div>
 );
@@ -170,8 +139,8 @@ const StatCard = ({ title, value, icon: Icon, color, trend, isLoading }) => (
 const CustomTooltip = ({ active, payload, label, currency = "৳" }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-4 rounded-lg shadow-lg border border-slate-200">
-        <p className="font-semibold text-slate-900 mb-2">{label}</p>
+      <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-200">
+        <p className="font-semibold text-slate-900 mb-2 text-sm">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} className="text-sm" style={{ color: entry.color }}>
             {entry.name}: {currency}
@@ -222,18 +191,18 @@ const Dashboard = () => {
 
   const getMonthName = (monthNumber) => {
     const months = [
-      "January",
-      "February",
-      "March",
-      "April",
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
       "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return months[monthNumber - 1];
   };
@@ -550,7 +519,7 @@ const Dashboard = () => {
   };
 
   const getIconComponent = (iconName) => {
-    const iconProps = { className: "w-6 h-6" };
+    const iconProps = { className: "w-5 h-5" };
     switch (iconName) {
       case "smartphone":
         return <Smartphone {...iconProps} />;
@@ -585,31 +554,11 @@ const Dashboard = () => {
     }
   };
 
-  const getCategoryIcon = (iconName) => {
-    switch (iconName) {
-      case "shopping-bag":
-        return <ShoppingBag className="w-4 h-4" />;
-      case "coffee":
-        return <Coffee className="w-4 h-4" />;
-      case "car":
-        return <Car className="w-4 h-4" />;
-      case "home":
-        return <Home className="w-4 h-4" />;
-      case "gift":
-        return <Gift className="w-4 h-4" />;
-      case "users":
-        return <Users className="w-4 h-4" />;
-      default:
-        return <ShoppingBag className="w-4 h-4" />;
-    }
-  };
-
   const handleRefresh = () => {
     fetchDashboardData();
   };
 
   const handleExportData = () => {
-    // Implement data export functionality
     toast.info("Export feature coming soon!");
   };
 
@@ -659,40 +608,72 @@ const Dashboard = () => {
 
       <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
         <div className="space-y-6 pb-20">
-          {/* Header */}
+          {/* Header with Controls in One Line */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">Dashboard</h1>
-              <p className="text-slate-600 mt-1">
+              <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+              <p className="text-sm text-slate-600 mt-0.5">
                 Financial overview for {getMonthName(selectedMonth)}{" "}
                 {selectedYear}
               </p>
             </div>
+
             <div className="flex items-center gap-3">
+              {/* Month Selector */}
+              <div className="w-32">
+                <MonthYearSelector
+                  selectedMonth={selectedMonth}
+                  selectedYear={selectedYear}
+                  onMonthChange={setSelectedMonth}
+                  onYearChange={setSelectedYear}
+                  isLoading={loading}
+                />
+              </div>
+
+              {/* Year Selector */}
+              <div className="w-28">
+                <div className="relative">
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                    disabled={loading}
+                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                  >
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - 2 + i;
+                      return (
+                        <option key={year} value={year}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Refresh Button */}
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+                title="Refresh data"
               >
                 <RefreshCw
                   className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
                 />
-                Refresh
               </button>
+
+              {/* Hide/Show Balance Button */}
               <button
                 onClick={toggleBalanceVisibility}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 bg-green-600 text-white hover:bg-green-700 shadow-sm"
+                title={showBalance ? "Hide balance" : "Show balance"}
               >
                 {showBalance ? (
-                  <>
-                    <EyeOff className="w-4 h-4 mr-2" />
-                    Hide Balance
-                  </>
+                  <EyeOff className="w-4 h-4" />
                 ) : (
-                  <>
-                    <Eye className="w-4 h-4 mr-2" />
-                    Show Balance
-                  </>
+                  <Eye className="w-4 h-4" />
                 )}
               </button>
             </div>
@@ -702,7 +683,7 @@ const Dashboard = () => {
           {error && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
               <div className="flex justify-between items-center">
-                <span>{error}</span>
+                <span className="text-sm">{error}</span>
                 <button
                   onClick={clearError}
                   className="text-red-500 hover:text-red-700 text-lg font-bold"
@@ -713,54 +694,285 @@ const Dashboard = () => {
             </div>
           )}
 
-          {/* Month Selector */}
-          <MonthYearSelector
-            selectedMonth={selectedMonth}
-            selectedYear={selectedYear}
-            onMonthChange={setSelectedMonth}
-            onYearChange={setSelectedYear}
-            isLoading={loading}
-          />
+          {/* Main Financial Summary Card */}
+          <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+            <div className="mb-4">
+              <h3 className="text-lg font-semibold text-slate-900">
+                Financial Summary
+              </h3>
+              <p className="text-sm text-slate-500">
+                Overview of your monthly finances
+              </p>
+            </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Total Income */}
+              <div className="border border-slate-200 rounded-lg p-4 hover:border-green-300 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-500 mb-2">Total Income</p>
+                    {loading ? (
+                      <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                    ) : (
+                      <p className="text-2xl font-bold text-green-600">
+                        {formatCurrency(dashboardData.monthlySummary.income)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2.5 rounded-lg text-green-600 bg-green-50">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center gap-1 text-sm text-green-600">
+                    <TrendingUpIcon className="w-3.5 h-3.5" />
+                    <span>+12.5%</span>
+                  </div>
+                  <span className="text-xs text-slate-400">vs last month</span>
+                </div>
+              </div>
+
+              {/* Total Expense */}
+              <div className="border border-slate-200 rounded-lg p-4 hover:border-red-300 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-500 mb-2">Total Expense</p>
+                    {loading ? (
+                      <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                    ) : (
+                      <p className="text-2xl font-bold text-red-600">
+                        {formatCurrency(dashboardData.monthlySummary.expense)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2.5 rounded-lg text-red-600 bg-red-50">
+                    <TrendingDown className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center gap-1 text-sm text-red-600">
+                    <TrendingDownIcon className="w-3.5 h-3.5" />
+                    <span>-8.3%</span>
+                  </div>
+                  <span className="text-xs text-slate-400">vs last month</span>
+                </div>
+              </div>
+
+              {/* Net Balance */}
+              <div className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-500 mb-2">Net Balance</p>
+                    {loading ? (
+                      <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                    ) : (
+                      <p
+                        className={`text-2xl font-bold ${
+                          dashboardData.monthlySummary.balance >= 0
+                            ? "text-blue-600"
+                            : "text-red-600"
+                        }`}
+                      >
+                        {formatCurrency(dashboardData.monthlySummary.balance)}
+                      </p>
+                    )}
+                  </div>
+                  <div className="p-2.5 rounded-lg text-blue-600 bg-blue-50">
+                    <ArrowLeftRight className="w-5 h-5" />
+                  </div>
+                </div>
+                <div className="mt-3">
+                  <div
+                    className={`flex items-center gap-1 text-sm ${
+                      dashboardData.monthlySummary.balance >= 0
+                        ? "text-blue-600"
+                        : "text-red-600"
+                    }`}
+                  >
+                    {dashboardData.monthlySummary.balance >= 0 ? (
+                      <>
+                        <TrendingUpIcon className="w-3.5 h-3.5" />
+                        <span>
+                          +
+                          {Math.abs(
+                            (dashboardData.monthlySummary.balance /
+                              dashboardData.monthlySummary.income) *
+                              100
+                          ).toFixed(1)}
+                          %
+                        </span>
+                      </>
+                    ) : (
+                      <>
+                        <TrendingDownIcon className="w-3.5 h-3.5" />
+                        <span>
+                          -
+                          {Math.abs(
+                            (dashboardData.monthlySummary.balance /
+                              dashboardData.monthlySummary.income) *
+                              100
+                          ).toFixed(1)}
+                          %
+                        </span>
+                      </>
+                    )}
+                  </div>
+                  <span className="text-xs text-slate-400">income ratio</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Other Stats Grid - 3 Cards per row */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <StatCard
-              title="Total Income"
-              value={formatCurrency(dashboardData.monthlySummary.income)}
-              icon={TrendingUp}
-              color="text-green-600"
-              // trend={{ value: 12.5 }}
+              title="Today's Income"
+              value={formatCurrency(dashboardData.dailyIncome.today)}
+              icon={Sun}
+              color="text-amber-600"
               isLoading={loading}
             />
             <StatCard
-              title="Total Expense"
-              value={formatCurrency(dashboardData.monthlySummary.expense)}
-              icon={TrendingDown}
-              color="text-red-600"
-              // trend={{ value: -8.3 }}
-              isLoading={loading}
-            />
-            <StatCard
-              title="Net Balance"
-              value={formatCurrency(dashboardData.monthlySummary.balance)}
-              icon={ArrowLeftRight}
-              color="text-blue-600"
+              title="Yesterday's Income"
+              value={formatCurrency(dashboardData.dailyIncome.yesterday)}
+              icon={Moon}
+              color="text-purple-600"
               isLoading={loading}
             />
             <StatCard
               title="Transactions"
               value={dashboardData.monthlySummary.transactions}
               icon={WalletIcon}
-              color="text-purple-600"
+              color="text-indigo-600"
               isLoading={loading}
             />
           </div>
 
-          {/* Charts Grid */}
+          {/* My Wallets Section - 3 cards per row */}
+          {dashboardData.wallets.length > 0 && (
+            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-900">
+                    My Wallets
+                  </h3>
+                  <p className="text-sm text-slate-500">Balance overview</p>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {dashboardData.wallets.map((wallet) => (
+                  <div
+                    key={wallet._id}
+                    className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors hover:shadow-sm"
+                  >
+                    <div className="flex items-center gap-3 mb-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: `${wallet.color}20` }}
+                      >
+                        {getIconComponent(wallet.icon)}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-medium text-slate-900 text-sm">
+                          {wallet.name}
+                        </h4>
+                        <p className="text-xs text-slate-500 capitalize">
+                          {wallet.type}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs text-slate-500">
+                          Current Balance
+                        </span>
+                        <span
+                          className={`text-sm font-bold ${
+                            wallet.monthlyBalance >= 0
+                              ? "text-green-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(wallet.monthlyBalance)}
+                        </span>
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5">
+                        <div
+                          className="h-1.5 rounded-full transition-all duration-300"
+                          style={{
+                            width: `${Math.min(
+                              (wallet.monthlyBalance /
+                                (wallet.monthlyBalance + 1000)) *
+                                100,
+                              100
+                            )}%`,
+                            backgroundColor: wallet.color || "#3b82f6",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Expenses Section */}
+          <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+            <div className="flex items-center justify-between mb-5">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  Recent Expenses
+                </h3>
+                <p className="text-sm text-slate-500">
+                  Top expenses this month
+                </p>
+              </div>
+              <Filter className="w-5 h-5 text-slate-400" />
+            </div>
+            <div className="space-y-3">
+              {dashboardData.topExpenses.length > 0 ? (
+                dashboardData.topExpenses.map((expense, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
+                        <TrendingDown className="w-4 h-4 text-red-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-medium text-slate-900 text-sm">
+                          {expense.name}
+                        </h4>
+                        <p className="text-xs text-slate-500">{expense.date}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-base font-bold text-red-600">
+                        {formatCurrency(expense.amount)}
+                      </span>
+                      {expense.notes && (
+                        <p className="text-xs text-slate-400 mt-1 truncate max-w-[150px]">
+                          {expense.notes}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-6 text-slate-400">
+                  <p>No expense data available</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Charts Grid - Below Expenses */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Monthly Trend Chart */}
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">
                     6-Month Trend
@@ -769,18 +981,18 @@ const Dashboard = () => {
                     Income vs Expense trend
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
                     <span className="text-xs text-slate-600">Income</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
                     <span className="text-xs text-slate-600">Expense</span>
                   </div>
                 </div>
               </div>
-              <div className="h-64">
+              <div className="h-60">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={dashboardData.monthlyTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -788,12 +1000,12 @@ const Dashboard = () => {
                       dataKey="month"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
                       tickFormatter={(value) => formatCompactCurrency(value)}
                     />
                     <Tooltip
@@ -824,8 +1036,8 @@ const Dashboard = () => {
             </div>
 
             {/* Weekly Performance */}
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">
                     Weekly Performance
@@ -835,7 +1047,7 @@ const Dashboard = () => {
                   </p>
                 </div>
               </div>
-              <div className="h-64">
+              <div className="h-60">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dashboardData.weeklyData}>
                     <CartesianGrid
@@ -847,25 +1059,25 @@ const Dashboard = () => {
                       dataKey="day"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tick={{ fill: "#64748b", fontSize: 11 }}
                       tickFormatter={(value) => formatCompactCurrency(value)}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Bar
                       dataKey="income"
                       fill="#10b981"
-                      radius={[4, 4, 0, 0]}
+                      radius={[3, 3, 0, 0]}
                       name="Income"
                     />
                     <Bar
                       dataKey="expense"
                       fill="#ef4444"
-                      radius={[4, 4, 0, 0]}
+                      radius={[3, 3, 0, 0]}
                       name="Expense"
                     />
                   </BarChart>
@@ -874,8 +1086,8 @@ const Dashboard = () => {
             </div>
 
             {/* Expenses by Category */}
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">
                     Expenses by Category
@@ -886,7 +1098,7 @@ const Dashboard = () => {
                 </div>
                 <PieChartIcon className="w-5 h-5 text-slate-400" />
               </div>
-              <div className="h-64">
+              <div className="h-60">
                 {dashboardData.categoryExpenses.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -898,7 +1110,7 @@ const Dashboard = () => {
                         label={({ name, percent }) =>
                           `${name}: ${(percent * 100).toFixed(0)}%`
                         }
-                        outerRadius={80}
+                        outerRadius={70}
                         fill="#8884d8"
                         dataKey="value"
                         nameKey="name"
@@ -924,36 +1136,11 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
-              {dashboardData.categoryExpenses.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {dashboardData.categoryExpenses
-                    .slice(0, 3)
-                    .map((category, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between"
-                      >
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-3 h-3 rounded"
-                            style={{ backgroundColor: category.color }}
-                          ></div>
-                          <span className="text-sm text-slate-700">
-                            {category.name}
-                          </span>
-                        </div>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {formatCurrency(category.value)}
-                        </span>
-                      </div>
-                    ))}
-                </div>
-              )}
             </div>
 
             {/* Wallet Distribution */}
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
+            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-5">
                 <div>
                   <h3 className="text-lg font-semibold text-slate-900">
                     Wallet Distribution
@@ -968,12 +1155,23 @@ const Dashboard = () => {
                   dashboardData.walletDistribution.map((wallet, index) => (
                     <div key={index} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium text-slate-700">
-                          {wallet.name}
-                        </span>
-                        <span className="text-sm font-semibold text-slate-900">
-                          {formatCurrency(wallet.value)}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded"
+                            style={{ backgroundColor: wallet.color }}
+                          ></div>
+                          <span className="text-sm font-medium text-slate-700">
+                            {wallet.name}
+                          </span>
+                        </div>
+                        <div className="text-right">
+                          <span className="text-sm font-semibold text-slate-900">
+                            {formatCurrency(wallet.value)}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-2">
+                            ({wallet.percentage.toFixed(1)}%)
+                          </span>
+                        </div>
                       </div>
                       <div className="w-full bg-slate-200 rounded-full h-2">
                         <div
@@ -994,192 +1192,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-
-          {/* Bottom Section */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Top Expenses */}
-            <div className="lg:col-span-2 bg-white rounded-xl p-6 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    Top Expenses
-                  </h3>
-                  <p className="text-sm text-slate-500">
-                    Largest expenses this month
-                  </p>
-                </div>
-                <Filter className="w-5 h-5 text-slate-400" />
-              </div>
-              <div className="space-y-4">
-                {dashboardData.topExpenses.length > 0 ? (
-                  dashboardData.topExpenses.map((expense, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-red-50 flex items-center justify-center">
-                          <TrendingDown className="w-5 h-5 text-red-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-slate-900">
-                            {expense.name}
-                          </h4>
-                          <p className="text-xs text-slate-500">
-                            {expense.date}
-                          </p>
-                          {expense.notes && (
-                            <p className="text-xs text-slate-400 mt-1">
-                              {expense.notes}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <span className="text-lg font-bold text-red-600">
-                        {formatCurrency(expense.amount)}
-                      </span>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-8 text-slate-400">
-                    <p>No expense data available</p>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <h3 className="text-lg font-semibold text-slate-900 mb-6">
-                Quick Stats
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                      <TrendingUp className="w-4 h-4 text-green-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Daily Avg. Income
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(dashboardData.dailyIncome.today)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-red-100 flex items-center justify-center">
-                      <TrendingDown className="w-4 h-4 text-red-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Daily Avg. Expense
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {formatCurrency(dashboardData.monthlySummary.expense / 30)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <ArrowLeftRight className="w-4 h-4 text-blue-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Savings Rate
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {dashboardData.monthlySummary.income > 0
-                      ? `${(
-                          (dashboardData.monthlySummary.balance /
-                            dashboardData.monthlySummary.income) *
-                          100
-                        ).toFixed(1)}%`
-                      : "0%"}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Calendar className="w-4 h-4 text-purple-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      Days in Month
-                    </span>
-                  </div>
-                  <span className="text-sm font-semibold text-slate-900">
-                    {new Date(selectedYear, selectedMonth, 0).getDate()}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Wallets Summary */}
-          {dashboardData.wallets.length > 0 && (
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-6">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
-                    My Wallets
-                  </h3>
-                  <p className="text-sm text-slate-500">Balance overview</p>
-                </div>
-                <a
-                  href="/wallets"
-                  className="text-sm text-green-600 hover:text-green-800 font-medium"
-                >
-                  View All →
-                </a>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {dashboardData.wallets.slice(0, 4).map((wallet) => (
-                  <div
-                    key={wallet._id}
-                    className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: `${wallet.color}20` }}
-                      >
-                        {getIconComponent(wallet.icon)}
-                      </div>
-                      <div>
-                        <h4 className="font-medium text-slate-900">
-                          {wallet.name}
-                        </h4>
-                        <p className="text-xs text-slate-500 capitalize">
-                          {wallet.type}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Opening</span>
-                        <span className="font-medium text-slate-700">
-                          {formatCurrency(wallet.openingBalance || 0)}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-slate-500">Current</span>
-                        <span
-                          className={`font-bold ${
-                            wallet.monthlyBalance >= 0
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
-                          {formatCurrency(wallet.monthlyBalance)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
 
