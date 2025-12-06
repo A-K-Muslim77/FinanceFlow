@@ -350,7 +350,7 @@ const Categories = () => {
         <div className="fixed inset-0 z-0">
           <BackgroundCircles />
         </div>
-        <div className="flex items-center justify-centermin-h-screen  relative z-10">
+        <div className="flex items-center justify-center min-h-screen relative z-10">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading categories...</p>
@@ -381,179 +381,189 @@ const Categories = () => {
         <BackgroundCircles />
       </div>
 
-      <div className="space-y-6 pb-20 lg:pb-6 relative z-10">
-        {/* Error Message */}
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-            <div className="flex justify-between items-center">
-              <span>{error}</span>
+      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
+        <div className="space-y-6 pb-20">
+          {/* Error Message */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              <div className="flex justify-between items-center">
+                <span>{error}</span>
+                <button
+                  onClick={clearError}
+                  className="text-red-500 hover:text-red-700 text-lg font-bold"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
+              <p className="text-slate-600 mt-0.5">
+                Organize your transactions
+              </p>
+            </div>
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Category
+            </button>
+          </div>
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
+              <p className="text-green-700 text-sm font-medium mb-1">
+                Income Categories
+              </p>
+              <p className="text-3xl font-bold text-green-900">{incomeCount}</p>
+            </div>
+            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
+              <p className="text-red-700 text-sm font-medium mb-1">
+                Expense Categories
+              </p>
+              <p className="text-3xl font-bold text-red-900">{expenseCount}</p>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <div
+              role="tablist"
+              className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-slate-100"
+            >
               <button
-                onClick={clearError}
-                className="text-red-500 hover:text-red-700 text-lg font-bold"
+                type="button"
+                role="tab"
+                onClick={() => setActiveTab("all")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTab === "all"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-200"
+                }`}
               >
-                ×
+                All
+              </button>
+              <button
+                type="button"
+                role="tab"
+                onClick={() => setActiveTab("income")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTab === "income"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-200"
+                }`}
+              >
+                Income
+              </button>
+              <button
+                type="button"
+                role="tab"
+                onClick={() => setActiveTab("expense")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTab === "expense"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-200"
+                }`}
+              >
+                Expense
               </button>
             </div>
           </div>
-        )}
 
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Categories</h1>
-            <p className="text-slate-600 mt-1">Organize your transactions</p>
-          </div>
-          <button
-            onClick={() => setIsCreateModalOpen(true)}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Category
-          </button>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-            <p className="text-green-700 text-sm font-medium mb-1">
-              Income Categories
-            </p>
-            <p className="text-3xl font-bold text-green-900">{incomeCount}</p>
-          </div>
-          <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-            <p className="text-red-700 text-sm font-medium mb-1">
-              Expense Categories
-            </p>
-            <p className="text-3xl font-bold text-red-900">{expenseCount}</p>
-          </div>
-        </div>
-
-        {/* Tabs */}
-        <div className="w-full">
-          <div
-            role="tablist"
-            className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-white"
-          >
-            <button
-              type="button"
-              role="tab"
-              onClick={() => setActiveTab("all")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTab === "all" ? "bg-green-500 text-white shadow" : ""
-              }`}
-            >
-              All
-            </button>
-            <button
-              type="button"
-              role="tab"
-              onClick={() => setActiveTab("income")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTab === "income" ? "bg-green-500 text-white shadow" : ""
-              }`}
-            >
-              Income
-            </button>
-            <button
-              type="button"
-              role="tab"
-              onClick={() => setActiveTab("expense")}
-              className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                activeTab === "expense" ? "bg-green-500 text-white shadow" : ""
-              }`}
-            >
-              Expense
-            </button>
-          </div>
-        </div>
-
-        {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCategories.map((category) => (
-            <div
-              key={category._id}
-              className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-lg transition-all duration-200 border-0 overflow-hidden relative z-20"
-            >
-              {/* Color bar */}
+          {/* Categories Grid */}
+          <div className="space-y-3">
+            {filteredCategories.map((category) => (
               <div
-                className="h-1.5 w-full"
-                style={{ backgroundColor: category.color }}
-              />
+                key={category._id}
+                className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-md transition-all duration-200 border-0 overflow-hidden"
+              >
+                {/* Color bar */}
+                <div
+                  className="h-1.5 w-full"
+                  style={{ backgroundColor: category.color }}
+                />
 
-              <div className="p-5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-1">
-                    {/* Icon */}
-                    <div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
-                      style={{ backgroundColor: `${category.color}20` }}
-                    >
-                      {getIconComponent(category.icon)}
-                    </div>
-
-                    {/* Category Info */}
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-semibold text-slate-900">
-                          {category.name}
-                        </h3>
-                        {category.isDefault && (
-                          <div className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs">
-                            Default
-                          </div>
-                        )}
+                <div className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4 flex-1">
+                      {/* Icon */}
+                      <div
+                        className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                        style={{ backgroundColor: `${category.color}20` }}
+                      >
+                        {getIconComponent(category.icon)}
                       </div>
-                      <p className="text-sm text-slate-500 capitalize">
-                        {category.type}
-                      </p>
-                    </div>
-                  </div>
 
-                  {/* Action Buttons */}
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => handleEditCategory(category)}
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                    >
-                      <SquarePen className="w-4 h-4 text-slate-600" />
-                    </button>
-                    {!category.isDefault && (
+                      {/* Category Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="font-semibold text-slate-900 truncate">
+                            {category.name}
+                          </h3>
+                          {category.isDefault && (
+                            <div className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs">
+                              Default
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm text-slate-500 capitalize">
+                          {category.type}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Action Buttons */}
+                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={() => handleDeleteClick(category)}
+                        onClick={() => handleEditCategory(category)}
                         className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
                       >
-                        <Trash2 className="w-4 h-4 text-red-500" />
+                        <SquarePen className="w-4 h-4 text-slate-600" />
                       </button>
-                    )}
+                      {!category.isDefault && (
+                        <button
+                          onClick={() => handleDeleteClick(category)}
+                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                        >
+                          <Trash2 className="w-4 h-4 text-red-500" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Empty State */}
-        {filteredCategories.length === 0 && (
-          <div className="text-center py-12">
-            <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
-              <p className="text-slate-500 text-lg">No categories found</p>
-              <p className="text-slate-400 mt-2">
-                {activeTab === "all"
-                  ? "Get started by creating your first category"
-                  : `No ${activeTab} categories found`}
-              </p>
-              {activeTab === "all" && (
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Create Your First Category
-                </button>
-              )}
-            </div>
+            ))}
           </div>
-        )}
+
+          {/* Empty State */}
+          {filteredCategories.length === 0 && (
+            <div className="text-center py-12">
+              <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
+                <p className="text-slate-500 text-lg">No categories found</p>
+                <p className="text-slate-400 mt-2">
+                  {activeTab === "all"
+                    ? "Get started by creating your first category"
+                    : `No ${activeTab} categories found`}
+                </p>
+                {activeTab === "all" && (
+                  <button
+                    onClick={() => setIsCreateModalOpen(true)}
+                    className="mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Create Your First Category
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Create Category Modal */}
