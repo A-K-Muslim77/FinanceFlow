@@ -7,7 +7,7 @@ const authRoutes = require("./routes/authRoutes");
 const categoryRoutes = require("./routes/categories");
 const walletRoutes = require("./routes/walletRoutes");
 const transactionRoutes = require("./routes/transactionRoutes");
-
+const budgetRoutes = require("./routes/budgetRoutes");
 const app = express();
 
 // Connect to database
@@ -22,7 +22,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/wallets", walletRoutes);
 app.use("/api/transactions", transactionRoutes);
-
+app.use("/api/budgets", budgetRoutes);
 // Health check route
 app.get("/api/health", (req, res) => {
   res.status(200).json({
