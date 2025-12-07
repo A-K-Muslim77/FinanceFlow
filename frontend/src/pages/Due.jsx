@@ -294,7 +294,7 @@ const Due = () => {
         return;
       }
 
-      console.log("Fetching entries from:", `${BASE_URL}/due-receivables`);
+      // console.log("Fetching entries from:", `${BASE_URL}/due-receivables`);
 
       const response = await fetch(`${BASE_URL}/due-receivables`, {
         method: "GET",
@@ -307,7 +307,7 @@ const Due = () => {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        console.log("Entries fetched successfully:", result.data);
+        // console.log("Entries fetched successfully:", result.data);
         setEntries(result.data);
 
         // Calculate all totals including paid amounts

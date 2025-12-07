@@ -11,9 +11,8 @@ import Due from "./pages/Due";
 import BackgroundCircles from "./components/BackgroundCircles";
 
 const AdminDashboard = () => {
-  const [activeView, setActiveView] = useState(() => {
-    return localStorage.getItem("financeActiveView") || "dashboard";
-  });
+  // Always start with dashboard, ignore localStorage
+  const [activeView, setActiveView] = useState("dashboard");
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -35,7 +34,7 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Save view to localStorage whenever it changes
+  // Save view to localStorage whenever it changes (optional)
   useEffect(() => {
     localStorage.setItem("financeActiveView", activeView);
   }, [activeView]);
@@ -43,9 +42,9 @@ const AdminDashboard = () => {
   const renderView = () => {
     switch (activeView) {
       case "dashboard":
-        return <Dashboard />;
+        return <Dashboard setActiveView={setActiveView} />;
       case "transactions":
-        return <Transactions />;
+        return <Transactions openFormOnLoad={true} />;
       case "wallets":
         return <Wallets />;
       case "categories":
@@ -59,7 +58,7 @@ const AdminDashboard = () => {
       case "due":
         return <Due />;
       default:
-        return <Dashboard />;
+        return <Dashboard setActiveView={setActiveView} />;
     }
   };
 

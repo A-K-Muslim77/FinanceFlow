@@ -142,6 +142,7 @@ const Transactions = () => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [monthlyData, setMonthlyData] = useState(null);
   const [showNoWalletWarning, setShowNoWalletWarning] = useState(false);
+  const [autoOpenChecked, setAutoOpenChecked] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -154,6 +155,19 @@ const Transactions = () => {
     fetchAvailableMonths();
     fetchWalletsAndCategories();
   }, [selectedMonth, selectedYear, activeTypeTab]);
+
+  // Check if we should auto-open the form (when coming from Dashboard plus button)
+  useEffect(() => {
+    if (!loading && !autoOpenChecked && wallets.length > 0) {
+      const shouldOpenForm =
+        sessionStorage.getItem("autoOpenTransactionForm") === "true";
+      if (shouldOpenForm) {
+        setIsCreateModalOpen(true);
+        sessionStorage.removeItem("autoOpenTransactionForm");
+        setAutoOpenChecked(true);
+      }
+    }
+  }, [loading, wallets, autoOpenChecked]);
 
   const fetchMonthlyTransactions = async () => {
     try {
@@ -1008,7 +1022,10 @@ const Transactions = () => {
 
       <TransactionForm
         isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
+        onClose={() => {
+          setIsCreateModalOpen(false);
+          setAutoOpenChecked(true); // Prevent auto-opening again
+        }}
         onSubmit={handleCreateTransaction}
         wallets={wallets}
         categories={categories}

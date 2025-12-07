@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { useNavigate } from "react-router-dom";
+// REMOVE this import:
+// import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -154,8 +155,8 @@ const CustomTooltip = ({ active, payload, label, currency = "৳" }) => {
   return null;
 };
 
-const Dashboard = () => {
-  const navigate = useNavigate();
+const Dashboard = ({ setActiveView }) => {
+  // REMOVE: const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
@@ -1197,10 +1198,15 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Quick Add Button */}
+      {/* Quick Add Button - Now navigates to Transactions page using state */}
       <button
-        onClick={() => navigate("/transactions")}
+        onClick={() => {
+          // Store a flag that we want to open the form
+          sessionStorage.setItem("autoOpenTransactionForm", "true");
+          setActiveView("transactions");
+        }}
         className="fixed bottom-24 lg:bottom-8 right-6 z-40 w-14 h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
+        title="Go to Transactions"
       >
         <Plus className="w-7 h-7 text-white" />
       </button>
