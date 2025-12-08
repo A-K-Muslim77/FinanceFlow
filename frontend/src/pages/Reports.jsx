@@ -42,6 +42,11 @@ const Reports = () => {
   );
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
 
+  // Store original transactions separately
+  const [originalTransactions, setOriginalTransactions] = useState([]);
+  const [originalWallets, setOriginalWallets] = useState([]);
+  const [originalCategories, setOriginalCategories] = useState([]);
+
   const [reportData, setReportData] = useState({
     summary: {
       totalIncome: 0,
@@ -74,6 +79,11 @@ const Reports = () => {
     },
   });
 
+  const [dateInputs, setDateInputs] = useState({
+    startDate: "",
+    endDate: "",
+  });
+
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
   const getAuthToken = () => {
@@ -98,29 +108,61 @@ const Reports = () => {
     return months[monthNumber - 1];
   };
 
-  const getShortMonthName = (monthNumber) => {
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    return months[monthNumber - 1] || "";
+  // Format date to dd/mm/yyyy
+  const formatDateToDDMMYYYY = (dateString) => {
+    if (!dateString) return "";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return dateString;
+
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return dateString;
+    }
+  };
+
+  // Convert dd/mm/yyyy to Date object
+  const parseDDMMYYYY = (dateString) => {
+    if (!dateString) return null;
+    try {
+      const parts = dateString.split("/");
+      if (parts.length !== 3) return null;
+
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+
+      if (day < 1 || day > 31 || month < 0 || month > 11) return null;
+
+      const date = new Date(year, month, day);
+      if (isNaN(date.getTime())) return null;
+      if (
+        date.getDate() !== day ||
+        date.getMonth() !== month ||
+        date.getFullYear() !== year
+      ) {
+        return null;
+      }
+
+      return date;
+    } catch {
+      return null;
+    }
+  };
+
+  // Validate dd/mm/yyyy format
+  const isValidDDMMYYYY = (dateString) => {
+    return parseDDMMYYYY(dateString) !== null;
   };
 
   // Calculate report data from filtered transactions
   const calculateReportDataFromTransactions = (
     transactions,
-    wallets = reportData.availableWallets,
-    categories = reportData.availableCategories
+    wallets = originalWallets,
+    categories = originalCategories
   ) => {
     // Calculate summary data
     const incomeTransactions = transactions.filter((t) => t.type === "income");
@@ -355,7 +397,12 @@ const Reports = () => {
       const wallets = walletsResult.data?.wallets || [];
       const categories = categoriesResult.data || [];
 
-      // Calculate initial report data
+      // Store original data
+      setOriginalTransactions(transactions);
+      setOriginalWallets(wallets);
+      setOriginalCategories(categories);
+
+      // Calculate initial report data with all transactions
       const initialReportData = calculateReportDataFromTransactions(
         transactions,
         wallets,
@@ -376,6 +423,12 @@ const Reports = () => {
           min: "",
           max: "",
         },
+      });
+
+      // Reset date inputs
+      setDateInputs({
+        startDate: "",
+        endDate: "",
       });
     } catch (error) {
       console.error("Error fetching reports:", error);
@@ -399,21 +452,39 @@ const Reports = () => {
       .replace("BDT", "৳");
   };
 
-  const handleFilterChange = (filterType, value) => {
-    setFilters((prev) => ({
+  const handleDateInputChange = (field, value) => {
+    // Update the displayed value
+    setDateInputs((prev) => ({
       ...prev,
-      [filterType]: value,
+      [field]: value,
     }));
-  };
 
-  const handleDateChange = (field, value) => {
-    setFilters((prev) => ({
-      ...prev,
-      dateRange: {
-        ...prev.dateRange,
-        [field]: value,
-      },
-    }));
+    // Parse and update the filter if valid
+    const date = parseDDMMYYYY(value);
+    if (date) {
+      // Convert to yyyy-mm-dd format for backend
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, "0");
+      const dd = String(date.getDate()).padStart(2, "0");
+      const yyyyMmDd = `${yyyy}-${mm}-${dd}`;
+
+      setFilters((prev) => ({
+        ...prev,
+        dateRange: {
+          ...prev.dateRange,
+          [field]: yyyyMmDd,
+        },
+      }));
+    } else if (value === "") {
+      // Clear the filter if input is empty
+      setFilters((prev) => ({
+        ...prev,
+        dateRange: {
+          ...prev.dateRange,
+          [field]: "",
+        },
+      }));
+    }
   };
 
   const handleAmountChange = (field, value) => {
@@ -477,16 +548,27 @@ const Reports = () => {
       },
     });
 
-    // Reset to original data
-    fetchReportsData();
+    setDateInputs({
+      startDate: "",
+      endDate: "",
+    });
+
+    // Reset to original data - always filter from originalTransactions
+    const resetReportData = calculateReportDataFromTransactions(
+      originalTransactions,
+      originalWallets,
+      originalCategories
+    );
+    setReportData(resetReportData);
+
     toast.success("Filters reset successfully");
   };
 
   const handleApplyFilters = () => {
-    // Get all transactions from current month
-    const allTransactions = [...reportData.transactions];
+    // Always filter from original transactions
+    const allTransactions = [...originalTransactions];
 
-    // If no filters are applied, reset to original data
+    // If no filters are applied, show all data
     const hasActiveFilters =
       filters.transactionTypes.length > 0 ||
       filters.selectedWallets.length > 0 ||
@@ -497,12 +579,17 @@ const Reports = () => {
       filters.dateRange.endDate;
 
     if (!hasActiveFilters) {
-      fetchReportsData();
+      const resetReportData = calculateReportDataFromTransactions(
+        originalTransactions,
+        originalWallets,
+        originalCategories
+      );
+      setReportData(resetReportData);
       toast.info("No filters applied. Showing all transactions.");
       return;
     }
 
-    // Apply filters one by one
+    // Apply filters one by one, starting with all original transactions
     let filtered = allTransactions;
 
     // Filter by transaction type
@@ -550,19 +637,27 @@ const Reports = () => {
     if (filters.dateRange.startDate) {
       const startDate = new Date(filters.dateRange.startDate);
       startDate.setHours(0, 0, 0, 0);
-      filtered = filtered.filter((t) => new Date(t.date) >= startDate);
+      filtered = filtered.filter((t) => {
+        const transactionDate = new Date(t.date);
+        transactionDate.setHours(0, 0, 0, 0);
+        return transactionDate >= startDate;
+      });
     }
     if (filters.dateRange.endDate) {
       const endDate = new Date(filters.dateRange.endDate);
       endDate.setHours(23, 59, 59, 999);
-      filtered = filtered.filter((t) => new Date(t.date) <= endDate);
+      filtered = filtered.filter((t) => {
+        const transactionDate = new Date(t.date);
+        transactionDate.setHours(23, 59, 59, 999);
+        return transactionDate <= endDate;
+      });
     }
 
     // Recalculate all report data from filtered transactions
     const newReportData = calculateReportDataFromTransactions(
       filtered,
-      reportData.availableWallets,
-      reportData.availableCategories
+      originalWallets,
+      originalCategories
     );
     setReportData(newReportData);
 
@@ -797,14 +892,21 @@ const Reports = () => {
                             Start Date
                           </label>
                           <input
-                            type="date"
+                            type="text"
                             className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
                             id="startDate"
-                            value={filters.dateRange.startDate}
+                            placeholder="dd/mm/yyyy"
+                            value={dateInputs.startDate}
                             onChange={(e) =>
-                              handleDateChange("startDate", e.target.value)
+                              handleDateInputChange("startDate", e.target.value)
                             }
                           />
+                          {dateInputs.startDate &&
+                            !isValidDDMMYYYY(dateInputs.startDate) && (
+                              <p className="text-xs text-red-500 mt-1">
+                                Invalid date format. Use dd/mm/yyyy
+                              </p>
+                            )}
                         </div>
                         <div>
                           <label
@@ -814,16 +916,29 @@ const Reports = () => {
                             End Date
                           </label>
                           <input
-                            type="date"
+                            type="text"
                             className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
                             id="endDate"
-                            value={filters.dateRange.endDate}
+                            placeholder="dd/mm/yyyy"
+                            value={dateInputs.endDate}
                             onChange={(e) =>
-                              handleDateChange("endDate", e.target.value)
+                              handleDateInputChange("endDate", e.target.value)
                             }
                           />
+                          {dateInputs.endDate &&
+                            !isValidDDMMYYYY(dateInputs.endDate) && (
+                              <p className="text-xs text-red-500 mt-1">
+                                Invalid date format. Use dd/mm/yyyy
+                              </p>
+                            )}
                         </div>
                       </div>
+                      {(dateInputs.startDate || dateInputs.endDate) && (
+                        <div className="mt-2 text-xs text-blue-600">
+                          Filtering by: {dateInputs.startDate || "Any start"} to{" "}
+                          {dateInputs.endDate || "Any end"}
+                        </div>
+                      )}
                     </div>
 
                     {/* Transaction Type */}
@@ -850,13 +965,13 @@ const Reports = () => {
                     </div>
 
                     {/* Wallets */}
-                    {reportData.availableWallets.length > 0 && (
+                    {originalWallets.length > 0 && (
                       <div>
                         <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
                           Wallets ({filters.selectedWallets.length} selected)
                         </label>
                         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
-                          {reportData.availableWallets.map((wallet) => (
+                          {originalWallets.map((wallet) => (
                             <button
                               key={wallet._id}
                               type="button"
@@ -875,14 +990,14 @@ const Reports = () => {
                     )}
 
                     {/* Categories */}
-                    {reportData.availableCategories.length > 0 && (
+                    {originalCategories.length > 0 && (
                       <div>
                         <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
                           Categories ({filters.selectedCategories.length}{" "}
                           selected)
                         </label>
                         <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
-                          {reportData.availableCategories.map((category) => (
+                          {originalCategories.map((category) => (
                             <button
                               key={category._id}
                               type="button"
@@ -975,9 +1090,15 @@ const Reports = () => {
                     </h3>
                     <p className="text-sm text-slate-600">
                       {reportData.summary.totalTransactions > 0
-                        ? `Showing insights from ${reportData.summary.totalTransactions} transactions`
+                        ? `Showing ${reportData.summary.totalTransactions} transactions`
                         : "No data available for this month"}
                     </p>
+                    {(dateInputs.startDate || dateInputs.endDate) && (
+                      <p className="text-sm text-blue-600 mt-1">
+                        Date filter: {dateInputs.startDate || "Any start"} to{" "}
+                        {dateInputs.endDate || "Any end"}
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1261,9 +1382,7 @@ const Reports = () => {
                                       "Uncategorized"}
                                   </p>
                                   <p className="text-sm text-slate-600">
-                                    {new Date(
-                                      transaction.date
-                                    ).toLocaleDateString()}
+                                    {formatDateToDDMMYYYY(transaction.date)}
                                   </p>
                                 </div>
                                 <div className="text-right">
@@ -1300,8 +1419,7 @@ const Reports = () => {
                             No transaction details available
                           </p>
                           <p className="text-slate-400">
-                            No transactions found for{" "}
-                            {getMonthName(selectedMonth)} {selectedYear}
+                            No transactions found for the selected filters
                           </p>
                         </div>
                       )}
