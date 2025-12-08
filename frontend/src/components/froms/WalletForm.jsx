@@ -1,5 +1,16 @@
 import { useState, useEffect } from "react";
-import { X } from "lucide-react";
+import {
+  X,
+  Wallet,
+  Building,
+  CreditCard,
+  Smartphone,
+  Landmark,
+  PiggyBank,
+  Coins,
+  Banknote,
+  Tag,
+} from "lucide-react";
 import { toast } from "react-toastify";
 
 const WalletForm = ({
@@ -19,40 +30,78 @@ const WalletForm = ({
   });
 
   const walletTypes = [
-    { value: "cash", label: "Cash" },
-    { value: "bank", label: "Bank Account" },
-    { value: "bkash", label: "bKash" },
-    { value: "nagad", label: "Nagad" },
-    { value: "rocket", label: "Rocket" },
-    { value: "credit_card", label: "Credit Card" },
-    { value: "other", label: "Other" },
+    { value: "cash", label: "Cash", icon: <Wallet className="w-4 h-4" /> },
+    {
+      value: "bank",
+      label: "Bank Account",
+      icon: <Building className="w-4 h-4" />,
+    },
+    {
+      value: "bkash",
+      label: "bKash",
+      icon: <Smartphone className="w-4 h-4" />,
+    },
+    {
+      value: "nagad",
+      label: "Nagad",
+      icon: <Smartphone className="w-4 h-4" />,
+    },
+    {
+      value: "rocket",
+      label: "Rocket",
+      icon: <Smartphone className="w-4 h-4" />,
+    },
+    {
+      value: "credit_card",
+      label: "Credit Card",
+      icon: <CreditCard className="w-4 h-4" />,
+    },
+    { value: "other", label: "Other", icon: <Tag className="w-4 h-4" /> },
   ];
 
   const icons = [
-    { name: "wallet", component: <WalletIcon /> },
-    { name: "banknote", component: <BanknoteIcon /> },
-    { name: "building2", component: <Building2Icon /> },
-    { name: "smartphone", component: <SmartphoneIcon /> },
-    { name: "credit-card", component: <CreditCardIcon /> },
-    { name: "landmark", component: <LandmarkIcon /> },
-    { name: "piggy-bank", component: <PiggyBankIcon /> },
-    { name: "coins", component: <CoinsIcon /> },
+    { name: "wallet", component: <Wallet className="w-5 h-5 sm:w-6 sm:h-6" /> },
+    {
+      name: "banknote",
+      component: <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
+      name: "building2",
+      component: <Building className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
+      name: "smartphone",
+      component: <Smartphone className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
+      name: "credit-card",
+      component: <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
+      name: "landmark",
+      component: <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    {
+      name: "piggy-bank",
+      component: <PiggyBank className="w-5 h-5 sm:w-6 sm:h-6" />,
+    },
+    { name: "coins", component: <Coins className="w-5 h-5 sm:w-6 sm:h-6" /> },
   ];
 
   const colors = [
-    "#3b82f6",
-    "#10b981",
-    "#f59e0b",
-    "#ef4444",
-    "#8b5cf6",
-    "#ec4899",
-    "#14b8a6",
-    "#f97316",
-    "#6366f1",
-    "#84cc16",
-    "#06b6d4",
-    "#d946ef",
-    "#f43f5e",
+    "#3b82f6", // blue-500
+    "#10b981", // emerald-500
+    "#f59e0b", // amber-500
+    "#ef4444", // red-500
+    "#8b5cf6", // violet-500
+    "#ec4899", // pink-500
+    "#14b8a6", // teal-500
+    "#f97316", // orange-500
+    "#6366f1", // indigo-500
+    "#84cc16", // lime-500
+    "#06b6d4", // cyan-500
+    "#d946ef", // fuchsia-500
+    "#f43f5e", // rose-500
   ];
 
   useEffect(() => {
@@ -62,7 +111,7 @@ const WalletForm = ({
         type: editData.type || "cash",
         icon: editData.icon || "wallet",
         color: editData.color || "#3b82f6",
-        balance: editData.balance || 0,
+        balance: editData.balance || editData.openingBalance || 0,
         description: editData.description || "",
       });
     } else {
@@ -115,150 +164,273 @@ const WalletForm = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4">
       <div
-        className="relative w-full max-w-lg bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95"
+        className="relative w-full max-w-md sm:max-w-lg bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-1.5 sm:p-1 bg-slate-100 hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
+          aria-label="Close"
         >
-          <X className="h-4 w-4" />
-          <span className="sr-only">Close</span>
+          <X className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
         </button>
 
-        <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-4">
-          <h2 className="text-lg font-semibold leading-none tracking-tight">
-            {isEdit ? "Edit Wallet" : "Create New Wallet"}
-          </h2>
+        {/* Header */}
+        <div className="flex flex-col space-y-2 sm:space-y-1.5 text-center sm:text-left mb-4 sm:mb-6">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: `${formData.color}20` }}
+            >
+              {icons.find((i) => i.name === formData.icon)?.component}
+            </div>
+            <div>
+              <h2 className="text-lg sm:text-xl font-semibold leading-none tracking-tight text-slate-900">
+                {isEdit ? "Edit Wallet" : "Create New Wallet"}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                {isEdit
+                  ? "Update your wallet details"
+                  : "Add a new wallet to track your finances"}
+              </p>
+            </div>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
+        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+          {/* Wallet Name */}
+          <div className="space-y-2">
             <label
               htmlFor="name"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium leading-none text-slate-700 block"
             >
               Wallet Name
+              <span className="text-red-500 ml-1">*</span>
             </label>
             <input
               type="text"
               id="name"
-              placeholder="e.g. Main Cash, Salary Account"
+              placeholder="e.g. Main Cash, Salary Account, Personal bKash"
               required
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              autoFocus
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-              Type
+          {/* Wallet Type */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium leading-none text-slate-700 block">
+              Wallet Type
             </label>
-            <select
-              value={formData.type}
-              onChange={(e) => handleInputChange("type", e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus:outline-none focus:ring-1 focus:ring-ring"
-            >
-              {walletTypes.map((type) => (
-                <option key={type.value} value={type.value}>
-                  {type.label}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <select
+                value={formData.type}
+                onChange={(e) => handleInputChange("type", e.target.value)}
+                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
+              >
+                {walletTypes.map((type) => (
+                  <option key={type.value} value={type.value}>
+                    {type.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="text-slate-500"
+                >
+                  <path d="m6 9 6 6 6-6" />
+                </svg>
+              </div>
+            </div>
           </div>
 
-          <div>
+          {/* Initial Balance */}
+          <div className="space-y-2">
             <label
               htmlFor="balance"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium leading-none text-slate-700 block"
             >
-              Initial Balance
+              Initial Balance (৳)
             </label>
-            <input
-              type="number"
-              id="balance"
-              step="0.01"
-              placeholder="0.00"
-              value={formData.balance}
-              onChange={(e) => handleInputChange("balance", e.target.value)}
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-            />
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">
+                ৳
+              </span>
+              <input
+                type="number"
+                id="balance"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
+                value={formData.balance}
+                onChange={(e) => handleInputChange("balance", e.target.value)}
+                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              />
+            </div>
+            <p className="text-xs text-slate-500">
+              Starting balance for this wallet
+            </p>
           </div>
 
-          <div>
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          {/* Icon Selection */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium leading-none text-slate-700 block">
               Icon
             </label>
-            <div className="grid grid-cols-8 gap-2 mt-2">
+            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-3">
               {icons.map((icon) => (
                 <button
                   key={icon.name}
                   type="button"
                   onClick={() => handleInputChange("icon", icon.name)}
-                  className={`p-3 rounded-lg border-2 transition-all hover:border-slate-300 ${
+                  className={`flex items-center justify-center p-2.5 sm:p-3 rounded-lg border-2 transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                     formData.icon === icon.name
-                      ? "border-green-500 bg-green-50"
-                      : "border-slate-200"
+                      ? "border-blue-500 bg-blue-50 scale-105"
+                      : "border-slate-200 bg-white"
                   }`}
+                  title={icon.name.replace("-", " ")}
+                  aria-label={`Select ${icon.name} icon`}
                 >
-                  {icon.component}
+                  <span
+                    className={
+                      formData.icon === icon.name
+                        ? "text-blue-600"
+                        : "text-slate-700"
+                    }
+                  >
+                    {icon.component}
+                  </span>
                 </button>
               ))}
             </div>
           </div>
 
-          <div>
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+          {/* Color Selection */}
+          <div className="space-y-3">
+            <label className="text-sm font-medium leading-none text-slate-700 block">
               Color
             </label>
-            <div className="grid grid-cols-8 gap-2 mt-2">
+            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 sm:gap-3">
               {colors.map((color) => (
                 <button
                   key={color}
                   type="button"
                   onClick={() => handleInputChange("color", color)}
-                  className={`w-10 h-10 rounded-lg transition-all hover:scale-105 ${
+                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-slate-400 ${
                     formData.color === color
-                      ? "ring-2 ring-offset-2 ring-green-500 scale-110"
+                      ? "ring-2 ring-offset-2 ring-blue-500 scale-110 shadow-md"
                       : ""
                   }`}
                   style={{ backgroundColor: color }}
-                />
+                  title={`Color ${color}`}
+                  aria-label={`Select ${color} color`}
+                >
+                  {formData.color === color && (
+                    <div className="flex items-center justify-center h-full">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="white"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="w-3 h-3 sm:w-4 sm:h-4"
+                      >
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  )}
+                </button>
               ))}
             </div>
           </div>
 
-          <div>
+          {/* Description */}
+          <div className="space-y-2">
             <label
               htmlFor="description"
-              className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              className="text-sm font-medium leading-none text-slate-700 block"
             >
               Description (Optional)
             </label>
             <textarea
               id="description"
-              placeholder="Add notes about this wallet"
+              placeholder="Add notes about this wallet (e.g., account number, bank name, purpose)"
               rows="3"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className="flex min-h-[60px] w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex min-h-[100px] w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
             />
+            <p className="text-xs text-slate-500">
+              Additional information to help you identify this wallet
+            </p>
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 pt-4">
+          {/* Preview Section */}
+          <div className="pt-4 border-t border-slate-200">
+            <h3 className="text-sm font-medium text-slate-700 mb-3">
+              Wallet Preview
+            </h3>
+            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
+              <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                style={{ backgroundColor: `${formData.color}20` }}
+              >
+                {icons.find((i) => i.name === formData.icon)?.component}
+              </div>
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <h4 className="font-semibold text-slate-900">
+                    {formData.name || "Wallet Name"}
+                  </h4>
+                  <span
+                    className={`px-2 py-1 rounded-md text-xs font-medium capitalize bg-blue-100 text-blue-800`}
+                  >
+                    {walletTypes.find((t) => t.value === formData.type)
+                      ?.label || "Cash"}
+                  </span>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-sm text-slate-700">
+                    Initial Balance:{" "}
+                    <span className="font-bold">
+                      ৳{parseFloat(formData.balance || 0).toLocaleString()}
+                    </span>
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 sm:pt-6 border-t border-slate-200">
             <button
               type="button"
               onClick={handleClose}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 bg-red-600 text-white hover:bg-white hover:text-red-600"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50 h-11 sm:h-10 px-4 py-3 sm:py-2 w-full sm:w-auto"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background text-primary-foreground shadow h-9 px-4 py-2 bg-green-600 text-white hover:bg-white hover:text-green-600"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-11 sm:h-10 px-4 py-3 sm:py-2 w-full sm:w-auto"
             >
               {isEdit ? "Update Wallet" : "Create Wallet"}
             </button>
@@ -268,162 +440,5 @@ const WalletForm = ({
     </div>
   );
 };
-
-const WalletIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <path d="M19 7V4a1 1 0 0 0-1-1H5a2 2 0 0 0 0 4h15a1 1 0 0 1 1 1v4h-3a2 2 0 0 0 0 4h3a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1"></path>
-    <path d="M3 5v14a2 2 0 0 0 2 2h15a1 1 0 0 0 1-1v-4"></path>
-  </svg>
-);
-
-const BanknoteIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <rect width="20" height="12" x="2" y="6" rx="2"></rect>
-    <circle cx="12" cy="12" r="2"></circle>
-    <path d="M6 12h.01M18 12h.01"></path>
-  </svg>
-);
-
-const Building2Icon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"></path>
-    <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"></path>
-    <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"></path>
-    <path d="M10 6h4"></path>
-    <path d="M10 10h4"></path>
-    <path d="M10 14h4"></path>
-    <path d="M10 18h4"></path>
-  </svg>
-);
-
-const CreditCardIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <rect width="20" height="14" x="2" y="5" rx="2"></rect>
-    <line x1="2" x2="22" y1="10" y2="10"></line>
-  </svg>
-);
-
-const LandmarkIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <line x1="3" x2="21" y1="22" y2="22"></line>
-    <line x1="6" x2="6" y1="18" y2="11"></line>
-    <line x1="10" x2="10" y1="18" y2="11"></line>
-    <line x1="14" x2="14" y1="18" y2="11"></line>
-    <line x1="18" x2="18" y1="18" y2="11"></line>
-    <polygon points="12 2 20 7 4 7"></polygon>
-  </svg>
-);
-
-const PiggyBankIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <path d="M19 5c-1.5 0-2.8 1.4-3 2-3.5-1.5-11-.3-11 5 0 1.8 0 3 2 4.5V20h4v-2h3v2h4v-4c1-.5 1.7-1 2-2h2v-4h-2c0-1-.5-1.5-1-2V5z"></path>
-    <path d="M2 9v1c0 1.1.9 2 2 2h1"></path>
-    <path d="M16 11h.01"></path>
-  </svg>
-);
-
-const CoinsIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <circle cx="8" cy="8" r="6"></circle>
-    <path d="M18.09 10.37A6 6 0 1 1 10.34 18"></path>
-    <path d="M7 6h1v4"></path>
-    <path d="m16.71 13.88.7.71-2.82 2.82"></path>
-  </svg>
-);
-
-const SmartphoneIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-    className="w-5 h-5 text-slate-700"
-  >
-    <rect width="14" height="20" x="5" y="2" rx="2" ry="2"></rect>
-    <path d="M12 18h.01"></path>
-  </svg>
-);
 
 export default WalletForm;
