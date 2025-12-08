@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-// REMOVE this import:
-// import { useNavigate } from "react-router-dom";
 import {
   BarChart,
   Bar,
@@ -57,6 +55,8 @@ import {
   Gift,
   Sun,
   Moon,
+  Menu,
+  X,
 } from "lucide-react";
 
 const MonthYearSelector = ({
@@ -65,6 +65,7 @@ const MonthYearSelector = ({
   onMonthChange,
   onYearChange,
   isLoading,
+  isMobile = false,
 }) => {
   const months = [
     { value: 1, label: "Jan" },
@@ -83,6 +84,26 @@ const MonthYearSelector = ({
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
+  if (isMobile) {
+    return (
+      <div className="relative w-full">
+        <select
+          value={selectedMonth}
+          onChange={(e) => onMonthChange(parseInt(e.target.value))}
+          disabled={isLoading}
+          className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+        >
+          {months.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -104,35 +125,45 @@ const MonthYearSelector = ({
 };
 
 const StatCard = ({ title, value, icon: Icon, color, trend, isLoading }) => (
-  <div className="bg-white rounded-xl p-5 border-0 shadow-sm hover:shadow-md transition-shadow">
+  <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm hover:shadow-md transition-shadow">
     <div className="flex items-start justify-between">
-      <div className="flex-1">
-        <p className="text-sm text-slate-500 mb-2">{title}</p>
+      <div className="flex-1 min-w-0">
+        <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2 truncate">
+          {title}
+        </p>
         {isLoading ? (
-          <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+          <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
         ) : (
-          <p className="text-2xl font-bold text-slate-900">{value}</p>
+          <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900 truncate">
+            {value}
+          </p>
         )}
       </div>
-      <div className={`p-2.5 rounded-lg ${color} bg-opacity-10`}>
-        <Icon className={`w-5 h-5 ${color.replace("text-", "")}`} />
+      <div
+        className={`p-2 sm:p-2.5 rounded-lg ${color} bg-opacity-10 flex-shrink-0 ml-2`}
+      >
+        <Icon
+          className={`w-4 h-4 sm:w-5 sm:h-5 ${color.replace("text-", "")}`}
+        />
       </div>
     </div>
     {trend && (
-      <div className="mt-3 flex items-center gap-1 text-sm">
+      <div className="mt-2 sm:mt-3 flex items-center gap-1 text-xs sm:text-sm">
         <div
-          className={`flex items-center gap-1 ${
+          className={`flex items-center gap-0.5 sm:gap-1 ${
             trend.value >= 0 ? "text-green-600" : "text-red-600"
           }`}
         >
           {trend.value >= 0 ? (
-            <TrendingUpIcon className="w-3.5 h-3.5" />
+            <TrendingUpIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           ) : (
-            <TrendingDownIcon className="w-3.5 h-3.5" />
+            <TrendingDownIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
           )}
           <span>{Math.abs(trend.value)}%</span>
         </div>
-        <span className="text-slate-400 text-xs ml-2">vs last month</span>
+        <span className="text-slate-400 text-xs ml-1 sm:ml-2">
+          vs last month
+        </span>
       </div>
     )}
   </div>
@@ -141,10 +172,16 @@ const StatCard = ({ title, value, icon: Icon, color, trend, isLoading }) => (
 const CustomTooltip = ({ active, payload, label, currency = "৳" }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-slate-200">
-        <p className="font-semibold text-slate-900 mb-2 text-sm">{label}</p>
+      <div className="bg-white p-2 sm:p-3 rounded-lg shadow-lg border border-slate-200 max-w-[200px] sm:max-w-none">
+        <p className="font-semibold text-slate-900 mb-1 sm:mb-2 text-xs sm:text-sm">
+          {label}
+        </p>
         {payload.map((entry, index) => (
-          <p key={index} className="text-sm" style={{ color: entry.color }}>
+          <p
+            key={index}
+            className="text-xs sm:text-sm"
+            style={{ color: entry.color }}
+          >
             {entry.name}: {currency}
             {entry.value.toLocaleString()}
           </p>
@@ -156,13 +193,13 @@ const CustomTooltip = ({ active, payload, label, currency = "৳" }) => {
 };
 
 const Dashboard = ({ setActiveView }) => {
-  // REMOVE: const navigate = useNavigate();
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [showBalance, setShowBalance] = useState(true);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     monthlySummary: {
       income: 0,
@@ -188,24 +225,25 @@ const Dashboard = ({ setActiveView }) => {
   const getAuthToken = () => {
     return localStorage.getItem("token");
   };
+
   const toggleBalanceVisibility = () => {
     setShowBalance(!showBalance);
   };
 
   const getMonthName = (monthNumber) => {
     const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
+      "January",
+      "February",
+      "March",
+      "April",
       "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
     ];
     return months[monthNumber - 1];
   };
@@ -246,7 +284,6 @@ const Dashboard = ({ setActiveView }) => {
         return;
       }
 
-      // Fetch all required data in parallel
       const [
         monthlyTransactionsRes,
         monthlyWalletsRes,
@@ -295,7 +332,6 @@ const Dashboard = ({ setActiveView }) => {
         throw new Error("Failed to fetch dashboard data");
       }
 
-      // Calculate daily income
       const today = new Date();
       const yesterday = new Date(today);
       yesterday.setDate(yesterday.getDate() - 1);
@@ -316,30 +352,25 @@ const Dashboard = ({ setActiveView }) => {
           ? ((todayIncome - yesterdayIncome) / yesterdayIncome) * 100
           : 0;
 
-      // Calculate category expenses
       const categoryExpenses = calculateCategoryExpenses(
         monthlyTransactions.data?.transactions || [],
         categories.data || []
       );
 
-      // Calculate 6-month trend
       const monthlyTrend = calculateMonthlyTrend(
         allTransactions.data || [],
         selectedYear,
         selectedMonth
       );
 
-      // Calculate weekly data
       const weeklyData = calculateWeeklyData(
         monthlyTransactions.data?.transactions || []
       );
 
-      // Get top expenses
       const topExpenses = getTopExpenses(
         monthlyTransactions.data?.transactions || []
       );
 
-      // Calculate wallet distribution
       const walletDistribution = calculateWalletDistribution(
         monthlyWallets.data?.wallets || []
       );
@@ -522,7 +553,7 @@ const Dashboard = ({ setActiveView }) => {
   };
 
   const getIconComponent = (iconName) => {
-    const iconProps = { className: "w-5 h-5" };
+    const iconProps = { className: "w-4 h-4 sm:w-5 sm:h-5" };
     switch (iconName) {
       case "smartphone":
         return <Smartphone {...iconProps} />;
@@ -569,6 +600,32 @@ const Dashboard = ({ setActiveView }) => {
     setError(null);
   };
 
+  const handlePreviousMonth = () => {
+    let newMonth = selectedMonth - 1;
+    let newYear = selectedYear;
+
+    if (newMonth < 1) {
+      newMonth = 12;
+      newYear = selectedYear - 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
+  const handleNextMonth = () => {
+    let newMonth = selectedMonth + 1;
+    let newYear = selectedYear;
+
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear = selectedYear + 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
   const COLORS = [
     "#0088FE",
     "#00C49F",
@@ -582,7 +639,7 @@ const Dashboard = ({ setActiveView }) => {
     return (
       <div className="min-h-screen relative">
         <BackgroundCircles />
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading dashboard...</p>
@@ -605,86 +662,191 @@ const Dashboard = ({ setActiveView }) => {
         draggable
         pauseOnHover
         theme="light"
+        className="!z-50"
       />
 
       <BackgroundCircles />
 
-      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        <div className="space-y-6 pb-20">
-          {/* Header with Controls in One Line */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-              <p className="text-sm text-slate-600 mt-0.5">
-                Financial overview for {getMonthName(selectedMonth)}{" "}
-                {selectedYear}
-              </p>
+      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
+        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
+          {/* Mobile Header */}
+          <div className="sm:hidden space-y-3 px-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Dashboard</h1>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {getMonthName(selectedMonth)} {selectedYear}
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-2 rounded-lg bg-white border border-slate-200"
+              >
+                {showMobileFilters ? (
+                  <X className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <Menu className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Month Selector */}
-              <div className="w-32">
-                <MonthYearSelector
-                  selectedMonth={selectedMonth}
-                  selectedYear={selectedYear}
-                  onMonthChange={setSelectedMonth}
-                  onYearChange={setSelectedYear}
-                  isLoading={loading}
-                />
-              </div>
-
-              {/* Year Selector */}
-              <div className="w-28">
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    disabled={loading}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                  >
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Refresh Button */}
+            {/* Mobile Quick Actions */}
+            <div className="flex items-center justify-between gap-2">
+              <button
+                onClick={handlePreviousMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={toggleBalanceVisibility}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                {showBalance ? (
+                  <EyeOff className="w-4 h-4 text-slate-600" />
+                ) : (
+                  <Eye className="w-4 h-4 text-slate-600" />
+                )}
+              </button>
               <button
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
-                title="Refresh data"
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
               >
                 <RefreshCw
-                  className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+                  className={`w-4 h-4 ${
+                    refreshing ? "animate-spin" : "text-slate-600"
+                  }`}
                 />
               </button>
-
-              {/* Hide/Show Balance Button */}
               <button
-                onClick={toggleBalanceVisibility}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 bg-green-600 text-white hover:bg-green-700 shadow-sm"
-                title={showBalance ? "Hide balance" : "Show balance"}
+                onClick={handleNextMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
               >
-                {showBalance ? (
-                  <EyeOff className="w-4 h-4" />
-                ) : (
-                  <Eye className="w-4 h-4" />
-                )}
+                <ChevronRight className="w-4 h-4 text-slate-600" />
               </button>
+            </div>
+
+            {/* Mobile Filters Dropdown */}
+            {showMobileFilters && (
+              <div className="bg-white rounded-xl p-4 border-0 shadow-lg">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Month
+                    </label>
+                    <MonthYearSelector
+                      selectedMonth={selectedMonth}
+                      selectedYear={selectedYear}
+                      onMonthChange={setSelectedMonth}
+                      onYearChange={setSelectedYear}
+                      isLoading={loading}
+                      isMobile={true}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Year
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden sm:block px-2 sm:px-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Dashboard
+                </h1>
+                <p className="text-sm text-slate-600 mt-0.5 sm:mt-0.5">
+                  Financial overview for {getMonthName(selectedMonth)}{" "}
+                  {selectedYear}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="w-28 sm:w-32">
+                  <MonthYearSelector
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    onMonthChange={setSelectedMonth}
+                    onYearChange={setSelectedYear}
+                    isLoading={loading}
+                  />
+                </div>
+
+                <div className="w-24 sm:w-28">
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex-shrink-0"
+                  title="Refresh data"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+                  />
+                </button>
+
+                <button
+                  onClick={toggleBalanceVisibility}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 bg-green-600 text-white hover:bg-green-700 shadow-sm flex-shrink-0"
+                  title={showBalance ? "Hide balance" : "Show balance"}
+                >
+                  {showBalance ? (
+                    <EyeOff className="w-4 h-4" />
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -698,37 +860,39 @@ const Dashboard = ({ setActiveView }) => {
           )}
 
           {/* Main Financial Summary Card */}
-          <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-            <div className="mb-4">
-              <h3 className="text-lg font-semibold text-slate-900">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm mx-2 sm:mx-0">
+            <div className="mb-3 sm:mb-4">
+              <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                 Financial Summary
               </h3>
-              <p className="text-sm text-slate-500">
+              <p className="text-xs sm:text-sm text-slate-500">
                 Overview of your monthly finances
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               {/* Total Income */}
-              <div className="border border-slate-200 rounded-lg p-4 hover:border-green-300 transition-colors">
+              <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-500 mb-2">Total Income</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2">
+                      Total Income
+                    </p>
                     {loading ? (
-                      <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                      <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
                     ) : (
-                      <p className="text-2xl font-bold text-green-600">
+                      <p className="text-xl sm:text-2xl font-bold text-green-600 truncate">
                         {formatCurrency(dashboardData.monthlySummary.income)}
                       </p>
                     )}
                   </div>
-                  <div className="p-2.5 rounded-lg text-green-600 bg-green-50">
-                    <TrendingUp className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-lg text-green-600 bg-green-50 flex-shrink-0 ml-2">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
-                <div className="mt-3">
-                  <div className="flex items-center gap-1 text-sm text-green-600">
-                    <TrendingUpIcon className="w-3.5 h-3.5" />
+                <div className="mt-2 sm:mt-3">
+                  <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600">
+                    <TrendingUpIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>+12.5%</span>
                   </div>
                   <span className="text-xs text-slate-400">vs last month</span>
@@ -736,25 +900,27 @@ const Dashboard = ({ setActiveView }) => {
               </div>
 
               {/* Total Expense */}
-              <div className="border border-slate-200 rounded-lg p-4 hover:border-red-300 transition-colors">
+              <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-red-300 transition-colors">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-500 mb-2">Total Expense</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2">
+                      Total Expense
+                    </p>
                     {loading ? (
-                      <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                      <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
                     ) : (
-                      <p className="text-2xl font-bold text-red-600">
+                      <p className="text-xl sm:text-2xl font-bold text-red-600 truncate">
                         {formatCurrency(dashboardData.monthlySummary.expense)}
                       </p>
                     )}
                   </div>
-                  <div className="p-2.5 rounded-lg text-red-600 bg-red-50">
-                    <TrendingDown className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-lg text-red-600 bg-red-50 flex-shrink-0 ml-2">
+                    <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
-                <div className="mt-3">
-                  <div className="flex items-center gap-1 text-sm text-red-600">
-                    <TrendingDownIcon className="w-3.5 h-3.5" />
+                <div className="mt-2 sm:mt-3">
+                  <div className="flex items-center gap-1 text-xs sm:text-sm text-red-600">
+                    <TrendingDownIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     <span>-8.3%</span>
                   </div>
                   <span className="text-xs text-slate-400">vs last month</span>
@@ -762,15 +928,17 @@ const Dashboard = ({ setActiveView }) => {
               </div>
 
               {/* Net Balance */}
-              <div className="border border-slate-200 rounded-lg p-4 hover:border-blue-300 transition-colors">
+              <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition-colors">
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <p className="text-sm text-slate-500 mb-2">Net Balance</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2">
+                      Net Balance
+                    </p>
                     {loading ? (
-                      <div className="h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                      <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
                     ) : (
                       <p
-                        className={`text-2xl font-bold ${
+                        className={`text-xl sm:text-2xl font-bold truncate ${
                           dashboardData.monthlySummary.balance >= 0
                             ? "text-blue-600"
                             : "text-red-600"
@@ -780,13 +948,13 @@ const Dashboard = ({ setActiveView }) => {
                       </p>
                     )}
                   </div>
-                  <div className="p-2.5 rounded-lg text-blue-600 bg-blue-50">
-                    <ArrowLeftRight className="w-5 h-5" />
+                  <div className="p-2 sm:p-2.5 rounded-lg text-blue-600 bg-blue-50 flex-shrink-0 ml-2">
+                    <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                 </div>
-                <div className="mt-3">
+                <div className="mt-2 sm:mt-3">
                   <div
-                    className={`flex items-center gap-1 text-sm ${
+                    className={`flex items-center gap-1 text-xs sm:text-sm ${
                       dashboardData.monthlySummary.balance >= 0
                         ? "text-blue-600"
                         : "text-red-600"
@@ -794,7 +962,7 @@ const Dashboard = ({ setActiveView }) => {
                   >
                     {dashboardData.monthlySummary.balance >= 0 ? (
                       <>
-                        <TrendingUpIcon className="w-3.5 h-3.5" />
+                        <TrendingUpIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         <span>
                           +
                           {Math.abs(
@@ -807,7 +975,7 @@ const Dashboard = ({ setActiveView }) => {
                       </>
                     ) : (
                       <>
-                        <TrendingDownIcon className="w-3.5 h-3.5" />
+                        <TrendingDownIcon className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                         <span>
                           -
                           {Math.abs(
@@ -827,7 +995,7 @@ const Dashboard = ({ setActiveView }) => {
           </div>
 
           {/* Other Stats Grid - 3 Cards per row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-0">
             <StatCard
               title="Today's Income"
               value={formatCurrency(dashboardData.dailyIncome.today)}
@@ -851,35 +1019,37 @@ const Dashboard = ({ setActiveView }) => {
             />
           </div>
 
-          {/* My Wallets Section - 3 cards per row */}
+          {/* My Wallets Section */}
           {dashboardData.wallets.length > 0 && (
-            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm mx-2 sm:mx-0">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                     My Wallets
                   </h3>
-                  <p className="text-sm text-slate-500">Balance overview</p>
+                  <p className="text-xs sm:text-sm text-slate-500">
+                    Balance overview
+                  </p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {dashboardData.wallets.map((wallet) => (
                   <div
                     key={wallet._id}
-                    className="border border-slate-200 rounded-lg p-4 hover:border-slate-300 transition-colors hover:shadow-sm"
+                    className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-slate-300 transition-colors hover:shadow-sm"
                   >
                     <div className="flex items-center gap-3 mb-3">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{ backgroundColor: `${wallet.color}20` }}
                       >
                         {getIconComponent(wallet.icon)}
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-medium text-slate-900 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-slate-900 text-sm truncate">
                           {wallet.name}
                         </h4>
-                        <p className="text-xs text-slate-500 capitalize">
+                        <p className="text-xs text-slate-500 capitalize truncate">
                           {wallet.type}
                         </p>
                       </div>
@@ -890,7 +1060,7 @@ const Dashboard = ({ setActiveView }) => {
                           Current Balance
                         </span>
                         <span
-                          className={`text-sm font-bold ${
+                          className={`text-sm font-bold truncate ${
                             wallet.monthlyBalance >= 0
                               ? "text-green-600"
                               : "text-red-600"
@@ -921,42 +1091,44 @@ const Dashboard = ({ setActiveView }) => {
           )}
 
           {/* Expenses Section */}
-          <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-            <div className="flex items-center justify-between mb-5">
+          <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm mx-2 sm:mx-0">
+            <div className="flex items-center justify-between mb-4 sm:mb-5">
               <div>
-                <h3 className="text-lg font-semibold text-slate-900">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                   Recent Expenses
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-xs sm:text-sm text-slate-500">
                   Top expenses this month
                 </p>
               </div>
-              <Filter className="w-5 h-5 text-slate-400" />
+              <Filter className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {dashboardData.topExpenses.length > 0 ? (
                 dashboardData.topExpenses.map((expense, index) => (
                   <div
                     key={index}
                     className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-red-50 flex items-center justify-center">
-                        <TrendingDown className="w-4 h-4 text-red-600" />
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
                       </div>
-                      <div>
-                        <h4 className="font-medium text-slate-900 text-sm">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-medium text-slate-900 text-sm truncate">
                           {expense.name}
                         </h4>
-                        <p className="text-xs text-slate-500">{expense.date}</p>
+                        <p className="text-xs text-slate-500 truncate">
+                          {expense.date}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className="text-base font-bold text-red-600">
+                    <div className="text-right flex-shrink-0 ml-2">
+                      <span className="text-sm sm:text-base font-bold text-red-600">
                         {formatCurrency(expense.amount)}
                       </span>
                       {expense.notes && (
-                        <p className="text-xs text-slate-400 mt-1 truncate max-w-[150px]">
+                        <p className="text-xs text-slate-400 mt-0.5 sm:mt-1 truncate max-w-[100px] sm:max-w-[150px]">
                           {expense.notes}
                         </p>
                       )}
@@ -964,38 +1136,38 @@ const Dashboard = ({ setActiveView }) => {
                   </div>
                 ))
               ) : (
-                <div className="text-center py-6 text-slate-400">
-                  <p>No expense data available</p>
+                <div className="text-center py-4 sm:py-6 text-slate-400">
+                  <p className="text-sm">No expense data available</p>
                 </div>
               )}
             </div>
           </div>
 
-          {/* Charts Grid - Below Expenses */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 px-2 sm:px-0">
             {/* Monthly Trend Chart */}
-            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
                     6-Month Trend
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs sm:text-sm text-slate-500 truncate">
                     Income vs Expense trend
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0 ml-2">
                   <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-green-500"></div>
+                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-green-500"></div>
                     <span className="text-xs text-slate-600">Income</span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+                    <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-red-500"></div>
                     <span className="text-xs text-slate-600">Expense</span>
                   </div>
                 </div>
               </div>
-              <div className="h-60">
+              <div className="h-48 sm:h-60">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={dashboardData.monthlyTrend}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" />
@@ -1003,12 +1175,12 @@ const Dashboard = ({ setActiveView }) => {
                       dataKey="month"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
                       tickFormatter={(value) => formatCompactCurrency(value)}
                     />
                     <Tooltip
@@ -1039,18 +1211,18 @@ const Dashboard = ({ setActiveView }) => {
             </div>
 
             {/* Weekly Performance */}
-            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                     Weekly Performance
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs sm:text-sm text-slate-500">
                     This week's income & expense
                   </p>
                 </div>
               </div>
-              <div className="h-60">
+              <div className="h-48 sm:h-60">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={dashboardData.weeklyData}>
                     <CartesianGrid
@@ -1062,12 +1234,12 @@ const Dashboard = ({ setActiveView }) => {
                       dataKey="day"
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
                     />
                     <YAxis
                       axisLine={false}
                       tickLine={false}
-                      tick={{ fill: "#64748b", fontSize: 11 }}
+                      tick={{ fill: "#64748b", fontSize: 10 }}
                       tickFormatter={(value) => formatCompactCurrency(value)}
                     />
                     <Tooltip content={<CustomTooltip />} />
@@ -1089,19 +1261,19 @@ const Dashboard = ({ setActiveView }) => {
             </div>
 
             {/* Expenses by Category */}
-            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                     Expenses by Category
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs sm:text-sm text-slate-500">
                     Distribution of expenses
                   </p>
                 </div>
-                <PieChartIcon className="w-5 h-5 text-slate-400" />
+                <PieChartIcon className="w-4 h-4 sm:w-5 sm:h-5 text-slate-400" />
               </div>
-              <div className="h-60">
+              <div className="h-48 sm:h-60">
                 {dashboardData.categoryExpenses.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -1113,7 +1285,8 @@ const Dashboard = ({ setActiveView }) => {
                         label={({ name, percent }) =>
                           `${name}: ${(percent * 100).toFixed(0)}%`
                         }
-                        outerRadius={70}
+                        outerRadius={60}
+                        innerRadius={30}
                         fill="#8884d8"
                         dataKey="value"
                         nameKey="name"
@@ -1130,55 +1303,54 @@ const Dashboard = ({ setActiveView }) => {
                           boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
                         }}
                       />
-                      <Legend />
                     </PieChart>
                   </ResponsiveContainer>
                 ) : (
                   <div className="h-full flex items-center justify-center text-slate-400">
-                    <p>No expense data available</p>
+                    <p className="text-sm">No expense data available</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Wallet Distribution */}
-            <div className="bg-white rounded-xl p-5 border-0 shadow-sm">
-              <div className="flex items-center justify-between mb-5">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+              <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                     Wallet Distribution
                   </h3>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-xs sm:text-sm text-slate-500">
                     Balance across wallets
                   </p>
                 </div>
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {dashboardData.walletDistribution.length > 0 ? (
                   dashboardData.walletDistribution.map((wallet, index) => (
-                    <div key={index} className="space-y-2">
+                    <div key={index} className="space-y-1.5 sm:space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-1 min-w-0">
                           <div
-                            className="w-3 h-3 rounded"
+                            className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded flex-shrink-0"
                             style={{ backgroundColor: wallet.color }}
                           ></div>
-                          <span className="text-sm font-medium text-slate-700">
+                          <span className="text-xs sm:text-sm font-medium text-slate-700 truncate">
                             {wallet.name}
                           </span>
                         </div>
-                        <div className="text-right">
-                          <span className="text-sm font-semibold text-slate-900">
+                        <div className="text-right flex-shrink-0 ml-2">
+                          <span className="text-xs sm:text-sm font-semibold text-slate-900">
                             {formatCurrency(wallet.value)}
                           </span>
-                          <span className="text-xs text-slate-500 ml-2">
+                          <span className="text-xs text-slate-500 ml-1">
                             ({wallet.percentage.toFixed(1)}%)
                           </span>
                         </div>
                       </div>
-                      <div className="w-full bg-slate-200 rounded-full h-2">
+                      <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
                         <div
-                          className="h-2 rounded-full transition-all duration-300"
+                          className="h-1.5 sm:h-2 rounded-full transition-all duration-300"
                           style={{
                             width: `${wallet.percentage}%`,
                             backgroundColor: wallet.color,
@@ -1189,7 +1361,7 @@ const Dashboard = ({ setActiveView }) => {
                   ))
                 ) : (
                   <div className="h-32 flex items-center justify-center text-slate-400">
-                    <p>No wallet data available</p>
+                    <p className="text-sm">No wallet data available</p>
                   </div>
                 )}
               </div>
@@ -1198,17 +1370,16 @@ const Dashboard = ({ setActiveView }) => {
         </div>
       </div>
 
-      {/* Quick Add Button - Now navigates to Transactions page using state */}
+      {/* Floating Action Button for Mobile */}
       <button
         onClick={() => {
-          // Store a flag that we want to open the form
           sessionStorage.setItem("autoOpenTransactionForm", "true");
           setActiveView("transactions");
         }}
-        className="fixed bottom-24 lg:bottom-8 right-6 z-40 w-14 h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
+        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
         title="Go to Transactions"
       >
-        <Plus className="w-7 h-7 text-white" />
+        <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
       </button>
     </div>
   );

@@ -25,6 +25,8 @@ import {
   Coffee,
   Gift,
   AlertTriangle,
+  Menu,
+  X,
 } from "lucide-react";
 
 // Delete Confirmation Modal Component
@@ -38,7 +40,7 @@ const DeleteConfirmationModal = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95">
+      <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95 mx-4">
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -75,7 +77,7 @@ const DeleteConfirmationModal = ({
           <button
             type="button"
             onClick={onConfirm}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-red-600 text-white shadow hover:bg-red-700 h-9 px-4 py-2"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-red-600 text-white shadow hover:bg-red-700 h-9 px-4 py-2 mt-2 sm:mt-0"
           >
             <Trash2 className="w-4 h-4 mr-1" />
             Delete Category
@@ -96,6 +98,7 @@ const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -133,7 +136,6 @@ const Categories = () => {
 
       if (response.ok && result.success) {
         setCategories(result.data);
-        //toast.success("Categories loaded successfully");
       } else {
         throw new Error(result.error || "Failed to fetch categories");
       }
@@ -158,7 +160,7 @@ const Categories = () => {
   ).length;
 
   const getIconComponent = (iconName) => {
-    const iconProps = { className: "w-6 h-6" };
+    const iconProps = { className: "w-5 h-5 sm:w-6 sm:h-6" };
     switch (iconName) {
       case "smartphone":
         return <Smartphone {...iconProps} />;
@@ -350,7 +352,7 @@ const Categories = () => {
         <div className="fixed inset-0 z-0">
           <BackgroundCircles />
         </div>
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading categories...</p>
@@ -374,6 +376,7 @@ const Categories = () => {
         draggable
         pauseOnHover
         theme="light"
+        className="!z-50"
       />
 
       {/* BackgroundCircles with lower z-index so it doesn't overlay text */}
@@ -381,16 +384,16 @@ const Categories = () => {
         <BackgroundCircles />
       </div>
 
-      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        <div className="space-y-6 pb-20">
+      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
+        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
               <div className="flex justify-between items-center">
-                <span>{error}</span>
+                <span className="text-sm sm:text-base">{error}</span>
                 <button
                   onClick={clearError}
-                  className="text-red-500 hover:text-red-700 text-lg font-bold"
+                  className="text-red-500 hover:text-red-700 text-lg font-bold ml-2"
                 >
                   ×
                 </button>
@@ -399,85 +402,167 @@ const Categories = () => {
           )}
 
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
-              <p className="text-slate-600 mt-0.5">
-                Organize your transactions
-              </p>
+          <div className="flex items-center justify-between gap-3 px-2 sm:px-0">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="sm:hidden inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 w-9 bg-white border border-slate-200 shadow-sm"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Categories
+                </h1>
+                <p className="text-slate-600 text-sm sm:text-base mt-0.5">
+                  Organize your transactions
+                </p>
+              </div>
             </div>
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Category
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">Add Category</span>
+              <span className="sm:hidden">Add</span>
             </button>
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <p className="text-green-700 text-sm font-medium mb-1">
-                Income Categories
-              </p>
-              <p className="text-3xl font-bold text-green-900">{incomeCount}</p>
+          {/* Mobile Navigation Menu */}
+          {isMobileMenuOpen && (
+            <div className="sm:hidden bg-white rounded-xl p-4 border-0 shadow-lg mx-2">
+              <div className="space-y-2">
+                <button
+                  onClick={() => {
+                    setActiveTab("all");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === "all"
+                      ? "bg-green-500 text-white"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  All Categories
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("income");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === "income"
+                      ? "bg-green-500 text-white"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  Income Categories
+                </button>
+                <button
+                  onClick={() => {
+                    setActiveTab("expense");
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                    activeTab === "expense"
+                      ? "bg-green-500 text-white"
+                      : "hover:bg-slate-100"
+                  }`}
+                >
+                  Expense Categories
+                </button>
+              </div>
             </div>
-            <div className="bg-white rounded-xl p-6 border-0 shadow-sm">
-              <p className="text-red-700 text-sm font-medium mb-1">
-                Expense Categories
-              </p>
-              <p className="text-3xl font-bold text-red-900">{expenseCount}</p>
+          )}
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 px-2 sm:px-0">
+            <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-700 text-sm font-medium mb-1">
+                    Income Categories
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-900">
+                    {incomeCount}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
+                </div>
+              </div>
+            </div>
+            <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-red-700 text-sm font-medium mb-1">
+                    Expense Categories
+                  </p>
+                  <p className="text-2xl sm:text-3xl font-bold text-red-900">
+                    {expenseCount}
+                  </p>
+                </div>
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-100 rounded-full flex items-center justify-center">
+                  <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6 text-red-600" />
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Tabs */}
-          <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-            <div
-              role="tablist"
-              className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-slate-100"
-            >
-              <button
-                type="button"
-                role="tab"
-                onClick={() => setActiveTab("all")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTab === "all"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-200"
-                }`}
+          {/* Tabs - Hidden on mobile when menu is open */}
+          {!isMobileMenuOpen && (
+            <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm mx-2 sm:mx-0">
+              <div
+                role="tablist"
+                className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-slate-100"
               >
-                All
-              </button>
-              <button
-                type="button"
-                role="tab"
-                onClick={() => setActiveTab("income")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTab === "income"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-200"
-                }`}
-              >
-                Income
-              </button>
-              <button
-                type="button"
-                role="tab"
-                onClick={() => setActiveTab("expense")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                  activeTab === "expense"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-200"
-                }`}
-              >
-                Expense
-              </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab("all")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTab === "all"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab("income")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTab === "income"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  Income
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => setActiveTab("expense")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTab === "expense"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  Expense
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Categories Grid */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3 px-2 sm:px-0">
             {filteredCategories.map((category) => (
               <div
                 key={category._id}
@@ -489,12 +574,12 @@ const Categories = () => {
                   style={{ backgroundColor: category.color }}
                 />
 
-                <div className="p-4">
+                <div className="p-3 sm:p-4">
                   <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-center gap-3 sm:gap-4 flex-1">
                       {/* Icon */}
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg sm:rounded-xl flex items-center justify-center shadow-sm"
                         style={{ backgroundColor: `${category.color}20` }}
                       >
                         {getIconComponent(category.icon)}
@@ -502,36 +587,38 @@ const Categories = () => {
 
                       {/* Category Info */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-slate-900 truncate">
+                        <div className="flex items-center gap-2 mb-0.5 sm:mb-1">
+                          <h3 className="font-semibold text-slate-900 truncate text-sm sm:text-base">
                             {category.name}
                           </h3>
                           {category.isDefault && (
-                            <div className="inline-flex items-center rounded-md border px-2.5 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs">
+                            <div className="inline-flex items-center rounded-md border px-2 py-0.5 font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80 text-xs">
                               Default
                             </div>
                           )}
                         </div>
-                        <p className="text-sm text-slate-500 capitalize">
+                        <p className="text-xs sm:text-sm text-slate-500 capitalize">
                           {category.type}
                         </p>
                       </div>
                     </div>
 
-                    {/* Action Buttons */}
-                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Action Buttons - Always visible on mobile, shown on hover on desktop */}
+                    <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button
                         onClick={() => handleEditCategory(category)}
-                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
+                        title="Edit category"
                       >
-                        <SquarePen className="w-4 h-4 text-slate-600" />
+                        <SquarePen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
                       </button>
                       {!category.isDefault && (
                         <button
                           onClick={() => handleDeleteClick(category)}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
+                          title="Delete category"
                         >
-                          <Trash2 className="w-4 h-4 text-red-500" />
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
                         </button>
                       )}
                     </div>
@@ -543,10 +630,15 @@ const Categories = () => {
 
           {/* Empty State */}
           {filteredCategories.length === 0 && (
-            <div className="text-center py-12">
-              <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
-                <p className="text-slate-500 text-lg">No categories found</p>
-                <p className="text-slate-400 mt-2">
+            <div className="text-center py-8 sm:py-12 px-4">
+              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
+                <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                  <Tag className="w-8 h-8 text-slate-400" />
+                </div>
+                <p className="text-slate-500 text-base sm:text-lg">
+                  No categories found
+                </p>
+                <p className="text-slate-400 mt-2 text-sm sm:text-base">
                   {activeTab === "all"
                     ? "Get started by creating your first category"
                     : `No ${activeTab} categories found`}
@@ -554,7 +646,7 @@ const Categories = () => {
                 {activeTab === "all" && (
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+                    className="mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600 w-full sm:w-auto"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Category
@@ -590,6 +682,14 @@ const Categories = () => {
         onConfirm={handleDeleteConfirm}
         categoryName={deletingCategory?.name || ""}
       />
+
+      {/* Floating Action Button for Mobile */}
+      <button
+        onClick={() => setIsCreateModalOpen(true)}
+        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center z-40 hover:bg-green-700 transition-colors"
+      >
+        <Plus className="w-6 h-6" />
+      </button>
     </div>
   );
 };

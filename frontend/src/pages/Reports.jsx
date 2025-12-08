@@ -13,6 +13,10 @@ import {
   AlertCircle,
   Calendar,
   ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+  Menu,
+  X,
 } from "lucide-react";
 
 // Chart components
@@ -34,7 +38,8 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [showFilters, setShowFilters] = useState(true);
+  const [showFilters, setShowFilters] = useState(false); // Changed to false for mobile
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(
@@ -104,6 +109,24 @@ const Reports = () => {
       "October",
       "November",
       "December",
+    ];
+    return months[monthNumber - 1];
+  };
+
+  const getShortMonthName = (monthNumber) => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ];
     return months[monthNumber - 1];
   };
@@ -350,7 +373,6 @@ const Reports = () => {
         return;
       }
 
-      // Fetch all required data in parallel
       const [transactionsRes, walletsRes, categoriesRes] = await Promise.all([
         fetch(
           `${BASE_URL}/transactions/monthly?month=${selectedMonth}&year=${selectedYear}`,
@@ -453,16 +475,13 @@ const Reports = () => {
   };
 
   const handleDateInputChange = (field, value) => {
-    // Update the displayed value
     setDateInputs((prev) => ({
       ...prev,
       [field]: value,
     }));
 
-    // Parse and update the filter if valid
     const date = parseDDMMYYYY(value);
     if (date) {
-      // Convert to yyyy-mm-dd format for backend
       const yyyy = date.getFullYear();
       const mm = String(date.getMonth() + 1).padStart(2, "0");
       const dd = String(date.getDate()).padStart(2, "0");
@@ -476,7 +495,6 @@ const Reports = () => {
         },
       }));
     } else if (value === "") {
-      // Clear the filter if input is empty
       setFilters((prev) => ({
         ...prev,
         dateRange: {
@@ -553,7 +571,6 @@ const Reports = () => {
       endDate: "",
     });
 
-    // Reset to original data - always filter from originalTransactions
     const resetReportData = calculateReportDataFromTransactions(
       originalTransactions,
       originalWallets,
@@ -565,10 +582,8 @@ const Reports = () => {
   };
 
   const handleApplyFilters = () => {
-    // Always filter from original transactions
     const allTransactions = [...originalTransactions];
 
-    // If no filters are applied, show all data
     const hasActiveFilters =
       filters.transactionTypes.length > 0 ||
       filters.selectedWallets.length > 0 ||
@@ -589,17 +604,14 @@ const Reports = () => {
       return;
     }
 
-    // Apply filters one by one, starting with all original transactions
     let filtered = allTransactions;
 
-    // Filter by transaction type
     if (filters.transactionTypes.length > 0) {
       filtered = filtered.filter((t) =>
         filters.transactionTypes.includes(t.type)
       );
     }
 
-    // Filter by wallets
     if (filters.selectedWallets.length > 0) {
       filtered = filtered.filter((t) => {
         const fromWallet = t.from_wallet_id?._id || t.from_wallet_id;
@@ -611,10 +623,9 @@ const Reports = () => {
       });
     }
 
-    // Filter by categories (only for income/expense, not transfers)
     if (filters.selectedCategories.length > 0) {
       filtered = filtered.filter((t) => {
-        if (t.type === "transfer") return true; // Keep transfers
+        if (t.type === "transfer") return true;
         const categoryId = t.category_id?._id || t.category_id;
         return (
           categoryId &&
@@ -623,7 +634,6 @@ const Reports = () => {
       });
     }
 
-    // Filter by amount range
     if (filters.amountRange.min) {
       const minAmount = parseFloat(filters.amountRange.min);
       filtered = filtered.filter((t) => t.amount >= minAmount);
@@ -633,7 +643,6 @@ const Reports = () => {
       filtered = filtered.filter((t) => t.amount <= maxAmount);
     }
 
-    // Filter by date range
     if (filters.dateRange.startDate) {
       const startDate = new Date(filters.dateRange.startDate);
       startDate.setHours(0, 0, 0, 0);
@@ -653,7 +662,6 @@ const Reports = () => {
       });
     }
 
-    // Recalculate all report data from filtered transactions
     const newReportData = calculateReportDataFromTransactions(
       filtered,
       originalWallets,
@@ -662,6 +670,11 @@ const Reports = () => {
     setReportData(newReportData);
 
     toast.success(`Filters applied: ${filtered.length} transactions found`);
+
+    // Close filters on mobile after applying
+    if (window.innerWidth < 1024) {
+      setShowFilters(false);
+    }
   };
 
   const clearError = () => {
@@ -671,10 +684,16 @@ const Reports = () => {
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-slate-200 rounded-lg shadow-lg">
-          <p className="font-semibold text-slate-900">{label}</p>
+        <div className="bg-white p-2 sm:p-3 border border-slate-200 rounded-lg shadow-lg max-w-[200px] sm:max-w-none">
+          <p className="font-semibold text-slate-900 text-xs sm:text-sm mb-1 sm:mb-2">
+            {label}
+          </p>
           {payload.map((entry, index) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
+            <p
+              key={index}
+              className="text-xs sm:text-sm"
+              style={{ color: entry.color }}
+            >
               {entry.name}: {formatCurrency(entry.value)}
             </p>
           ))}
@@ -684,13 +703,39 @@ const Reports = () => {
     return null;
   };
 
+  const handlePreviousMonth = () => {
+    let newMonth = selectedMonth - 1;
+    let newYear = selectedYear;
+
+    if (newMonth < 1) {
+      newMonth = 12;
+      newYear = selectedYear - 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
+  const handleNextMonth = () => {
+    let newMonth = selectedMonth + 1;
+    let newYear = selectedYear;
+
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear = selectedYear + 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
   if (loading && !reportData.summary.totalTransactions) {
     return (
       <div className="min-h-screen relative">
         <div className="fixed inset-0 z-0">
           <BackgroundCircles />
         </div>
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading reports...</p>
@@ -713,84 +758,201 @@ const Reports = () => {
         draggable
         pauseOnHover
         theme="light"
+        className="!z-50"
       />
 
       <div className="fixed inset-0 z-0">
         <BackgroundCircles />
       </div>
 
-      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        <div className="space-y-6 pb-20 lg:pb-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl font-bold text-slate-900">
-                Advanced Reports
-              </h1>
-              <p className="text-slate-600 mt-1">
-                Detailed financial insights and analytics
-              </p>
+      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
+        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
+          {/* Mobile Header */}
+          <div className="lg:hidden space-y-3 px-2 sm:px-0">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Reports</h1>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Financial insights & analytics
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMobileMenu(!showMobileMenu)}
+                className="p-2 rounded-lg bg-white border border-slate-200"
+              >
+                {showMobileMenu ? (
+                  <X className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <Menu className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Month Selector */}
-              <div className="w-32">
-                <div className="relative">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                    disabled={loading}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const month = i + 1;
-                      return (
-                        <option key={month} value={month}>
-                          {getMonthName(month)}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
+            {/* Mobile Month Navigation */}
+            <div className="bg-white rounded-xl p-3 border-0 shadow-sm">
+              <div className="flex items-center justify-between">
+                <button
+                  onClick={handlePreviousMonth}
+                  className="p-2 rounded-lg hover:bg-slate-100"
+                >
+                  <ChevronLeft className="w-5 h-5 text-slate-600" />
+                </button>
 
-              {/* Year Selector */}
-              <div className="w-28">
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    disabled={loading}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                  >
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                <div className="text-center">
+                  <p className="font-semibold text-slate-900 text-sm">
+                    {getShortMonthName(selectedMonth)} {selectedYear}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    Tap filters to change
+                  </p>
                 </div>
-              </div>
 
-              {/* Filter Toggle Button */}
+                <button
+                  onClick={handleNextMonth}
+                  className="p-2 rounded-lg hover:bg-slate-100"
+                >
+                  <ChevronRight className="w-5 h-5 text-slate-600" />
+                </button>
+              </div>
+            </div>
+
+            {/* Mobile Quick Actions */}
+            <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
               >
-                <Filter className="w-4 h-4 mr-2" />
-                {showFilters ? "Hide Filters" : "Show Filters"}
+                <Filter className="w-4 h-4" />
+                <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
               </button>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {showMobileMenu && (
+              <div className="bg-white rounded-xl p-4 border-0 shadow-lg">
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Month
+                    </label>
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) =>
+                        setSelectedMonth(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = i + 1;
+                        return (
+                          <option key={month} value={month}>
+                            {getShortMonthName(month)}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Year
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden lg:block px-2 sm:px-0">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">
+                  Advanced Reports
+                </h1>
+                <p className="text-sm text-slate-600 mt-0.5 sm:mt-1">
+                  Detailed financial insights and analytics
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="w-28 sm:w-32">
+                  <div className="relative">
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) =>
+                        setSelectedMonth(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = i + 1;
+                        return (
+                          <option key={month} value={month}>
+                            {getMonthName(month)}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <div className="w-24 sm:w-28">
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowFilters(!showFilters)}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                  <Filter className="w-4 h-4" />
+                  {showFilters ? "Hide Filters" : "Show Filters"}
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -803,36 +965,36 @@ const Reports = () => {
             </div>
           )}
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Summary Cards - Mobile Optimized */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 px-2 sm:px-0">
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <p className="text-xs text-green-700 mb-1">Total Income</p>
-                <p className="text-2xl font-bold text-green-900">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-900 truncate">
                   {formatCurrency(reportData.summary.totalIncome)}
                 </p>
                 <p className="text-xs text-green-600 mt-1">
-                  {reportData.summary.incomeTransactions} transactions
+                  {reportData.summary.incomeTransactions} txns
                 </p>
               </div>
             </div>
 
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <p className="text-xs text-red-700 mb-1">Total Expense</p>
-                <p className="text-2xl font-bold text-red-900">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-900 truncate">
                   {formatCurrency(reportData.summary.totalExpense)}
                 </p>
                 <p className="text-xs text-red-600 mt-1">
-                  {reportData.summary.expenseTransactions} transactions
+                  {reportData.summary.expenseTransactions} txns
                 </p>
               </div>
             </div>
 
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <p className="text-xs text-blue-700 mb-1">Net Amount</p>
-                <p className="text-2xl font-bold text-blue-900">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-900 truncate">
                   {formatCurrency(reportData.summary.netAmount)}
                 </p>
                 <p className="text-xs text-blue-600 mt-1">
@@ -842,9 +1004,9 @@ const Reports = () => {
             </div>
 
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-4">
+              <div className="p-3 sm:p-4">
                 <p className="text-xs text-purple-700 mb-1">Avg Transaction</p>
-                <p className="text-2xl font-bold text-purple-900">
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-purple-900 truncate">
                   {formatCurrency(reportData.summary.avgTransaction)}
                 </p>
                 <p className="text-xs text-purple-600 mt-1">
@@ -854,224 +1016,244 @@ const Reports = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Filters Panel */}
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+            {/* Filters Panel - Mobile Overlay */}
             {showFilters && (
               <div className="lg:col-span-1">
-                <div className="rounded-xl border bg-card text-card-foreground shadow">
-                  <div className="flex flex-col space-y-1.5 p-6 pb-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Filter className="w-5 h-5 text-blue-600" />
-                        <div className="font-semibold leading-none tracking-tight">
-                          Advanced Filters
-                        </div>
-                      </div>
-                      <button
-                        onClick={handleResetFilters}
-                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 text-slate-700 hover:bg-slate-100"
-                      >
-                        <RotateCcw className="w-4 h-4 mr-1" />
-                        Reset
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="p-6 pt-0 space-y-6">
-                    {/* Date Range */}
-                    <div>
-                      <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
-                        Date Range
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label
-                            className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                            htmlFor="startDate"
-                          >
-                            Start Date
-                          </label>
-                          <input
-                            type="text"
-                            className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                            id="startDate"
-                            placeholder="dd/mm/yyyy"
-                            value={dateInputs.startDate}
-                            onChange={(e) =>
-                              handleDateInputChange("startDate", e.target.value)
-                            }
-                          />
-                          {dateInputs.startDate &&
-                            !isValidDDMMYYYY(dateInputs.startDate) && (
-                              <p className="text-xs text-red-500 mt-1">
-                                Invalid date format. Use dd/mm/yyyy
-                              </p>
-                            )}
-                        </div>
-                        <div>
-                          <label
-                            className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                            htmlFor="endDate"
-                          >
-                            End Date
-                          </label>
-                          <input
-                            type="text"
-                            className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                            id="endDate"
-                            placeholder="dd/mm/yyyy"
-                            value={dateInputs.endDate}
-                            onChange={(e) =>
-                              handleDateInputChange("endDate", e.target.value)
-                            }
-                          />
-                          {dateInputs.endDate &&
-                            !isValidDDMMYYYY(dateInputs.endDate) && (
-                              <p className="text-xs text-red-500 mt-1">
-                                Invalid date format. Use dd/mm/yyyy
-                              </p>
-                            )}
-                        </div>
-                      </div>
-                      {(dateInputs.startDate || dateInputs.endDate) && (
-                        <div className="mt-2 text-xs text-blue-600">
-                          Filtering by: {dateInputs.startDate || "Any start"} to{" "}
-                          {dateInputs.endDate || "Any end"}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Transaction Type */}
-                    <div>
-                      <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
-                        Transaction Type
-                      </label>
-                      <div className="flex flex-wrap gap-2">
-                        {["income", "expense", "transfer"].map((type) => (
+                <div className="fixed inset-0 z-40 bg-black/50 lg:bg-transparent lg:relative lg:inset-auto lg:z-auto">
+                  <div className="fixed inset-y-0 left-0 z-50 w-full max-w-xs bg-white shadow-xl lg:relative lg:inset-auto lg:shadow-none lg:w-full lg:max-w-none lg:bg-transparent">
+                    <div className="h-full overflow-y-auto">
+                      <div className="rounded-xl border bg-card text-card-foreground shadow lg:shadow-none lg:border lg:bg-white">
+                        {/* Mobile Header */}
+                        <div className="flex items-center justify-between p-4 border-b lg:hidden">
+                          <h2 className="text-lg font-semibold">Filters</h2>
                           <button
-                            key={type}
-                            type="button"
-                            onClick={() => toggleTransactionType(type)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                              filters.transactionTypes.includes(type)
-                                ? "bg-green-600 text-white"
-                                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                            }`}
+                            onClick={() => setShowFilters(false)}
+                            className="p-2 rounded-lg hover:bg-slate-100"
                           >
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
+                            <X className="w-5 h-5 text-slate-600" />
                           </button>
-                        ))}
+                        </div>
+
+                        <div className="flex flex-col space-y-1.5 p-4 sm:p-6 sm:pb-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <Filter className="w-5 h-5 text-blue-600" />
+                              <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
+                                Advanced Filters
+                              </div>
+                            </div>
+                            <button
+                              onClick={handleResetFilters}
+                              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-2 sm:px-3 text-slate-700 hover:bg-slate-100"
+                            >
+                              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                              <span className="hidden sm:inline">Reset</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="p-4 sm:p-6 sm:pt-0 space-y-4 sm:space-y-6">
+                          {/* Date Range */}
+                          <div>
+                            <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                              Date Range
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                              <div>
+                                <label
+                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                                  htmlFor="startDate"
+                                >
+                                  Start Date
+                                </label>
+                                <input
+                                  type="text"
+                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                                  id="startDate"
+                                  placeholder="dd/mm/yyyy"
+                                  value={dateInputs.startDate}
+                                  onChange={(e) =>
+                                    handleDateInputChange(
+                                      "startDate",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                                {dateInputs.startDate &&
+                                  !isValidDDMMYYYY(dateInputs.startDate) && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                      Invalid format
+                                    </p>
+                                  )}
+                              </div>
+                              <div>
+                                <label
+                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                                  htmlFor="endDate"
+                                >
+                                  End Date
+                                </label>
+                                <input
+                                  type="text"
+                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                                  id="endDate"
+                                  placeholder="dd/mm/yyyy"
+                                  value={dateInputs.endDate}
+                                  onChange={(e) =>
+                                    handleDateInputChange(
+                                      "endDate",
+                                      e.target.value
+                                    )
+                                  }
+                                />
+                                {dateInputs.endDate &&
+                                  !isValidDDMMYYYY(dateInputs.endDate) && (
+                                    <p className="text-xs text-red-500 mt-1">
+                                      Invalid format
+                                    </p>
+                                  )}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Transaction Type */}
+                          <div>
+                            <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                              Transaction Type
+                            </label>
+                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                              {["income", "expense", "transfer"].map((type) => (
+                                <button
+                                  key={type}
+                                  type="button"
+                                  onClick={() => toggleTransactionType(type)}
+                                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none ${
+                                    filters.transactionTypes.includes(type)
+                                      ? "bg-green-600 text-white"
+                                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                                  }`}
+                                >
+                                  {type.charAt(0).toUpperCase() + type.slice(1)}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {/* Wallets */}
+                          {originalWallets.length > 0 && (
+                            <div>
+                              <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                                Wallets ({filters.selectedWallets.length})
+                              </label>
+                              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 overflow-y-auto p-1">
+                                {originalWallets.map((wallet) => (
+                                  <button
+                                    key={wallet._id}
+                                    type="button"
+                                    onClick={() =>
+                                      toggleWalletSelection(wallet._id)
+                                    }
+                                    className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
+                                      filters.selectedWallets.includes(
+                                        wallet._id
+                                      )
+                                        ? "border-green-600 bg-green-50 text-green-700"
+                                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                                    }`}
+                                  >
+                                    {wallet.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Categories */}
+                          {originalCategories.length > 0 && (
+                            <div>
+                              <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                                Categories ({filters.selectedCategories.length})
+                              </label>
+                              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 overflow-y-auto p-1">
+                                {originalCategories.map((category) => (
+                                  <button
+                                    key={category._id}
+                                    type="button"
+                                    onClick={() =>
+                                      toggleCategorySelection(category._id)
+                                    }
+                                    className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border truncate ${
+                                      filters.selectedCategories.includes(
+                                        category._id
+                                      )
+                                        ? "border-green-600 bg-green-50 text-green-700"
+                                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                                    }`}
+                                  >
+                                    {category.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Amount Range */}
+                          <div>
+                            <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                              Amount Range
+                            </label>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                              <div>
+                                <label
+                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                                  htmlFor="minAmount"
+                                >
+                                  Min Amount
+                                </label>
+                                <input
+                                  type="number"
+                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                                  id="minAmount"
+                                  step="0.01"
+                                  placeholder="৳ 0.00"
+                                  value={filters.amountRange.min}
+                                  onChange={(e) =>
+                                    handleAmountChange("min", e.target.value)
+                                  }
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                                  htmlFor="maxAmount"
+                                >
+                                  Max Amount
+                                </label>
+                                <input
+                                  type="number"
+                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                                  id="maxAmount"
+                                  step="0.01"
+                                  placeholder="৳ 0.00"
+                                  value={filters.amountRange.max}
+                                  onChange={(e) =>
+                                    handleAmountChange("max", e.target.value)
+                                  }
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={handleApplyFilters}
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 w-full shadow-lg bg-green-600 text-white hover:bg-green-700"
+                          >
+                            Apply Filters
+                          </button>
+                        </div>
                       </div>
                     </div>
-
-                    {/* Wallets */}
-                    {originalWallets.length > 0 && (
-                      <div>
-                        <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
-                          Wallets ({filters.selectedWallets.length} selected)
-                        </label>
-                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
-                          {originalWallets.map((wallet) => (
-                            <button
-                              key={wallet._id}
-                              type="button"
-                              onClick={() => toggleWalletSelection(wallet._id)}
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
-                                filters.selectedWallets.includes(wallet._id)
-                                  ? "border-green-600 bg-green-50 text-green-700"
-                                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                              }`}
-                            >
-                              {wallet.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Categories */}
-                    {originalCategories.length > 0 && (
-                      <div>
-                        <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
-                          Categories ({filters.selectedCategories.length}{" "}
-                          selected)
-                        </label>
-                        <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
-                          {originalCategories.map((category) => (
-                            <button
-                              key={category._id}
-                              type="button"
-                              onClick={() =>
-                                toggleCategorySelection(category._id)
-                              }
-                              className={`px-3 py-2 rounded-lg text-sm font-medium transition-all border ${
-                                filters.selectedCategories.includes(
-                                  category._id
-                                )
-                                  ? "border-green-600 bg-green-50 text-green-700"
-                                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                              }`}
-                            >
-                              {category.name}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Amount Range */}
-                    <div>
-                      <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-sm font-semibold text-slate-700 mb-3 block">
-                        Amount Range
-                      </label>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                          <label
-                            className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                            htmlFor="minAmount"
-                          >
-                            Minimum Amount
-                          </label>
-                          <input
-                            type="number"
-                            className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                            id="minAmount"
-                            step="0.01"
-                            placeholder="৳ 0.00"
-                            value={filters.amountRange.min}
-                            onChange={(e) =>
-                              handleAmountChange("min", e.target.value)
-                            }
-                          />
-                        </div>
-                        <div>
-                          <label
-                            className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                            htmlFor="maxAmount"
-                          >
-                            Maximum Amount
-                          </label>
-                          <input
-                            type="number"
-                            className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                            id="maxAmount"
-                            step="0.01"
-                            placeholder="৳ 0.00"
-                            value={filters.amountRange.max}
-                            onChange={(e) =>
-                              handleAmountChange("max", e.target.value)
-                            }
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <button
-                      onClick={handleApplyFilters}
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 w-full shadow-lg bg-green-600 text-white hover:bg-green-700"
-                    >
-                      Apply Filters
-                    </button>
                   </div>
                 </div>
               </div>
@@ -1081,121 +1263,136 @@ const Reports = () => {
             <div
               className={`${showFilters ? "lg:col-span-3" : "lg:col-span-4"}`}
             >
-              {/* Month Info */}
-              <div className="bg-white rounded-xl p-4 border-0 shadow-sm mb-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                  <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
+              {/* Month Info - Mobile Optimized */}
+              <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
                       {getMonthName(selectedMonth)} {selectedYear}
                     </h3>
-                    <p className="text-sm text-slate-600">
+                    <p className="text-xs sm:text-sm text-slate-600">
                       {reportData.summary.totalTransactions > 0
                         ? `Showing ${reportData.summary.totalTransactions} transactions`
-                        : "No data available for this month"}
+                        : "No data available"}
                     </p>
                     {(dateInputs.startDate || dateInputs.endDate) && (
-                      <p className="text-sm text-blue-600 mt-1">
+                      <p className="text-xs sm:text-sm text-blue-600 mt-1 truncate">
                         Date filter: {dateInputs.startDate || "Any start"} to{" "}
                         {dateInputs.endDate || "Any end"}
                       </p>
                     )}
                   </div>
+                  {!showFilters && (
+                    <button
+                      onClick={() => setShowFilters(true)}
+                      className="lg:hidden inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-8 px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 w-full sm:w-auto"
+                    >
+                      <Filter className="w-4 h-4" />
+                      Show Filters
+                    </button>
+                  )}
                 </div>
               </div>
 
-              <div className="space-y-6">
-                {/* Tabs */}
-                <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-                  <div className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-2">
+              <div className="space-y-4 sm:space-y-6">
+                {/* Tabs - Mobile Optimized */}
+                <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm">
+                  <div className="h-8 sm:h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-2">
                     <button
                       type="button"
                       onClick={() => setActiveTab("overview")}
-                      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                         activeTab === "overview"
                           ? "bg-green-500 text-white shadow"
                           : "hover:bg-slate-100"
                       }`}
                     >
-                      Overview & Charts
+                      <span className="truncate">Charts</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setActiveTab("details")}
-                      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
                         activeTab === "details"
                           ? "bg-green-500 text-white shadow"
                           : "hover:bg-slate-100"
                       }`}
                     >
-                      Transaction Details
+                      <span className="truncate">Details</span>
                     </button>
                   </div>
                 </div>
 
                 {/* Charts Content */}
                 {activeTab === "overview" && (
-                  <div className="space-y-6">
+                  <div className="space-y-4 sm:space-y-6">
                     {/* Income vs Expense Chart */}
                     {reportData.categoriesData.length > 0 ? (
                       <div className="rounded-xl border bg-card text-card-foreground shadow">
-                        <div className="flex flex-col space-y-1.5 p-6">
-                          <div className="font-semibold leading-none tracking-tight">
+                        <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                          <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
                             Income vs Expense by Category
                           </div>
-                          <p className="text-sm text-slate-600">
-                            Comparison of income and expense for each category
+                          <p className="text-xs sm:text-sm text-slate-600">
+                            Comparison of income and expense per category
                           </p>
                         </div>
-                        <div className="p-6 pt-0">
-                          <ResponsiveContainer width="100%" height={400}>
-                            <RechartsBarChart
-                              data={reportData.categoriesData}
-                              margin={{
-                                top: 20,
-                                right: 30,
-                                left: 20,
-                                bottom: 80,
-                              }}
-                            >
-                              <CartesianGrid strokeDasharray="3 3" />
-                              <XAxis
-                                dataKey="name"
-                                angle={-45}
-                                textAnchor="end"
-                                height={80}
-                                interval={0}
-                              />
-                              <YAxis />
-                              <Tooltip content={<CustomTooltip />} />
-                              <Legend />
-                              <Bar
-                                dataKey="income"
-                                name="Income"
-                                fill="#10b981"
-                                radius={[8, 8, 0, 0]}
-                              />
-                              <Bar
-                                dataKey="expense"
-                                name="Expense"
-                                fill="#ef4444"
-                                radius={[8, 8, 0, 0]}
-                              />
-                            </RechartsBarChart>
-                          </ResponsiveContainer>
+                        <div className="p-3 sm:p-6 sm:pt-0">
+                          <div className="h-64 sm:h-72 md:h-80 lg:h-96">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <RechartsBarChart
+                                data={reportData.categoriesData}
+                                margin={{
+                                  top: 20,
+                                  right: 10,
+                                  left: 0,
+                                  bottom: 60,
+                                }}
+                              >
+                                <CartesianGrid
+                                  strokeDasharray="3 3"
+                                  stroke="#f1f5f9"
+                                />
+                                <XAxis
+                                  dataKey="name"
+                                  angle={-45}
+                                  textAnchor="end"
+                                  height={60}
+                                  interval={0}
+                                  tick={{ fontSize: 10 }}
+                                />
+                                <YAxis tick={{ fontSize: 10 }} />
+                                <Tooltip content={<CustomTooltip />} />
+                                <Legend />
+                                <Bar
+                                  dataKey="income"
+                                  name="Income"
+                                  fill="#10b981"
+                                  radius={[4, 4, 0, 0]}
+                                />
+                                <Bar
+                                  dataKey="expense"
+                                  name="Expense"
+                                  fill="#ef4444"
+                                  radius={[4, 4, 0, 0]}
+                                />
+                              </RechartsBarChart>
+                            </ResponsiveContainer>
+                          </div>
                         </div>
                       </div>
                     ) : (
                       <div className="rounded-xl border bg-card text-card-foreground shadow">
-                        <div className="p-6">
-                          <div className="text-center py-12">
-                            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                              <BarChartIcon className="w-8 h-8 text-slate-400" />
+                        <div className="p-4 sm:p-6">
+                          <div className="text-center py-8 sm:py-12">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                              <BarChartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                             </div>
-                            <p className="text-slate-500 text-lg mb-2">
+                            <p className="text-slate-500 text-sm sm:text-lg mb-2">
                               No category data available
                             </p>
-                            <p className="text-slate-400">
-                              No transactions found for the selected filters
+                            <p className="text-slate-400 text-xs sm:text-sm">
+                              No transactions found for selected filters
                             </p>
                           </div>
                         </div>
@@ -1203,63 +1400,72 @@ const Reports = () => {
                     )}
 
                     {/* Bottom Charts Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                       {/* Wallet Activity */}
                       {reportData.walletActivity.length > 0 ? (
                         <div className="rounded-xl border bg-card text-card-foreground shadow">
-                          <div className="flex flex-col space-y-1.5 p-6">
-                            <div className="font-semibold leading-none tracking-tight">
+                          <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                            <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
                               Wallet Activity
                             </div>
-                            <p className="text-sm text-slate-600">
+                            <p className="text-xs sm:text-sm text-slate-600">
                               Net balance per wallet
                             </p>
                           </div>
-                          <div className="p-6 pt-0">
-                            <ResponsiveContainer width="100%" height={300}>
-                              <RechartsBarChart
-                                data={reportData.walletActivity}
-                                layout="vertical"
-                                margin={{
-                                  top: 5,
-                                  right: 30,
-                                  left: 20,
-                                  bottom: 5,
-                                }}
-                              >
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis type="number" />
-                                <YAxis
-                                  type="category"
-                                  dataKey="name"
-                                  width={100}
-                                />
-                                <Tooltip
-                                  formatter={(value) => [
-                                    formatCurrency(value),
-                                    "Balance",
-                                  ]}
-                                />
-                                <Bar
-                                  dataKey="value"
-                                  fill="#3b82f6"
-                                  radius={[0, 4, 4, 0]}
-                                />
-                              </RechartsBarChart>
-                            </ResponsiveContainer>
+                          <div className="p-3 sm:p-6 sm:pt-0">
+                            <div className="h-56 sm:h-64">
+                              <ResponsiveContainer width="100%" height="100%">
+                                <RechartsBarChart
+                                  data={reportData.walletActivity}
+                                  layout="vertical"
+                                  margin={{
+                                    top: 5,
+                                    right: 20,
+                                    left: 60,
+                                    bottom: 5,
+                                  }}
+                                >
+                                  <CartesianGrid
+                                    strokeDasharray="3 3"
+                                    stroke="#f1f5f9"
+                                  />
+                                  <XAxis
+                                    type="number"
+                                    tick={{ fontSize: 10 }}
+                                  />
+                                  <YAxis
+                                    type="category"
+                                    dataKey="name"
+                                    width={80}
+                                    tick={{ fontSize: 10 }}
+                                  />
+                                  <Tooltip
+                                    formatter={(value) => [
+                                      formatCurrency(value),
+                                      "Balance",
+                                    ]}
+                                  />
+                                  <Bar
+                                    dataKey="value"
+                                    fill="#3b82f6"
+                                    radius={[0, 4, 4, 0]}
+                                  />
+                                </RechartsBarChart>
+                              </ResponsiveContainer>
+                            </div>
                           </div>
                         </div>
                       ) : (
                         <div className="rounded-xl border bg-card text-card-foreground shadow">
-                          <div className="p-6">
-                            <div className="text-center py-12">
-                              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <WalletIcon className="w-8 h-8 text-slate-400" />
+                          <div className="p-4 sm:p-6">
+                            <div className="text-center py-8 sm:py-12">
+                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                <WalletIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                               </div>
-                              <p className="text-slate-500 text-lg mb-2">
+                              <p className="text-slate-500 text-sm sm:text-lg mb-2">
                                 No wallet activity data
                               </p>
-                              <p className="text-slate-400">
+                              <p className="text-slate-400 text-xs sm:text-sm">
                                 No transaction data available for wallets
                               </p>
                             </div>
@@ -1270,54 +1476,59 @@ const Reports = () => {
                       {/* Top Expense Categories */}
                       {reportData.expenseCategories.length > 0 ? (
                         <div className="rounded-xl border bg-card text-card-foreground shadow">
-                          <div className="flex flex-col space-y-1.5 p-6">
-                            <div className="font-semibold leading-none tracking-tight">
+                          <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                            <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
                               Top Expense Categories
                             </div>
-                            <p className="text-sm text-slate-600">
+                            <p className="text-xs sm:text-sm text-slate-600">
                               Highest spending categories
                             </p>
                           </div>
-                          <div className="p-6 pt-0">
-                            <div className="flex flex-col lg:flex-row items-center gap-6">
-                              <ResponsiveContainer width="100%" height={250}>
-                                <RechartsPieChart>
-                                  <Pie
-                                    data={reportData.expenseCategories}
-                                    cx="50%"
-                                    cy="50%"
-                                    labelLine={true}
-                                    label={({ name, percentage }) =>
-                                      `${name}: ${percentage.toFixed(1)}%`
-                                    }
-                                    outerRadius={80}
-                                    fill="#8884d8"
-                                    dataKey="value"
-                                  >
-                                    {reportData.expenseCategories.map(
-                                      (entry, index) => (
-                                        <Cell
-                                          key={`cell-${index}`}
-                                          fill={entry.color}
-                                        />
-                                      )
-                                    )}
-                                  </Pie>
-                                  <Tooltip
-                                    formatter={(value) => formatCurrency(value)}
-                                  />
-                                </RechartsPieChart>
-                              </ResponsiveContainer>
+                          <div className="p-3 sm:p-6 sm:pt-0">
+                            <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-6">
+                              <div className="w-full lg:w-1/2 h-48 sm:h-56">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <RechartsPieChart>
+                                    <Pie
+                                      data={reportData.expenseCategories}
+                                      cx="50%"
+                                      cy="50%"
+                                      labelLine={true}
+                                      label={({ name, percentage }) =>
+                                        `${name}: ${percentage.toFixed(1)}%`
+                                      }
+                                      outerRadius={60}
+                                      innerRadius={20}
+                                      fill="#8884d8"
+                                      dataKey="value"
+                                    >
+                                      {reportData.expenseCategories.map(
+                                        (entry, index) => (
+                                          <Cell
+                                            key={`cell-${index}`}
+                                            fill={entry.color}
+                                          />
+                                        )
+                                      )}
+                                    </Pie>
+                                    <Tooltip
+                                      formatter={(value) =>
+                                        formatCurrency(value)
+                                      }
+                                    />
+                                  </RechartsPieChart>
+                                </ResponsiveContainer>
+                              </div>
 
-                              <div className="grid grid-cols-1 gap-2 w-full lg:w-1/2">
+                              <div className="grid grid-cols-1 gap-1.5 sm:gap-2 w-full lg:w-1/2">
                                 {reportData.expenseCategories.map(
                                   (category) => (
                                     <div
                                       key={category.name}
-                                      className="flex items-center gap-2 text-sm"
+                                      className="flex items-center gap-2 text-xs sm:text-sm p-2 bg-slate-50 rounded"
                                     >
                                       <div
-                                        className="w-3 h-3 rounded-full"
+                                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
                                         style={{
                                           backgroundColor: category.color,
                                         }}
@@ -1325,7 +1536,7 @@ const Reports = () => {
                                       <span className="text-slate-700 truncate flex-1">
                                         {category.name}
                                       </span>
-                                      <span className="text-slate-500 ml-auto">
+                                      <span className="text-slate-500 ml-2 font-medium flex-shrink-0">
                                         {formatCurrency(category.value)}
                                       </span>
                                     </div>
@@ -1337,15 +1548,15 @@ const Reports = () => {
                         </div>
                       ) : (
                         <div className="rounded-xl border bg-card text-card-foreground shadow">
-                          <div className="p-6">
-                            <div className="text-center py-12">
-                              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <PieChartIcon className="w-8 h-8 text-slate-400" />
+                          <div className="p-4 sm:p-6">
+                            <div className="text-center py-8 sm:py-12">
+                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                <PieChartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                               </div>
-                              <p className="text-slate-500 text-lg mb-2">
+                              <p className="text-slate-500 text-sm sm:text-lg mb-2">
                                 No expense category data
                               </p>
-                              <p className="text-slate-400">
+                              <p className="text-slate-400 text-xs sm:text-sm">
                                 No expense transactions found
                               </p>
                             </div>
@@ -1359,35 +1570,35 @@ const Reports = () => {
                 {/* Transaction Details Tab */}
                 {activeTab === "details" && (
                   <div className="rounded-xl border bg-card text-card-foreground shadow">
-                    <div className="flex flex-col space-y-1.5 p-6">
-                      <div className="font-semibold leading-none tracking-tight">
+                    <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                      <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
                         Transaction Details
                       </div>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-xs sm:text-sm text-slate-600">
                         Detailed view of filtered transactions
                       </p>
                     </div>
-                    <div className="p-6 pt-0">
+                    <div className="p-3 sm:p-6 sm:pt-0">
                       {reportData.transactions.length > 0 ? (
-                        <div className="space-y-3">
+                        <div className="space-y-2 sm:space-y-3">
                           {reportData.transactions.map((transaction) => (
                             <div
                               key={transaction._id}
-                              className="p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                              className="p-3 sm:p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                             >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-medium text-slate-900">
+                              <div className="flex items-start justify-between">
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-slate-900 text-sm sm:text-base truncate">
                                     {transaction.category_id?.name ||
                                       "Uncategorized"}
                                   </p>
-                                  <p className="text-sm text-slate-600">
+                                  <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
                                     {formatDateToDDMMYYYY(transaction.date)}
                                   </p>
                                 </div>
-                                <div className="text-right">
+                                <div className="text-right flex-shrink-0 ml-2">
                                   <p
-                                    className={`font-bold ${
+                                    className={`font-bold text-sm sm:text-base ${
                                       transaction.type === "income"
                                         ? "text-green-600"
                                         : transaction.type === "expense"
@@ -1411,15 +1622,15 @@ const Reports = () => {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-12">
-                          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <AlertCircle className="w-8 h-8 text-slate-400" />
+                        <div className="text-center py-8 sm:py-12">
+                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                           </div>
-                          <p className="text-slate-500 text-lg mb-2">
+                          <p className="text-slate-500 text-sm sm:text-lg mb-2">
                             No transaction details available
                           </p>
-                          <p className="text-slate-400">
-                            No transactions found for the selected filters
+                          <p className="text-slate-400 text-xs sm:text-sm">
+                            No transactions found for selected filters
                           </p>
                         </div>
                       )}
@@ -1431,6 +1642,16 @@ const Reports = () => {
           </div>
         </div>
       </div>
+
+      {/* Mobile Filter Toggle Button */}
+      {!showFilters && (
+        <button
+          onClick={() => setShowFilters(true)}
+          className="lg:hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center z-40 hover:bg-green-700 transition-colors"
+        >
+          <Filter className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

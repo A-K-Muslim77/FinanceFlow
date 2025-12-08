@@ -27,6 +27,7 @@ import {
   ArrowDownLeft,
   ArrowRightLeft,
   Copy,
+  Menu,
 } from "lucide-react";
 
 const WalletTransactionsModal = ({
@@ -116,8 +117,37 @@ const WalletTransactionsModal = ({
       date.toLocaleTimeString("en-US", {
         hour: "2-digit",
         minute: "2-digit",
+        hour12: false,
       })
     );
+  };
+
+  const formatDateMobile = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (date.toDateString() === now.toDateString()) {
+      return `Today • ${date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })}`;
+    }
+
+    if (date.toDateString() === yesterday.toDateString()) {
+      return `Yesterday • ${date.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      })}`;
+    }
+
+    return date.toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
   };
 
   const getMonthName = (monthNumber) => {
@@ -142,8 +172,8 @@ const WalletTransactionsModal = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between mb-6 pb-4 border-b">
+      <div className="relative w-full max-w-4xl bg-white rounded-lg shadow-lg p-4 sm:p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between mb-4 sm:mb-6 pb-4 border-b">
           <div>
             <h3 className="text-lg font-semibold text-slate-900">
               Wallet Transactions
@@ -161,7 +191,7 @@ const WalletTransactionsModal = ({
         </div>
 
         {walletData && (
-          <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+          <div className="mb-4 sm:mb-6 p-4 bg-slate-50 rounded-lg">
             <div className="flex items-center gap-3 mb-3">
               <div
                 className="w-10 h-10 rounded-lg flex items-center justify-center"
@@ -231,17 +261,17 @@ const WalletTransactionsModal = ({
                 </p>
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
               <div>
                 <p className="text-xs text-slate-500">Opening Balance</p>
-                <p className="text-lg font-semibold text-slate-700">
+                <p className="text-base sm:text-lg font-semibold text-slate-700">
                   {formatCurrency(walletData.openingBalance)}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-blue-500">Monthly Balance</p>
                 <p
-                  className={`text-lg font-semibold ${
+                  className={`text-base sm:text-lg font-semibold ${
                     walletData.monthlyBalance >= 0
                       ? "text-green-600"
                       : "text-red-600"
@@ -252,27 +282,27 @@ const WalletTransactionsModal = ({
               </div>
               {totals && (
                 <>
-                  <div>
+                  <div className="col-span-2 md:col-span-1">
                     <p className="text-xs text-green-500">
                       Income (Incl. Transfers)
                     </p>
-                    <p className="text-lg font-semibold text-green-600">
+                    <p className="text-base sm:text-lg font-semibold text-green-600">
                       +{formatCurrency(totals.combinedIncome || totals.income)}
                     </p>
                   </div>
-                  <div>
+                  <div className="col-span-2 md:col-span-1">
                     <p className="text-xs text-red-500">
                       Expense (Incl. Transfers)
                     </p>
-                    <p className="text-lg font-semibold text-red-600">
+                    <p className="text-base sm:text-lg font-semibold text-red-600">
                       -
                       {formatCurrency(totals.combinedExpense || totals.expense)}
                     </p>
                   </div>
-                  <div>
+                  <div className="col-span-2 md:col-span-1">
                     <p className="text-xs text-blue-500">Net Change</p>
                     <p
-                      className={`text-lg font-semibold ${
+                      className={`text-base sm:text-lg font-semibold ${
                         totals.netChange >= 0
                           ? "text-green-600"
                           : "text-red-600"
@@ -291,7 +321,7 @@ const WalletTransactionsModal = ({
         {error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg">
             <div className="flex justify-between items-center">
-              <span>{error}</span>
+              <span className="text-sm">{error}</span>
               <button
                 onClick={() => setError(null)}
                 className="text-red-500 hover:text-red-700 text-lg font-bold"
@@ -333,11 +363,11 @@ const WalletTransactionsModal = ({
                 return (
                   <div
                     key={transaction._id}
-                    className="p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                    className="p-3 sm:p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                   >
-                    <div className="flex items-center gap-4">
+                    <div className="flex items-start sm:items-center gap-3 sm:gap-4">
                       <div
-                        className="w-10 h-10 rounded-lg flex items-center justify-center"
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center flex-shrink-0"
                         style={{
                           backgroundColor: isTransfer
                             ? "rgb(241, 245, 249)"
@@ -348,20 +378,20 @@ const WalletTransactionsModal = ({
                       >
                         {isTransfer ? (
                           <ArrowRightLeft
-                            className={`w-5 h-5 ${
+                            className={`w-4 h-4 sm:w-5 sm:h-5 ${
                               isIncoming ? "text-green-600" : "text-red-600"
                             }`}
                           />
                         ) : isIncome ? (
-                          <ArrowDownLeft className="w-5 h-5 text-green-600" />
+                          <ArrowDownLeft className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                         ) : (
-                          <ArrowUpRight className="w-5 h-5 text-red-600" />
+                          <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                         )}
                       </div>
 
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h4 className="font-medium text-slate-900 truncate">
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 mb-1">
+                          <h4 className="font-medium text-slate-900 truncate text-sm sm:text-base">
                             {isTransfer
                               ? `${fromWallet?.name || "Wallet"} → ${
                                   toWallet?.name || "Wallet"
@@ -369,7 +399,7 @@ const WalletTransactionsModal = ({
                               : category?.name || "Uncategorized"}
                           </h4>
                           <div
-                            className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium ${
+                            className={`inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium w-fit ${
                               displayType === "income"
                                 ? "text-green-600 bg-green-50 border-green-200"
                                 : "text-red-600 bg-red-50 border-red-200"
@@ -377,24 +407,38 @@ const WalletTransactionsModal = ({
                           >
                             {isTransfer
                               ? isIncoming
-                                ? "Transfer In (Income)"
-                                : "Transfer Out (Expense)"
+                                ? "Transfer In"
+                                : "Transfer Out"
                               : transaction.type === "income"
                               ? "Income"
                               : "Expense"}
                           </div>
                         </div>
                         {transaction.notes && (
-                          <p className="text-sm text-slate-600 mb-1 line-clamp-1">
+                          <p className="text-xs sm:text-sm text-slate-600 mb-1 line-clamp-1">
                             {transaction.notes}
                           </p>
                         )}
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
-                          <span>{formatDate(transaction.date)}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 text-xs text-slate-500">
+                          <span className="hidden sm:inline">
+                            {formatDate(transaction.date)}
+                          </span>
+                          <span className="sm:hidden">
+                            {formatDateMobile(transaction.date)}
+                          </span>
                           {isTransfer ? (
                             <>
-                              <span>From: {fromWallet?.name || "Wallet"}</span>
-                              <span>To: {toWallet?.name || "Wallet"}</span>
+                              <span className="hidden sm:inline">
+                                From: {fromWallet?.name || "Wallet"}
+                              </span>
+                              <span className="hidden sm:inline">
+                                To: {toWallet?.name || "Wallet"}
+                              </span>
+                              <div className="sm:hidden flex items-center gap-1">
+                                <span>{fromWallet?.name || "Wallet"}</span>
+                                <span>→</span>
+                                <span>{toWallet?.name || "Wallet"}</span>
+                              </div>
                             </>
                           ) : (
                             <span>{fromWallet?.name || "Wallet"}</span>
@@ -404,7 +448,7 @@ const WalletTransactionsModal = ({
 
                       <div className="text-right">
                         <p
-                          className={`text-lg font-bold ${
+                          className={`text-base sm:text-lg font-bold whitespace-nowrap ${
                             displayType === "income"
                               ? "text-green-600"
                               : "text-red-600"
@@ -425,28 +469,28 @@ const WalletTransactionsModal = ({
         {!loading && transactions.length === 0 && (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <WalletIcon className="w-8 h-8 text-slate-400" />
+              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                <WalletIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
               </div>
-              <p className="text-slate-500 text-lg mb-2">
+              <p className="text-slate-500 text-base sm:text-lg mb-2">
                 No transactions found
               </p>
-              <p className="text-slate-400">
+              <p className="text-slate-400 text-sm">
                 No transactions for this wallet in {getMonthName(month)} {year}
               </p>
             </div>
           </div>
         )}
 
-        <div className="mt-6 pt-4 border-t">
-          <div className="flex justify-between items-center text-sm text-slate-600">
+        <div className="mt-4 sm:mt-6 pt-4 border-t">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-slate-600">
             <span>
               {transactions.length} transaction
               {transactions.length !== 1 ? "s" : ""}
             </span>
             <button
               onClick={onClose}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 text-slate-700 hover:bg-slate-100"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 text-slate-700 hover:bg-slate-100 w-full sm:w-auto"
             >
               Close
             </button>
@@ -571,6 +615,7 @@ const Wallets = () => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copying, setCopying] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(
@@ -966,10 +1011,84 @@ const Wallets = () => {
         <BackgroundCircles />
       </div>
 
-      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        <div className="space-y-6 pb-20">
-          {/* Header with Controls in One Line */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 relative z-10">
+        <div className="space-y-4 pb-20">
+          {/* Mobile Header */}
+          <div className="block sm:hidden bg-white rounded-xl p-4 shadow-sm mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">My Wallets</h1>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  {getMonthName(selectedMonth)} {selectedYear}
+                </p>
+              </div>
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"
+              >
+                {isMobileMenuOpen ? (
+                  <X className="w-5 h-5" />
+                ) : (
+                  <Menu className="w-5 h-5" />
+                )}
+              </button>
+            </div>
+
+            {/* Mobile Menu Dropdown */}
+            {isMobileMenuOpen && (
+              <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Month
+                    </label>
+                    <MonthYearSelector
+                      selectedMonth={selectedMonth}
+                      selectedYear={selectedYear}
+                      onMonthChange={handleMonthChange}
+                      onYearChange={handleYearChange}
+                      isLoading={loading}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                      Year
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedYear}
+                        onChange={(e) =>
+                          setSelectedYear(parseInt(e.target.value))
+                        }
+                        disabled={loading}
+                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                      >
+                        {Array.from({ length: 5 }, (_, i) => {
+                          const year = new Date().getFullYear() - 2 + i;
+                          return (
+                            <option key={year} value={year}>
+                              {year}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add Wallet
+                </button>
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden sm:flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-slate-900">My Wallets</h1>
               <p className="text-sm text-slate-600 mt-0.5">
@@ -977,37 +1096,41 @@ const Wallets = () => {
               </p>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Month Selector */}
-              <div className="w-32">
-                <MonthYearSelector
-                  selectedMonth={selectedMonth}
-                  selectedYear={selectedYear}
-                  onMonthChange={handleMonthChange}
-                  onYearChange={handleYearChange}
-                  isLoading={loading}
-                />
-              </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
+              <div className="flex gap-3 flex-1 lg:flex-none">
+                {/* Month Selector */}
+                <div className="w-32">
+                  <MonthYearSelector
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    onMonthChange={handleMonthChange}
+                    onYearChange={handleYearChange}
+                    isLoading={loading}
+                  />
+                </div>
 
-              {/* Year Selector */}
-              <div className="w-28">
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                    disabled={loading}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                  >
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                {/* Year Selector */}
+                <div className="w-28">
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+                  </div>
                 </div>
               </div>
 
@@ -1096,12 +1219,12 @@ const Wallets = () => {
           {/* Monthly Summary */}
           {monthlyData && (
             <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-900">
+                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                     {monthlyData.monthName} {monthlyData.year}
                   </h3>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-xs sm:text-sm text-slate-600">
                     {wallets.length === 0
                       ? "No wallets created for this month"
                       : `Showing ${wallets.length} wallet${
@@ -1111,11 +1234,11 @@ const Wallets = () => {
                 </div>
 
                 <div className="text-right">
-                  <p className="text-sm text-slate-500 mb-1">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-1">
                     Monthly Total Balance
                   </p>
                   <p
-                    className={`text-2xl font-bold ${
+                    className={`text-xl sm:text-2xl font-bold ${
                       monthlyData.totalMonthlyBalance < 0
                         ? "text-red-600"
                         : "text-green-900"
@@ -1130,21 +1253,21 @@ const Wallets = () => {
 
           {/* Wallets Grid */}
           {wallets.length === 0 && (
-            <div className="text-center py-12">
-              <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <WalletIcon className="w-8 h-8 text-slate-400" />
+            <div className="text-center py-8 sm:py-12">
+              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <WalletIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                 </div>
-                <p className="text-slate-500 text-lg mb-2">
+                <p className="text-slate-500 text-base sm:text-lg mb-2">
                   No wallets for {getMonthName(selectedMonth)} {selectedYear}
                 </p>
-                <p className="text-slate-400 mb-6">
+                <p className="text-slate-400 mb-6 text-sm">
                   Start by creating wallets for this month
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create New Wallet
@@ -1153,7 +1276,7 @@ const Wallets = () => {
                     selectedYear > new Date().getFullYear()) && (
                     <button
                       onClick={handleShowCopyModal}
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-gray-600 text-white hover:bg-gray-700"
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 shadow-lg bg-gray-600 text-white hover:bg-gray-700"
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       Copy from Previous Month
@@ -1165,7 +1288,7 @@ const Wallets = () => {
           )}
 
           {wallets.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {wallets.map((wallet) => (
                 <div
                   key={wallet._id}
@@ -1176,11 +1299,11 @@ const Wallets = () => {
                     style={{ backgroundColor: wallet.color }}
                   />
 
-                  <div className="p-5">
-                    <div className="flex items-center justify-between">
+                  <div className="p-4 sm:p-5">
+                    <div className="flex items-start sm:items-center justify-between">
                       <div className="flex items-center gap-3 flex-1">
                         <div
-                          className="w-12 h-12 rounded-xl flex items-center justify-center shadow-md"
+                          className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-md"
                           style={{ backgroundColor: `${wallet.color}20` }}
                         >
                           {getIconComponent(wallet.icon)}
@@ -1188,11 +1311,11 @@ const Wallets = () => {
 
                         <div className="flex-1">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold text-slate-900">
+                            <h3 className="font-semibold text-slate-900 text-sm sm:text-base">
                               {wallet.name}
                             </h3>
                           </div>
-                          <p className="text-sm text-slate-500 capitalize">
+                          <p className="text-xs sm:text-sm text-slate-500 capitalize">
                             {wallet.type === "credit_card"
                               ? "Credit Card"
                               : wallet.type === "bank"
@@ -1204,22 +1327,26 @@ const Wallets = () => {
                         </div>
                       </div>
 
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {/* Always show action buttons on mobile, show on hover on desktop */}
+                      <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity ml-2">
                         <button
                           onClick={() => handleViewTransactions(wallet)}
                           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          title="View Transactions"
                         >
                           <Eye className="w-4 h-4 text-slate-600" />
                         </button>
                         <button
                           onClick={() => handleEditWallet(wallet)}
                           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          title="Edit Wallet"
                         >
                           <SquarePen className="w-4 h-4 text-slate-600" />
                         </button>
                         <button
                           onClick={() => handleDeleteClick(wallet)}
                           className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                          title="Delete Wallet"
                         >
                           <Trash2 className="w-4 h-4 text-red-500" />
                         </button>
@@ -1228,20 +1355,20 @@ const Wallets = () => {
 
                     <div className="mt-4 space-y-2">
                       <div className="flex items-baseline justify-between">
-                        <span className="text-sm text-slate-500">
+                        <span className="text-xs sm:text-sm text-slate-500">
                           Opening Balance
                         </span>
-                        <span className="text-lg font-semibold text-slate-700">
+                        <span className="text-base sm:text-lg font-semibold text-slate-700">
                           {formatBalance(wallet.openingBalance || 0)}
                         </span>
                       </div>
 
                       <div className="flex items-baseline justify-between">
-                        <span className="text-sm text-slate-500">
+                        <span className="text-xs sm:text-sm text-slate-500">
                           Monthly Balance
                         </span>
                         <span
-                          className={`text-2xl font-bold ${
+                          className={`text-xl sm:text-2xl font-bold ${
                             wallet.monthlyBalance < 0
                               ? "text-red-600"
                               : "text-slate-900"
@@ -1264,7 +1391,7 @@ const Wallets = () => {
                     </div>
 
                     {wallet.description && (
-                      <p className="text-sm text-slate-500 mt-3 line-clamp-2">
+                      <p className="text-xs sm:text-sm text-slate-500 mt-3 line-clamp-2">
                         {wallet.description}
                       </p>
                     )}
@@ -1275,6 +1402,15 @@ const Wallets = () => {
           )}
         </div>
       </div>
+
+      {/* Floating Action Button for Mobile */}
+      <button
+        onClick={() => setIsCreateModalOpen(true)}
+        className="fixed bottom-20 right-4 sm:hidden z-40 rounded-full p-4 shadow-lg transition-transform hover:scale-110 bg-green-600 text-white hover:bg-green-700"
+        style={{ boxShadow: "0 4px 14px 0 rgba(0, 0, 0, 0.2)" }}
+      >
+        <Plus className="w-6 h-6" />
+      </button>
 
       <WalletForm
         isOpen={isCreateModalOpen}

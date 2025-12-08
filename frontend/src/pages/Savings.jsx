@@ -44,7 +44,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, goalName }) => {
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95">
+      <div className="relative w-full max-w-md bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95 mx-2">
         <div className="flex items-center gap-3 mb-4">
           <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
             <AlertTriangle className="w-5 h-5 text-red-600" />
@@ -72,7 +72,7 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, goalName }) => {
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 text-slate-700 hover:bg-slate-100"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 text-slate-700 hover:bg-slate-100 mt-2 sm:mt-0"
           >
             Cancel
           </button>
@@ -129,25 +129,25 @@ const TransactionsModal = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-      <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-lg p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-y-auto">
+      <div className="relative w-full max-w-2xl bg-white rounded-lg shadow-lg p-4 sm:p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-y-auto mx-2">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
+          className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
         </button>
 
-        <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-6">
-          <h2 className="text-lg font-semibold leading-none tracking-tight">
+        <div className="flex flex-col space-y-1.5 text-center sm:text-left mb-4 sm:mb-6">
+          <h2 className="text-base sm:text-lg font-semibold leading-none tracking-tight">
             Transaction History
           </h2>
-          <p className="text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500">
             {goal.name} - All deposits and withdrawals
           </p>
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex items-center gap-1 text-sm text-green-600">
-              <ArrowDownLeft className="w-4 h-4" />
+          <div className="flex flex-wrap gap-3 sm:gap-4 mt-2">
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-green-600">
+              <ArrowDownLeft className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>
                 Total Deposits:{" "}
                 {formatCurrency(
@@ -157,8 +157,8 @@ const TransactionsModal = ({
                 )}
               </span>
             </div>
-            <div className="flex items-center gap-1 text-sm text-red-600">
-              <ArrowUpRight className="w-4 h-4" />
+            <div className="flex items-center gap-1 text-xs sm:text-sm text-red-600">
+              <ArrowUpRight className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span>
                 Total Withdrawals:{" "}
                 {formatCurrency(
@@ -172,46 +172,48 @@ const TransactionsModal = ({
         </div>
 
         {loading ? (
-          <div className="flex items-center justify-center py-12">
+          <div className="flex items-center justify-center py-8 sm:py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             <p className="ml-3 text-slate-600">Loading transactions...</p>
           </div>
         ) : transactions.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Clock className="w-8 h-8 text-slate-400" />
+          <div className="text-center py-8 sm:py-12">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+              <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
             </div>
-            <p className="text-slate-500 text-lg">No transactions yet</p>
-            <p className="text-slate-400 mt-2">
+            <p className="text-slate-500 text-sm sm:text-lg">
+              No transactions yet
+            </p>
+            <p className="text-slate-400 text-xs sm:text-sm mt-1 sm:mt-2">
               Make your first deposit to start tracking
             </p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3">
             {transactions.map((transaction, index) => (
               <div
                 key={index}
-                className="rounded-lg border border-slate-200 p-4 hover:bg-slate-50 transition-colors"
+                className="rounded-lg border border-slate-200 p-3 sm:p-4 hover:bg-slate-50 transition-colors"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-2 sm:gap-3 flex-1">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                      className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                         transaction.type === "deposit"
                           ? "bg-green-100 text-green-600"
                           : "bg-red-100 text-red-600"
                       }`}
                     >
                       {transaction.type === "deposit" ? (
-                        <ArrowDownLeft className="w-5 h-5" />
+                        <ArrowDownLeft className="w-4 h-4 sm:w-5 sm:h-5" />
                       ) : (
-                        <ArrowUpRight className="w-5 h-5" />
+                        <ArrowUpRight className="w-4 h-4 sm:w-5 sm:h-5" />
                       )}
                     </div>
-                    <div>
-                      <div className="flex items-center gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
                         <span
-                          className={`text-sm font-medium px-2 py-0.5 rounded-full ${
+                          className={`text-xs sm:text-sm font-medium px-2 py-0.5 rounded-full ${
                             transaction.type === "deposit"
                               ? "bg-green-50 text-green-700 border border-green-200"
                               : "bg-red-50 text-red-700 border border-red-200"
@@ -227,15 +229,15 @@ const TransactionsModal = ({
                         </span>
                       </div>
                       {transaction.notes && (
-                        <p className="text-sm text-slate-600 mt-1">
+                        <p className="text-xs sm:text-sm text-slate-600 mt-0.5 sm:mt-1 line-clamp-2">
                           {transaction.notes}
                         </p>
                       )}
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0 ml-2">
                     <p
-                      className={`text-lg font-bold ${
+                      className={`text-base sm:text-lg font-bold ${
                         transaction.type === "deposit"
                           ? "text-green-600"
                           : "text-red-600"
@@ -251,14 +253,14 @@ const TransactionsModal = ({
           </div>
         )}
 
-        <div className="flex justify-between items-center mt-6 pt-4 border-t border-slate-200">
-          <div className="text-sm text-slate-500">
+        <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-0 mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-slate-200">
+          <div className="text-xs sm:text-sm text-slate-500">
             Showing {transactions.length} transaction
             {transactions.length !== 1 ? "s" : ""}
           </div>
           <button
             onClick={onRefresh}
-            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3"
+            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-3 w-full sm:w-auto"
           >
             Refresh
           </button>
@@ -396,7 +398,7 @@ const Savings = () => {
   };
 
   const getIconComponent = (iconName) => {
-    const iconProps = { className: "w-6 h-6" };
+    const iconProps = { className: "w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" };
     switch (iconName) {
       case "piggy-bank":
         return <PiggyBank {...iconProps} />;
@@ -586,7 +588,6 @@ const Savings = () => {
             : "Withdrawal successful"
         );
 
-        // Refresh transactions if history modal is open
         if (viewingGoal && viewingGoal._id === selectedGoal._id) {
           refreshTransactions();
         }
@@ -637,7 +638,7 @@ const Savings = () => {
         <div className="fixed inset-0 z-0">
           <BackgroundCircles />
         </div>
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading savings goals...</p>
@@ -660,37 +661,39 @@ const Savings = () => {
         draggable
         pauseOnHover
         theme="light"
+        className="!z-50"
       />
 
       <div className="fixed inset-0 z-0">
         <BackgroundCircles />
       </div>
 
-      <div className="width-full mx-auto px-4 sm:px-6 lg:px-8 py-6 relative z-10">
-        <div className="space-y-6 pb-20">
+      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
+        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
           {/* Header */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 px-2 sm:px-0">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">
+              <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">
                 Savings Goals
               </h1>
-              <p className="text-slate-600 mt-1">
+              <p className="text-slate-600 text-xs sm:text-sm mt-0.5 sm:mt-1">
                 Track and achieve your financial goals
               </p>
             </div>
 
             <button
               onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
+              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600 w-full sm:w-auto"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              New Goal
+              <Plus className="w-4 h-4" />
+              <span className="hidden sm:inline">New Goal</span>
+              <span className="sm:hidden">New Goal</span>
             </button>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -703,20 +706,22 @@ const Savings = () => {
             </div>
           )}
 
-          {/* Summary Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Summary Cards - Mobile Optimized */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-0">
             {/* Total Savings Card */}
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 mb-1">Total Savings</p>
-                    <p className="text-2xl font-bold text-green-600">
+                    <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                      Total Savings
+                    </p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-600 truncate">
                       {formatCurrency(totals.totalBalance)}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
-                    <TrendingUp className="w-6 h-6 text-green-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-600" />
                   </div>
                 </div>
               </div>
@@ -724,16 +729,18 @@ const Savings = () => {
 
             {/* Total Target Card */}
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 mb-1">Total Target</p>
-                    <p className="text-2xl font-bold text-blue-500">
+                    <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                      Total Target
+                    </p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-500 truncate">
                       {formatCurrency(totals.totalTarget)}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                    <Target className="w-6 h-6 text-blue-500" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-500" />
                   </div>
                 </div>
               </div>
@@ -741,16 +748,18 @@ const Savings = () => {
 
             {/* Active Goals Card */}
             <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-5">
+              <div className="p-4 sm:p-5">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-slate-600 mb-1">Active Goals</p>
-                    <p className="text-2xl font-bold text-slate-900">
+                    <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                      Active Goals
+                    </p>
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-slate-900">
                       {totals.activeGoals}
                     </p>
                   </div>
-                  <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center">
-                    <Target className="w-6 h-6 text-slate-600" />
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-slate-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                    <Target className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-slate-600" />
                   </div>
                 </div>
               </div>
@@ -758,7 +767,7 @@ const Savings = () => {
           </div>
 
           {/* Savings Goals Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-0">
             {savingsGoals.map((goal) => {
               const progress = goal.progressPercentage || 0;
               const remaining =
@@ -775,61 +784,65 @@ const Savings = () => {
                     isCompleted ? "border-green-200 border-2" : ""
                   }`}
                 >
-                  <div className="p-5">
+                  <div className="p-4 sm:p-5">
                     {/* Header with actions */}
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1 flex items-start gap-3">
+                    <div className="flex items-start justify-between mb-3 sm:mb-4">
+                      <div className="flex-1 flex items-start gap-2 sm:gap-3">
                         <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm"
+                          className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center shadow-sm flex-shrink-0"
                           style={{ backgroundColor: `${goal.color}20` }}
                         >
                           {getIconComponent(goal.icon)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-slate-900 mb-1 truncate">
-                            {goal.name}
-                          </h3>
-                          {goal.description && (
-                            <p className="text-xs text-slate-500 truncate">
-                              {goal.description}
-                            </p>
-                          )}
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <h3 className="text-sm sm:text-base md:text-lg font-semibold text-slate-900 mb-0.5 sm:mb-1 truncate">
+                                {goal.name}
+                              </h3>
+                              {goal.description && (
+                                <p className="text-xs text-slate-500 truncate">
+                                  {goal.description}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex gap-0.5 sm:gap-1 flex-shrink-0">
+                              <button
+                                onClick={() => handleViewHistory(goal)}
+                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
+                                title="View History"
+                              >
+                                <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-500" />
+                              </button>
+                              <button
+                                onClick={() => handleEditGoal(goal)}
+                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
+                                title="Edit Goal"
+                              >
+                                <SquarePen className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-600" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteClick(goal)}
+                                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
+                                title="Delete Goal"
+                              >
+                                <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-500" />
+                              </button>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex gap-1">
-                        <button
-                          onClick={() => handleViewHistory(goal)}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                          title="View History"
-                        >
-                          <Eye className="w-4 h-4 text-blue-500" />
-                        </button>
-                        <button
-                          onClick={() => handleEditGoal(goal)}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                          title="Edit Goal"
-                        >
-                          <SquarePen className="w-4 h-4 text-slate-600" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(goal)}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
-                          title="Delete Goal"
-                        >
-                          <Trash2 className="w-4 h-4 text-red-500" />
-                        </button>
                       </div>
                     </div>
 
                     {/* Progress bar */}
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between text-sm">
+                    <div className="space-y-2.5 sm:space-y-3">
+                      <div className="flex items-center justify-between text-xs sm:text-sm">
                         <span className="text-slate-600">Progress</span>
                         <span className="font-bold text-blue-600">
                           {progress.toFixed(1)}%
                         </span>
                       </div>
-                      <div className="relative w-full overflow-hidden rounded-full bg-slate-200 h-2">
+                      <div className="relative w-full overflow-hidden rounded-full bg-slate-200 h-1.5 sm:h-2">
                         <div
                           className={`h-full transition-all duration-500 ${getProgressColor(
                             progress
@@ -842,21 +855,21 @@ const Savings = () => {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-xs text-slate-500">Current</p>
-                          <p className="text-xl font-bold text-slate-900">
+                          <p className="text-base sm:text-lg md:text-xl font-bold text-slate-900 truncate">
                             {formatCurrency(goal.currentBalance || 0)}
                           </p>
                         </div>
                         <div className="text-right">
                           <p className="text-xs text-slate-500">Target</p>
-                          <p className="text-xl font-bold text-slate-900">
+                          <p className="text-base sm:text-lg md:text-xl font-bold text-slate-900 truncate">
                             {formatCurrency(goal.targetAmount)}
                           </p>
                         </div>
                       </div>
 
                       {/* Remaining and monthly target */}
-                      <div className="pt-3 border-t border-slate-200">
-                        <p className="text-sm text-slate-600">
+                      <div className="pt-2 sm:pt-3 border-t border-slate-200">
+                        <p className="text-xs sm:text-sm text-slate-600">
                           {remaining > 0
                             ? `${formatCurrency(
                                 remaining
@@ -864,42 +877,42 @@ const Savings = () => {
                             : "Goal completed! 🎉"}
                         </p>
                         {goal.monthlyTarget && remaining > 0 && (
-                          <p className="text-xs text-slate-500 mt-1">
+                          <p className="text-xs text-slate-500 mt-0.5 sm:mt-1">
                             Monthly target: {formatCurrency(goal.monthlyTarget)}
                           </p>
                         )}
                       </div>
 
                       {/* Action buttons */}
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-1.5 sm:gap-2 pt-2">
                         <button
                           onClick={() =>
                             handleTransactionClick(goal, "deposit")
                           }
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow h-9 px-4 py-2 flex-1 bg-green-600 hover:bg-green-700 text-white"
+                          className="inline-flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap rounded-md text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 shadow h-8 sm:h-9 px-2.5 sm:px-4 py-1.5 sm:py-2 flex-1 bg-green-600 hover:bg-green-700 text-white"
                         >
-                          <CircleArrowDown className="w-4 h-4 mr-2" />
-                          Deposit
+                          <CircleArrowDown className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <span className="truncate">Deposit</span>
                         </button>
                         <button
                           onClick={() =>
                             handleTransactionClick(goal, "withdrawal")
                           }
                           disabled={(goal.currentBalance || 0) <= 0}
-                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-9 px-4 py-2 flex-1 disabled:opacity-50"
+                          className="inline-flex items-center justify-center gap-1 sm:gap-2 whitespace-nowrap rounded-md text-xs sm:text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 sm:h-9 px-2.5 sm:px-4 py-1.5 sm:py-2 flex-1 disabled:opacity-50"
                         >
-                          <CircleArrowUp className="w-4 h-4 mr-2" />
-                          Withdraw
+                          <CircleArrowUp className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <span className="truncate">Withdraw</span>
                         </button>
                       </div>
                     </div>
 
                     {/* Completed badge */}
                     {isCompleted && (
-                      <div className="pt-3 border-t border-green-200 bg-green-50 -mx-5 -mb-5 px-5 py-3 rounded-b-lg mt-4">
-                        <p className="text-sm font-medium text-green-700 text-center flex items-center justify-center gap-2">
-                          <Trophy className="w-4 h-4" />
-                          Goal Completed!
+                      <div className="pt-2 sm:pt-3 border-t border-green-200 bg-green-50 -mx-4 sm:-mx-5 -mb-4 sm:-mb-5 px-4 sm:px-5 py-2 sm:py-3 rounded-b-lg mt-3 sm:mt-4">
+                        <p className="text-xs sm:text-sm font-medium text-green-700 text-center flex items-center justify-center gap-1.5 sm:gap-2">
+                          <Trophy className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          <span>Goal Completed!</span>
                         </p>
                       </div>
                     )}
@@ -911,18 +924,20 @@ const Savings = () => {
 
           {/* Empty state */}
           {savingsGoals.length === 0 && (
-            <div className="text-center py-12">
-              <div className="bg-white rounded-xl p-8 border-0 shadow-sm">
-                <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <PiggyBank className="w-8 h-8 text-blue-500" />
+            <div className="text-center py-8 sm:py-12 px-4">
+              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-blue-50 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                  <PiggyBank className="w-6 h-6 sm:w-8 sm:h-8 text-blue-500" />
                 </div>
-                <p className="text-slate-500 text-lg">No savings goals found</p>
-                <p className="text-slate-400 mt-2">
+                <p className="text-slate-500 text-base sm:text-lg mb-2">
+                  No savings goals found
+                </p>
+                <p className="text-slate-400 text-sm sm:text-base">
                   Start by creating your first savings goal
                 </p>
                 <button
                   onClick={() => setIsCreateModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600 mt-5"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600 mt-4 sm:mt-5 w-full sm:w-auto"
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Create Your First Goal
@@ -976,6 +991,14 @@ const Savings = () => {
         onConfirm={handleDeleteConfirm}
         goalName={deletingGoal?.name}
       />
+
+      {/* Floating Action Button for Mobile */}
+      <button
+        onClick={() => setIsCreateModalOpen(true)}
+        className="sm:hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center z-40 hover:bg-green-700 transition-colors"
+      >
+        <Plus className="w-5 h-5" />
+      </button>
     </div>
   );
 };
