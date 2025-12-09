@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* Soft premium blob motion (a bit slower & smoother) */
+/* ========== ANIMATIONS (DESKTOP ONLY) ========== */
 @keyframes blob {
   0%,
   100% {
@@ -18,7 +18,6 @@
   animation: blob 14s ease-in-out infinite;
 }
 
-/* Subtle floating for rings */
 @keyframes floatRing {
   0%,
   100% {
@@ -33,7 +32,7 @@
   animation: floatRing 18s ease-in-out infinite;
 }
 
-/* Sidebar + scrollbar (unchanged, just grouped) */
+/* ========== SIDEBAR STYLES ========== */
 .sidebar-transition {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -53,4 +52,97 @@
 
 .sidebar-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* ========== MOBILE PERFORMANCE OPTIMIZATION ========== */
+@media (max-width: 767px) {
+  /* DISABLE ALL ANIMATIONS ON MOBILE */
+  .animate-blob,
+  .ring-float,
+  .animate-pulse {
+    animation: none !important;
+  }
+
+  /* OPTIMIZE BLUR FOR MOBILE - Keep it subtle */
+  .blur-3xl {
+    filter: blur(25px) !important;
+  }
+
+  .blur-2xl {
+    filter: blur(15px) !important;
+  }
+
+  .blur-xl {
+    filter: blur(10px) !important;
+  }
+
+  .blur-lg {
+    filter: blur(8px) !important;
+  }
+
+  .blur-md {
+    filter: blur(6px) !important;
+  }
+
+  /* DISABLE COMPLEX EFFECTS */
+  .mix-blend-soft-light {
+    mix-blend-mode: normal !important;
+    opacity: 0.05 !important;
+  }
+
+  /* HARDWARE ACCELERATION FOR SMOOTH RENDERING */
+  .fixed {
+    transform: translate3d(0, 0, 0);
+    backface-visibility: hidden;
+  }
+
+  /* IMPROVE TOUCH TARGETS */
+  button,
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+    min-height: 44px !important;
+  }
+
+  /* FIX iOS SAFARI ISSUES */
+  .h-screen {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+
+  /* BETTER SCROLLING */
+  .overflow-y-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* PREVENT FONT SCALING */
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+}
+
+/* ========== ANIMATION DELAYS ========== */
+.animation-delay-1000 {
+  animation-delay: 1s;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-3000 {
+  animation-delay: 3s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+.animation-delay-5000 {
+  animation-delay: 5s;
+}
+
+.animation-delay-6000 {
+  animation-delay: 6s;
 }

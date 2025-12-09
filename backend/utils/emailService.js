@@ -16,7 +16,7 @@ transporter.verify(function (error, success) {
   if (error) {
     console.log("SMTP configuration error:", error);
   } else {
-    console.log("SMTP server is ready to send emails");
+    // console.log("SMTP server is ready to send emails");
   }
 });
 
@@ -52,8 +52,8 @@ const sendOtpEmail = async (email, otp) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    console.log("✅ OTP email sent successfully to:", email);
-    console.log("📧 Message ID:", info.messageId);
+    // console.log("✅ OTP email sent successfully to:", email);
+    // console.log("📧 Message ID:", info.messageId);
     return true;
   } catch (error) {
     console.error("❌ Error sending OTP email:", error);

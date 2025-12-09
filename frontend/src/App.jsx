@@ -17,7 +17,7 @@ function App() {
   return (
     <Router>
       <div className="App relative">
-        {/* Background Circles for all pages */}
+        {/* Single BackgroundCircles component that handles mobile/desktop internally */}
         <BackgroundCircles />
 
         <Routes>

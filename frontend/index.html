@@ -1,10 +1,23 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="no-js">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/logo.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/logo1.png" />
+    <!-- Optimized viewport for mobile -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=1.0, viewport-fit=cover"
+    />
+    <!-- Prevent iOS phone number detection -->
+    <meta name="format-detection" content="telephone=no" />
     <title>FinanceFlow</title>
+
+    <!-- Modernizr-like feature detection (optional) -->
+    <script>
+      // Remove no-js class if JavaScript is enabled
+      document.documentElement.classList.remove("no-js");
+      document.documentElement.classList.add("js");
+    </script>
   </head>
   <body>
     <div id="root"></div>

@@ -129,7 +129,7 @@ const Login = () => {
                 <img
                   className="aspect-square h-full w-full object-cover"
                   alt="FinanceFlow v2 logo"
-                  src="/src/assets/SCOM-lOGO-Green.png"
+                  src="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/691f62bda3a8f458a93490c4/daca4f53c_1000008238.png"
                 />
               </span>
             </div>
