@@ -17,6 +17,11 @@ const BudgetForm = ({
     year: new Date().getFullYear(), // Current year
   });
 
+  const [errors, setErrors] = useState({
+    category_id: "",
+    monthly_limit: "",
+  });
+
   const months = [
     { value: 1, label: "January" },
     { value: 2, label: "February" },
@@ -53,18 +58,44 @@ const BudgetForm = ({
         year: new Date().getFullYear(),
       });
     }
+    // Clear errors when opening form
+    setErrors({
+      category_id: "",
+      monthly_limit: "",
+    });
   }, [isEdit, editData]);
+
+  const validateForm = () => {
+    const newErrors = {
+      category_id: "",
+      monthly_limit: "",
+    };
+    let isValid = true;
+
+    if (!formData.category_id) {
+      newErrors.category_id = "Please select a category";
+      isValid = false;
+    }
+
+    if (!formData.monthly_limit) {
+      newErrors.monthly_limit = "Please enter a monthly limit";
+      isValid = false;
+    } else if (parseFloat(formData.monthly_limit) <= 0) {
+      newErrors.monthly_limit = "Monthly limit must be greater than 0";
+      isValid = false;
+    } else if (isNaN(parseFloat(formData.monthly_limit))) {
+      newErrors.monthly_limit = "Please enter a valid number";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.category_id) {
-      toast.error("Please select a category");
-      return;
-    }
-
-    if (!formData.monthly_limit || parseFloat(formData.monthly_limit) <= 0) {
-      toast.error("Please enter a valid monthly limit");
+    if (!validateForm()) {
       return;
     }
 
@@ -81,6 +112,14 @@ const BudgetForm = ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
   };
 
   const handleClose = () => {
@@ -89,6 +128,10 @@ const BudgetForm = ({
       monthly_limit: "",
       month: new Date().getMonth() + 1,
       year: new Date().getFullYear(),
+    });
+    setErrors({
+      category_id: "",
+      monthly_limit: "",
     });
     onClose();
   };
@@ -120,7 +163,11 @@ const BudgetForm = ({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Category Selection */}
           <div className="space-y-2">
             <label
@@ -134,8 +181,9 @@ const BudgetForm = ({
               id="category_id"
               value={formData.category_id}
               onChange={(e) => handleInputChange("category_id", e.target.value)}
-              className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-              required
+              className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                errors.category_id ? "border-red-500" : "border-slate-300"
+              } bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}
             >
               <option value="" disabled>
                 Select a category
@@ -149,6 +197,9 @@ const BudgetForm = ({
                 </option>
               ))}
             </select>
+            {errors.category_id && (
+              <p className="text-xs text-red-500 mt-1">{errors.category_id}</p>
+            )}
             {categories.length === 0 && (
               <p className="text-xs text-red-500 mt-1">
                 No categories available. Please create categories first.
@@ -175,14 +226,20 @@ const BudgetForm = ({
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                required
                 value={formData.monthly_limit}
                 onChange={(e) =>
                   handleInputChange("monthly_limit", e.target.value)
                 }
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  errors.monthly_limit ? "border-red-500" : "border-slate-300"
+                } bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}
               />
             </div>
+            {errors.monthly_limit && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.monthly_limit}
+              </p>
+            )}
           </div>
 
           {/* Month and Year Selection */}

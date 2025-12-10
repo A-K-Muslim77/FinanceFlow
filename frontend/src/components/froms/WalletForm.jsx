@@ -29,6 +29,8 @@ const WalletForm = ({
     description: "",
   });
 
+  const [error, setError] = useState("");
+
   const walletTypes = [
     { value: "cash", label: "Cash", icon: <Wallet className="w-4 h-4" /> },
     {
@@ -124,15 +126,20 @@ const WalletForm = ({
         description: "",
       });
     }
+    // Clear error when opening form
+    setError("");
   }, [isEdit, editData]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error("Please enter a wallet name");
+      setError("Please enter a wallet name");
       return;
     }
+
+    // Clear error if validation passes
+    setError("");
 
     const submitData = {
       ...formData,
@@ -147,6 +154,11 @@ const WalletForm = ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (error && field === "name") {
+      setError("");
+    }
   };
 
   const handleClose = () => {
@@ -158,6 +170,7 @@ const WalletForm = ({
       balance: 0,
       description: "",
     });
+    setError("");
     onClose();
   };
 
@@ -180,27 +193,21 @@ const WalletForm = ({
 
         {/* Header */}
         <div className="flex flex-col space-y-2 sm:space-y-1.5 text-center sm:text-left mb-4 sm:mb-6">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center"
-              style={{ backgroundColor: `${formData.color}20` }}
-            >
-              {icons.find((i) => i.name === formData.icon)?.component}
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold leading-none tracking-tight text-slate-900">
-                {isEdit ? "Edit Wallet" : "Create New Wallet"}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                {isEdit
-                  ? "Update your wallet details"
-                  : "Add a new wallet to track your finances"}
-              </p>
-            </div>
-          </div>
+          <h2 className="text-lg sm:text-xl font-semibold leading-none tracking-tight text-slate-900">
+            {isEdit ? "Edit Wallet" : "Create New Wallet"}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500">
+            {isEdit
+              ? "Update your wallet details"
+              : "Add a new wallet to track your finances"}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Wallet Name */}
           <div className="space-y-2">
             <label
@@ -214,12 +221,14 @@ const WalletForm = ({
               type="text"
               id="name"
               placeholder="e.g. Main Cash, Salary Account, Personal bKash"
-              required
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                error ? "border-red-500" : "border-slate-300"
+              } bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               autoFocus
             />
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
           </div>
 
           {/* Wallet Type */}
@@ -381,42 +390,6 @@ const WalletForm = ({
             <p className="text-xs text-slate-500">
               Additional information to help you identify this wallet
             </p>
-          </div>
-
-          {/* Preview Section */}
-          <div className="pt-4 border-t border-slate-200">
-            <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Wallet Preview
-            </h3>
-            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                style={{ backgroundColor: `${formData.color}20` }}
-              >
-                {icons.find((i) => i.name === formData.icon)?.component}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-slate-900">
-                    {formData.name || "Wallet Name"}
-                  </h4>
-                  <span
-                    className={`px-2 py-1 rounded-md text-xs font-medium capitalize bg-blue-100 text-blue-800`}
-                  >
-                    {walletTypes.find((t) => t.value === formData.type)
-                      ?.label || "Cash"}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-slate-700">
-                    Initial Balance:{" "}
-                    <span className="font-bold">
-                      ৳{parseFloat(formData.balance || 0).toLocaleString()}
-                    </span>
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
 
           {/* Action Buttons */}

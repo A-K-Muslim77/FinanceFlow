@@ -26,6 +26,12 @@ const DueReceivablesForm = ({
     notes: "",
   });
 
+  const [errors, setErrors] = useState({
+    amount: "",
+    person: "",
+    due_date: "",
+  });
+
   const statusOptions = [
     { value: "pending", label: "Pending", icon: <Clock className="w-4 h-4" /> },
     { value: "paid", label: "Paid", icon: <CheckCircle className="w-4 h-4" /> },
@@ -53,24 +59,51 @@ const DueReceivablesForm = ({
       });
       setType("due");
     }
+    // Clear errors when opening form
+    setErrors({
+      amount: "",
+      person: "",
+      due_date: "",
+    });
   }, [isEdit, editData]);
+
+  const validateForm = () => {
+    const newErrors = {
+      amount: "",
+      person: "",
+      due_date: "",
+    };
+    let isValid = true;
+
+    if (!formData.amount) {
+      newErrors.amount = "Please enter an amount";
+      isValid = false;
+    } else if (
+      parseFloat(formData.amount) <= 0 ||
+      isNaN(parseFloat(formData.amount))
+    ) {
+      newErrors.amount = "Please enter a valid amount";
+      isValid = false;
+    }
+
+    if (!formData.person.trim()) {
+      newErrors.person = "Please enter a person/entity name";
+      isValid = false;
+    }
+
+    if (!formData.due_date) {
+      newErrors.due_date = "Please select a due date";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate form data
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    if (!formData.person.trim()) {
-      toast.error("Please enter a person/entity name");
-      return;
-    }
-
-    if (!formData.due_date) {
-      toast.error("Please select a due date");
+    if (!validateForm()) {
       return;
     }
 
@@ -86,6 +119,14 @@ const DueReceivablesForm = ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
   };
 
   const handleClose = () => {
@@ -95,6 +136,11 @@ const DueReceivablesForm = ({
       due_date: "",
       status: "pending",
       notes: "",
+    });
+    setErrors({
+      amount: "",
+      person: "",
+      due_date: "",
     });
     setType("due");
     onClose();
@@ -173,7 +219,11 @@ const DueReceivablesForm = ({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Type Selection */}
           <div className="space-y-3">
             <label className="text-sm font-medium leading-none text-slate-700 block">
@@ -264,12 +314,16 @@ const DueReceivablesForm = ({
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                required
                 value={formData.amount}
                 onChange={(e) => handleInputChange("amount", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  errors.amount ? "border-red-500" : "border-slate-300"
+                } bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               />
             </div>
+            {errors.amount && (
+              <p className="text-xs text-red-500 mt-1">{errors.amount}</p>
+            )}
           </div>
 
           {/* Person/Entity Name */}
@@ -287,12 +341,16 @@ const DueReceivablesForm = ({
                 type="text"
                 id="person"
                 placeholder="e.g. John Doe, ABC Company"
-                required
                 value={formData.person}
                 onChange={(e) => handleInputChange("person", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  errors.person ? "border-red-500" : "border-slate-300"
+                } bg-white pl-10 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               />
             </div>
+            {errors.person && (
+              <p className="text-xs text-red-500 mt-1">{errors.person}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -310,14 +368,18 @@ const DueReceivablesForm = ({
                 <input
                   type="date"
                   id="due_date"
-                  required
                   value={formData.due_date}
                   onChange={(e) =>
                     handleInputChange("due_date", e.target.value)
                   }
-                  className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                    errors.due_date ? "border-red-500" : "border-slate-300"
+                  } bg-white pl-10 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               </div>
+              {errors.due_date && (
+                <p className="text-xs text-red-500 mt-1">{errors.due_date}</p>
+              )}
             </div>
 
             {/* Status */}
@@ -386,48 +448,53 @@ const DueReceivablesForm = ({
           </div>
 
           {/* Summary Preview */}
-          {formData.amount && formData.person && formData.due_date && (
-            <div className="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <h3 className="text-sm font-medium text-slate-700 mb-2">
-                Transaction Summary
-              </h3>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Type:</span>
-                  <span
-                    className={`font-medium ${
-                      isDue ? "text-red-600" : "text-blue-600"
-                    }`}
-                  >
-                    {isDue ? "Due (You Owe)" : "Receivable (Owed to You)"}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Amount:</span>
-                  <span className="font-semibold text-slate-900">
-                    ৳{parseFloat(formData.amount).toLocaleString()}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">To/From:</span>
-                  <span className="font-medium text-slate-900">
-                    {formData.person}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-600">Due Date:</span>
-                  <span className="font-medium text-slate-900">
-                    {new Date(formData.due_date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      month: "short",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </span>
+          {formData.amount &&
+            formData.person &&
+            formData.due_date &&
+            !errors.amount &&
+            !errors.person &&
+            !errors.due_date && (
+              <div className="p-3 sm:p-4 bg-slate-50 rounded-lg border border-slate-200">
+                <h3 className="text-sm font-medium text-slate-700 mb-2">
+                  Transaction Summary
+                </h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Type:</span>
+                    <span
+                      className={`font-medium ${
+                        isDue ? "text-red-600" : "text-blue-600"
+                      }`}
+                    >
+                      {isDue ? "Due (You Owe)" : "Receivable (Owed to You)"}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Amount:</span>
+                    <span className="font-semibold text-slate-900">
+                      ৳{parseFloat(formData.amount).toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">To/From:</span>
+                    <span className="font-medium text-slate-900">
+                      {formData.person}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-slate-600">Due Date:</span>
+                    <span className="font-medium text-slate-900">
+                      {new Date(formData.due_date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
           {/* Action Buttons */}
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 sm:pt-6 border-t border-slate-200">

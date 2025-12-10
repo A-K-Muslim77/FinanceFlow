@@ -8,21 +8,36 @@ const DepositWithdrawModal = ({ isOpen, onClose, onSubmit, goal, type }) => {
     notes: "",
   });
 
+  const [error, setError] = useState("");
+
+  const validateForm = () => {
+    if (!formData.amount) {
+      setError("Please enter an amount");
+      return false;
+    }
+
+    const amount = parseFloat(formData.amount);
+
+    if (isNaN(amount) || amount <= 0) {
+      setError("Please enter a valid amount");
+      return false;
+    }
+
+    if (type === "withdrawal" && amount > goal?.currentBalance) {
+      setError(
+        `Withdrawal amount cannot exceed current balance (৳${goal?.currentBalance.toLocaleString()})`
+      );
+      return false;
+    }
+
+    setError("");
+    return true;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
-    }
-
-    if (
-      type === "withdrawal" &&
-      parseFloat(formData.amount) > goal?.currentBalance
-    ) {
-      toast.error(
-        `Withdrawal amount cannot exceed current balance (৳${goal?.currentBalance.toLocaleString()})`
-      );
+    if (!validateForm()) {
       return;
     }
 
@@ -34,6 +49,11 @@ const DepositWithdrawModal = ({ isOpen, onClose, onSubmit, goal, type }) => {
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (error && field === "amount") {
+      setError("");
+    }
   };
 
   const handleClose = () => {
@@ -41,6 +61,7 @@ const DepositWithdrawModal = ({ isOpen, onClose, onSubmit, goal, type }) => {
       amount: "",
       notes: "",
     });
+    setError("");
     onClose();
   };
 
@@ -168,7 +189,11 @@ const DepositWithdrawModal = ({ isOpen, onClose, onSubmit, goal, type }) => {
           )}
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Amount */}
           <div className="space-y-2">
             <label
@@ -189,14 +214,16 @@ const DepositWithdrawModal = ({ isOpen, onClose, onSubmit, goal, type }) => {
                 min="0"
                 max={isWithdrawal ? goal?.currentBalance : undefined}
                 placeholder="0.00"
-                required
                 value={formData.amount}
                 onChange={(e) => handleInputChange("amount", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  error ? "border-red-500" : "border-slate-300"
+                } bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}
                 autoFocus
               />
             </div>
-            {isWithdrawal && goal?.currentBalance > 0 && (
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+            {isWithdrawal && goal?.currentBalance > 0 && !error && (
               <div className="flex items-center gap-1 text-xs sm:text-sm text-slate-600 mt-2 p-2 bg-slate-100 rounded">
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -222,37 +249,39 @@ const DepositWithdrawModal = ({ isOpen, onClose, onSubmit, goal, type }) => {
                 </span>
               </div>
             )}
-            {formData.amount && !isNaN(parseFloat(formData.amount)) && (
-              <div
-                className={`text-xs sm:text-sm mt-2 p-2 rounded ${
-                  isWithdrawal
-                    ? "bg-red-50 text-red-700"
-                    : "bg-green-50 text-green-700"
-                }`}
-              >
-                {isWithdrawal ? (
-                  <>
-                    New balance will be:{" "}
-                    <span className="font-bold">
-                      ৳
-                      {(
-                        goal.currentBalance - parseFloat(formData.amount)
-                      ).toLocaleString()}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    New balance will be:{" "}
-                    <span className="font-bold">
-                      ৳
-                      {(
-                        goal.currentBalance + parseFloat(formData.amount)
-                      ).toLocaleString()}
-                    </span>
-                  </>
-                )}
-              </div>
-            )}
+            {formData.amount &&
+              !isNaN(parseFloat(formData.amount)) &&
+              !error && (
+                <div
+                  className={`text-xs sm:text-sm mt-2 p-2 rounded ${
+                    isWithdrawal
+                      ? "bg-red-50 text-red-700"
+                      : "bg-green-50 text-green-700"
+                  }`}
+                >
+                  {isWithdrawal ? (
+                    <>
+                      New balance will be:{" "}
+                      <span className="font-bold">
+                        ৳
+                        {(
+                          goal.currentBalance - parseFloat(formData.amount)
+                        ).toLocaleString()}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      New balance will be:{" "}
+                      <span className="font-bold">
+                        ৳
+                        {(
+                          goal.currentBalance + parseFloat(formData.amount)
+                        ).toLocaleString()}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
           </div>
 
           {/* Notes */}

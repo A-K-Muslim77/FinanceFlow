@@ -31,6 +31,14 @@ const TransactionForm = ({
     notes: "",
   });
 
+  const [errors, setErrors] = useState({
+    amount: "",
+    from_wallet_id: "",
+    to_wallet_id: "",
+    category_id: "",
+    date: "",
+  });
+
   useEffect(() => {
     if (isEdit && editData) {
       setFormData({
@@ -56,27 +64,74 @@ const TransactionForm = ({
         notes: "",
       });
     }
+    // Clear errors when opening form
+    setErrors({
+      amount: "",
+      from_wallet_id: "",
+      to_wallet_id: "",
+      category_id: "",
+      date: "",
+    });
   }, [isEdit, editData]);
 
   const filteredCategories = categories.filter(
     (category) => category.type === formData.type
   );
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
+  const validateForm = () => {
+    const newErrors = {
+      amount: "",
+      from_wallet_id: "",
+      to_wallet_id: "",
+      category_id: "",
+      date: "",
+    };
+    let isValid = true;
 
-    if (!formData.amount || parseFloat(formData.amount) <= 0) {
-      toast.error("Please enter a valid amount");
-      return;
+    if (!formData.amount) {
+      newErrors.amount = "Please enter an amount";
+      isValid = false;
+    } else if (
+      parseFloat(formData.amount) <= 0 ||
+      isNaN(parseFloat(formData.amount))
+    ) {
+      newErrors.amount = "Please enter a valid amount";
+      isValid = false;
     }
 
     if (!formData.from_wallet_id) {
-      toast.error("Please select a wallet");
-      return;
+      newErrors.from_wallet_id = "Please select a wallet";
+      isValid = false;
     }
 
-    if (formData.type !== "transfer" && !formData.category_id) {
-      toast.error("Please select a category");
+    if (!formData.date) {
+      newErrors.date = "Please select a date and time";
+      isValid = false;
+    }
+
+    if (formData.type !== "transfer") {
+      if (!formData.category_id) {
+        newErrors.category_id = "Please select a category";
+        isValid = false;
+      }
+    } else {
+      if (!formData.to_wallet_id) {
+        newErrors.to_wallet_id = "Please select a to wallet";
+        isValid = false;
+      } else if (formData.from_wallet_id === formData.to_wallet_id) {
+        newErrors.to_wallet_id = "From wallet and To wallet cannot be the same";
+        isValid = false;
+      }
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
       return;
     }
 
@@ -93,14 +148,6 @@ const TransactionForm = ({
     }
 
     if (formData.type === "transfer") {
-      if (!formData.to_wallet_id) {
-        toast.error("Please select a to wallet for transfer");
-        return;
-      }
-      if (formData.from_wallet_id === formData.to_wallet_id) {
-        toast.error("From wallet and To wallet cannot be the same");
-        return;
-      }
       submitData.to_wallet_id = formData.to_wallet_id;
     } else if (formData.type === "income") {
       submitData.to_wallet_id = formData.from_wallet_id;
@@ -117,6 +164,12 @@ const TransactionForm = ({
         category_id: value === "transfer" ? "" : prev.category_id,
         to_wallet_id: value !== "transfer" ? "" : prev.to_wallet_id,
       }));
+      // Clear relevant errors when type changes
+      setErrors((prev) => ({
+        ...prev,
+        category_id: value === "transfer" ? "" : prev.category_id,
+        to_wallet_id: value !== "transfer" ? "" : prev.to_wallet_id,
+      }));
     } else if (field === "from_wallet_id") {
       setFormData((prev) => ({
         ...prev,
@@ -126,10 +179,35 @@ const TransactionForm = ({
             ? ""
             : prev.to_wallet_id,
       }));
+      // Clear from_wallet error and potentially to_wallet error
+      if (errors.from_wallet_id) {
+        setErrors((prev) => ({
+          ...prev,
+          from_wallet_id: "",
+        }));
+      }
+      if (
+        formData.type === "transfer" &&
+        errors.to_wallet_id &&
+        value === formData.to_wallet_id
+      ) {
+        setErrors((prev) => ({
+          ...prev,
+          to_wallet_id: "From wallet and To wallet cannot be the same",
+        }));
+      }
     } else {
       setFormData((prev) => ({
         ...prev,
         [field]: value,
+      }));
+    }
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
       }));
     }
   };
@@ -143,6 +221,13 @@ const TransactionForm = ({
       category_id: "",
       date: new Date().toISOString().slice(0, 16),
       notes: "",
+    });
+    setErrors({
+      amount: "",
+      from_wallet_id: "",
+      to_wallet_id: "",
+      category_id: "",
+      date: "",
     });
     onClose();
   };
@@ -241,7 +326,11 @@ const TransactionForm = ({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Type Selection */}
           <div className="space-y-3">
             <label className="text-sm font-medium leading-none text-slate-700 block">
@@ -307,12 +396,16 @@ const TransactionForm = ({
                 step="0.01"
                 min="0"
                 placeholder="0.00"
-                required
                 value={formData.amount}
                 onChange={(e) => handleInputChange("amount", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  errors.amount ? "border-red-500" : "border-slate-300"
+                } bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}
               />
             </div>
+            {errors.amount && (
+              <p className="text-xs text-red-500 mt-1">{errors.amount}</p>
+            )}
           </div>
 
           {/* From Wallet */}
@@ -332,8 +425,9 @@ const TransactionForm = ({
                 onChange={(e) =>
                   handleInputChange("from_wallet_id", e.target.value)
                 }
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none"
-                required
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  errors.from_wallet_id ? "border-red-500" : "border-slate-300"
+                } bg-white pl-10 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none`}
               >
                 <option value="">Select wallet</option>
                 {wallets.map((wallet) => (
@@ -360,6 +454,11 @@ const TransactionForm = ({
                 </svg>
               </div>
             </div>
+            {errors.from_wallet_id && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.from_wallet_id}
+              </p>
+            )}
           </div>
 
           {/* To Wallet or Category */}
@@ -380,8 +479,9 @@ const TransactionForm = ({
                   onChange={(e) =>
                     handleInputChange("to_wallet_id", e.target.value)
                   }
-                  className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-                  required={formData.type === "transfer"}
+                  className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                    errors.to_wallet_id ? "border-red-500" : "border-slate-300"
+                  } bg-white pl-10 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none`}
                 >
                   <option value="">Select to wallet</option>
                   {wallets
@@ -410,6 +510,11 @@ const TransactionForm = ({
                   </svg>
                 </div>
               </div>
+              {errors.to_wallet_id && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.to_wallet_id}
+                </p>
+              )}
             </div>
           ) : (
             <div className="space-y-2">
@@ -427,8 +532,9 @@ const TransactionForm = ({
                   onChange={(e) =>
                     handleInputChange("category_id", e.target.value)
                   }
-                  className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none"
-                  required={formData.type !== "transfer"}
+                  className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                    errors.category_id ? "border-red-500" : "border-slate-300"
+                  } bg-white px-3 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 appearance-none`}
                 >
                   <option value="">Select category</option>
                   {filteredCategories.map((category) => (
@@ -454,6 +560,11 @@ const TransactionForm = ({
                   </svg>
                 </div>
               </div>
+              {errors.category_id && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.category_id}
+                </p>
+              )}
             </div>
           )}
 
@@ -471,12 +582,16 @@ const TransactionForm = ({
               <input
                 type="datetime-local"
                 id="date"
-                required
                 value={formData.date}
                 onChange={(e) => handleInputChange("date", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-10 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                  errors.date ? "border-red-500" : "border-slate-300"
+                } bg-white pl-10 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}
               />
             </div>
+            {errors.date && (
+              <p className="text-xs text-red-500 mt-1">{errors.date}</p>
+            )}
           </div>
 
           {/* Notes */}

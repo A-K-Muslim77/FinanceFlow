@@ -19,6 +19,11 @@ const SavingsForm = ({
     color: "#3b82f6",
   });
 
+  const [errors, setErrors] = useState({
+    name: "",
+    targetAmount: "",
+  });
+
   // Using Lucide React icons directly
   const icons = [
     {
@@ -127,19 +132,44 @@ const SavingsForm = ({
         color: "#3b82f6",
       });
     }
+    // Clear errors when opening form
+    setErrors({
+      name: "",
+      targetAmount: "",
+    });
   }, [isEdit, editData]);
+
+  const validateForm = () => {
+    const newErrors = {
+      name: "",
+      targetAmount: "",
+    };
+    let isValid = true;
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Please enter a goal name";
+      isValid = false;
+    }
+
+    if (!formData.targetAmount) {
+      newErrors.targetAmount = "Please enter a target amount";
+      isValid = false;
+    } else if (
+      parseFloat(formData.targetAmount) <= 0 ||
+      isNaN(parseFloat(formData.targetAmount))
+    ) {
+      newErrors.targetAmount = "Please enter a valid target amount";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    // Validate form data
-    if (!formData.name.trim()) {
-      toast.error("Please enter a goal name");
-      return;
-    }
-
-    if (!formData.targetAmount || parseFloat(formData.targetAmount) <= 0) {
-      toast.error("Please enter a valid target amount");
+    if (!validateForm()) {
       return;
     }
 
@@ -157,6 +187,14 @@ const SavingsForm = ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (errors[field]) {
+      setErrors((prev) => ({
+        ...prev,
+        [field]: "",
+      }));
+    }
   };
 
   const handleClose = () => {
@@ -167,6 +205,10 @@ const SavingsForm = ({
       description: "",
       icon: "piggy-bank",
       color: "#3b82f6",
+    });
+    setErrors({
+      name: "",
+      targetAmount: "",
     });
     onClose();
   };
@@ -190,24 +232,21 @@ const SavingsForm = ({
 
         {/* Header */}
         <div className="flex flex-col space-y-2 sm:space-y-1.5 text-center sm:text-left mb-4 sm:mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full flex items-center justify-center bg-blue-100">
-              <LucideIcons.PiggyBank className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
-            </div>
-            <div>
-              <h2 className="text-lg sm:text-xl font-semibold leading-none tracking-tight text-slate-900">
-                {isEdit ? "Edit Savings Goal" : "Create Savings Goal"}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                {isEdit
-                  ? "Update your savings goal details"
-                  : "Set up a new savings target to track your progress"}
-              </p>
-            </div>
-          </div>
+          <h2 className="text-lg sm:text-xl font-semibold leading-none tracking-tight text-slate-900">
+            {isEdit ? "Edit Savings Goal" : "Create Savings Goal"}
+          </h2>
+          <p className="text-xs sm:text-sm text-slate-500">
+            {isEdit
+              ? "Update your savings goal details"
+              : "Set up a new savings target to track your progress"}
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Goal Name */}
           <div className="space-y-2">
             <label
@@ -221,12 +260,16 @@ const SavingsForm = ({
               type="text"
               id="name"
               placeholder="e.g. Emergency Fund, Vacation, New Car"
-              required
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                errors.name ? "border-red-500" : "border-slate-300"
+              } bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
               autoFocus
             />
+            {errors.name && (
+              <p className="text-xs text-red-500 mt-1">{errors.name}</p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -249,14 +292,20 @@ const SavingsForm = ({
                   step="0.01"
                   min="0"
                   placeholder="0.00"
-                  required
                   value={formData.targetAmount}
                   onChange={(e) =>
                     handleInputChange("targetAmount", e.target.value)
                   }
-                  className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                    errors.targetAmount ? "border-red-500" : "border-slate-300"
+                  } bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
                 />
               </div>
+              {errors.targetAmount && (
+                <p className="text-xs text-red-500 mt-1">
+                  {errors.targetAmount}
+                </p>
+              )}
             </div>
 
             {/* Monthly Target */}
@@ -291,7 +340,8 @@ const SavingsForm = ({
           {formData.monthlyTarget &&
             parseFloat(formData.monthlyTarget) > 0 &&
             formData.targetAmount &&
-            parseFloat(formData.targetAmount) > 0 && (
+            parseFloat(formData.targetAmount) > 0 &&
+            !errors.targetAmount && (
               <div className="p-3 bg-blue-50 rounded-lg border border-blue-100">
                 <p className="text-sm text-blue-800 font-medium">
                   Time Estimate:
@@ -403,47 +453,6 @@ const SavingsForm = ({
                   )}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Preview Section */}
-          <div className="pt-4 border-t border-slate-200">
-            <h3 className="text-sm font-medium text-slate-700 mb-3">
-              Goal Preview
-            </h3>
-            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                style={{ backgroundColor: `${formData.color}20` }}
-              >
-                {icons.find((i) => i.name === formData.icon)?.component}
-              </div>
-              <div className="flex-1">
-                <div className="flex items-center gap-2 mb-1">
-                  <h4 className="font-semibold text-slate-900">
-                    {formData.name || "Goal Name"}
-                  </h4>
-                </div>
-                <div className="space-y-1">
-                  {formData.targetAmount && (
-                    <p className="text-sm text-slate-700">
-                      Target:{" "}
-                      <span className="font-bold">
-                        ৳{parseFloat(formData.targetAmount).toLocaleString()}
-                      </span>
-                    </p>
-                  )}
-                  {formData.monthlyTarget &&
-                    parseFloat(formData.monthlyTarget) > 0 && (
-                      <p className="text-sm text-slate-700">
-                        Monthly:{" "}
-                        <span className="font-medium">
-                          ৳{parseFloat(formData.monthlyTarget).toLocaleString()}
-                        </span>
-                      </p>
-                    )}
-                </div>
-              </div>
             </div>
           </div>
 

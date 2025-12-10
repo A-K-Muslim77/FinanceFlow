@@ -17,6 +17,8 @@ const CategoryForm = ({
     color: "#f59e0b",
   });
 
+  const [error, setError] = useState("");
+
   // Using Lucide React icons directly
   const icons = [
     {
@@ -125,6 +127,8 @@ const CategoryForm = ({
         color: "#f59e0b",
       });
     }
+    // Clear error when opening form
+    setError("");
   }, [isEdit, editData]);
 
   const handleSubmit = (e) => {
@@ -132,9 +136,12 @@ const CategoryForm = ({
 
     // Validate form data
     if (!formData.name.trim()) {
-      toast.error("Please enter a category name");
+      setError("Please enter a category name");
       return;
     }
+
+    // Clear error if validation passes
+    setError("");
 
     onSubmit(formData);
   };
@@ -144,6 +151,11 @@ const CategoryForm = ({
       ...prev,
       [field]: value,
     }));
+
+    // Clear error when user starts typing
+    if (error && field === "name") {
+      setError("");
+    }
   };
 
   const handleClose = () => {
@@ -153,6 +165,7 @@ const CategoryForm = ({
       icon: "tag",
       color: "#f59e0b",
     });
+    setError("");
     onClose();
   };
 
@@ -185,7 +198,11 @@ const CategoryForm = ({
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-6">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4 sm:space-y-6"
+          noValidate
+        >
           {/* Category Name */}
           <div className="space-y-2">
             <label
@@ -199,12 +216,14 @@ const CategoryForm = ({
               type="text"
               id="name"
               placeholder="e.g. Groceries, Salary, Entertainment"
-              required
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+              className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+                error ? "border-red-500" : "border-slate-300"
+              } bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500`}
               autoFocus
             />
+            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
           </div>
 
           {/* Type Selection */}
@@ -295,38 +314,6 @@ const CategoryForm = ({
                   )}
                 </button>
               ))}
-            </div>
-          </div>
-
-          {/* Preview Section */}
-          <div className="pt-4 border-t border-slate-200">
-            <h3 className="text-sm font-medium text-slate-700 mb-3">Preview</h3>
-            <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-lg">
-              <div
-                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                style={{ backgroundColor: `${formData.color}20` }}
-              >
-                {icons.find((i) => i.name === formData.icon)?.component}
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h4 className="font-semibold text-slate-900">
-                    {formData.name || "Category Name"}
-                  </h4>
-                  <span
-                    className={`px-2 py-1 rounded-md text-xs font-medium capitalize ${
-                      formData.type === "income"
-                        ? "bg-green-100 text-green-800"
-                        : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {formData.type}
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500 mt-1">
-                  Your category will appear like this
-                </p>
-              </div>
             </div>
           </div>
 
