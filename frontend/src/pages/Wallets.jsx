@@ -28,6 +28,9 @@ import {
   ArrowRightLeft,
   Copy,
   Menu,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 
 const WalletTransactionsModal = ({
@@ -562,6 +565,7 @@ const MonthYearSelector = ({
   onMonthChange,
   onYearChange,
   isLoading,
+  isMobile = false,
 }) => {
   const months = [
     { value: 1, label: "Jan" },
@@ -580,6 +584,26 @@ const MonthYearSelector = ({
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
+  if (isMobile) {
+    return (
+      <div className="relative w-full">
+        <select
+          value={selectedMonth}
+          onChange={(e) => onMonthChange(parseInt(e.target.value))}
+          disabled={isLoading}
+          className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+        >
+          {months.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -615,7 +639,7 @@ const Wallets = () => {
   const [availableMonths, setAvailableMonths] = useState([]);
   const [showCopyModal, setShowCopyModal] = useState(false);
   const [copying, setCopying] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(
@@ -976,13 +1000,41 @@ const Wallets = () => {
     setShowCopyModal(true);
   };
 
+  const handleRefresh = () => {
+    fetchMonthlyWallets();
+  };
+
+  const handlePreviousMonth = () => {
+    let newMonth = selectedMonth - 1;
+    let newYear = selectedYear;
+
+    if (newMonth < 1) {
+      newMonth = 12;
+      newYear = selectedYear - 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
+  const handleNextMonth = () => {
+    let newMonth = selectedMonth + 1;
+    let newYear = selectedYear;
+
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear = selectedYear + 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen relative">
-        <div className="fixed inset-0 z-0">
-          <BackgroundCircles />
-        </div>
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <BackgroundCircles />
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading wallets...</p>
@@ -1005,16 +1057,16 @@ const Wallets = () => {
         draggable
         pauseOnHover
         theme="light"
+        className="!z-50"
       />
 
-      <div className="fixed inset-0 z-0">
-        <BackgroundCircles />
-      </div>
+      <BackgroundCircles />
 
-      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 relative z-10">
-        <div className="space-y-4 pb-20">
+      {/* REMOVED: px-3 sm:px-4 lg:px-6 from the main container */}
+      <div className="w-full mx-auto py-3 sm:py-6 relative z-10">
+        <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
           {/* Mobile Header */}
-          <div className="block sm:hidden bg-white rounded-xl p-4 shadow-sm mb-4">
+          <div className="sm:hidden space-y-3 px-2 sm:px-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-bold text-slate-900">My Wallets</h1>
@@ -1023,23 +1075,51 @@ const Wallets = () => {
                 </p>
               </div>
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-2 rounded-lg bg-white border border-slate-200"
               >
-                {isMobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                {showMobileFilters ? (
+                  <X className="w-5 h-5 text-slate-600" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className="w-5 h-5 text-slate-600" />
                 )}
               </button>
             </div>
 
-            {/* Mobile Menu Dropdown */}
-            {isMobileMenuOpen && (
-              <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+            {/* Mobile Quick Actions */}
+            <div className="flex items-center justify-between gap-1">
+              <button
+                onClick={handlePreviousMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={handleRefresh}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <RefreshCw className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 border-green-600 flex-1 flex items-center justify-center"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronRight className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Mobile Filters Dropdown */}
+            {showMobileFilters && (
+              <div className="bg-white rounded-xl p-3 border-0 shadow-lg">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                    <label className="block text-xs text-slate-500 mb-1">
                       Month
                     </label>
                     <MonthYearSelector
@@ -1048,77 +1128,20 @@ const Wallets = () => {
                       onMonthChange={handleMonthChange}
                       onYearChange={handleYearChange}
                       isLoading={loading}
+                      isMobile={true}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                    <label className="block text-xs text-slate-500 mb-1">
                       Year
                     </label>
-                    <div className="relative">
-                      <select
-                        value={selectedYear}
-                        onChange={(e) =>
-                          setSelectedYear(parseInt(e.target.value))
-                        }
-                        disabled={loading}
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                      >
-                        {Array.from({ length: 5 }, (_, i) => {
-                          const year = new Date().getFullYear() - 2 + i;
-                          return (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          );
-                        })}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsCreateModalOpen(true)}
-                  className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Wallet
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Header */}
-          <div className="hidden sm:flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">My Wallets</h1>
-              <p className="text-sm text-slate-600 mt-0.5">
-                Wallet balances for {getMonthName(selectedMonth)} {selectedYear}
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-              <div className="flex gap-3 flex-1 lg:flex-none">
-                {/* Month Selector */}
-                <div className="w-32">
-                  <MonthYearSelector
-                    selectedMonth={selectedMonth}
-                    selectedYear={selectedYear}
-                    onMonthChange={handleMonthChange}
-                    onYearChange={handleYearChange}
-                    isLoading={loading}
-                  />
-                </div>
-
-                {/* Year Selector */}
-                <div className="w-28">
-                  <div className="relative">
                     <select
                       value={selectedYear}
                       onChange={(e) =>
                         setSelectedYear(parseInt(e.target.value))
                       }
                       disabled={loading}
-                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
                     >
                       {Array.from({ length: 5 }, (_, i) => {
                         const year = new Date().getFullYear() - 2 + i;
@@ -1129,25 +1152,102 @@ const Wallets = () => {
                         );
                       })}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
+                {(selectedMonth > 1 ||
+                  selectedYear > new Date().getFullYear()) && (
+                  <button
+                    onClick={handleShowCopyModal}
+                    className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 bg-gray-600 text-white hover:bg-gray-700"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy from Previous Month
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden sm:block px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  My Wallets
+                </h1>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  Wallet balances for {getMonthName(selectedMonth)}{" "}
+                  {selectedYear}
+                </p>
               </div>
 
-              {/* Add Wallet Button */}
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Wallet
-              </button>
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="w-28 sm:w-32">
+                  <MonthYearSelector
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    onMonthChange={handleMonthChange}
+                    onYearChange={handleYearChange}
+                    isLoading={loading}
+                  />
+                </div>
+
+                <div className="w-24 sm:w-28">
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleRefresh}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex-shrink-0"
+                  title="Refresh data"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 shadow-sm bg-green-600 text-white hover:bg-green-700 flex-shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Wallet</span>
+                </button>
+
+                {(selectedMonth > 1 ||
+                  selectedYear > new Date().getFullYear()) && (
+                  <button
+                    onClick={handleShowCopyModal}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 shadow-sm bg-gray-600 text-white hover:bg-gray-700 flex-shrink-0"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span className="hidden sm:inline">Copy from Previous</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mx-2 sm:mx-4 lg:mx-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -1162,7 +1262,7 @@ const Wallets = () => {
 
           {/* Available Months */}
           {availableMonths.length > 0 && (
-            <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">
                 Available Months
               </h3>
@@ -1196,7 +1296,7 @@ const Wallets = () => {
                           setSelectedMonth(month);
                           setSelectedYear(year);
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm border transition-colors ${
                           selectedMonth === month && selectedYear === year
                             ? "bg-green-100 text-green-800 border-green-300"
                             : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
@@ -1204,7 +1304,7 @@ const Wallets = () => {
                       >
                         {monthName} {year}
                         {walletCount > 0 && (
-                          <span className="ml-2 text-xs bg-slate-200 px-1.5 py-0.5 rounded">
+                          <span className="ml-1 sm:ml-2 text-xs bg-slate-200 px-1 sm:px-1.5 py-0.5 rounded">
                             {walletCount}
                           </span>
                         )}
@@ -1218,22 +1318,22 @@ const Wallets = () => {
 
           {/* Monthly Summary */}
           {monthlyData && (
-            <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
+              <div className="mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900">
+                  {monthlyData.monthName} {monthlyData.year}
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500">
+                  {wallets.length === 0
+                    ? "No wallets created for this month"
+                    : `Showing ${wallets.length} wallet${
+                        wallets.length !== 1 ? "s" : ""
+                      } for this month`}
+                </p>
+              </div>
+
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                 <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
-                    {monthlyData.monthName} {monthlyData.year}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600">
-                    {wallets.length === 0
-                      ? "No wallets created for this month"
-                      : `Showing ${wallets.length} wallet${
-                          wallets.length !== 1 ? "s" : ""
-                        } for this month`}
-                  </p>
-                </div>
-
-                <div className="text-right">
                   <p className="text-xs sm:text-sm text-slate-500 mb-1">
                     Monthly Total Balance
                   </p>
@@ -1247,14 +1347,26 @@ const Wallets = () => {
                     {formatBalance(monthlyData.totalMonthlyBalance)}
                   </p>
                 </div>
+
+                {(selectedMonth > 1 ||
+                  selectedYear > new Date().getFullYear()) &&
+                  wallets.length === 0 && (
+                    <button
+                      onClick={handleShowCopyModal}
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 sm:h-10 px-3 sm:px-4 py-2 shadow bg-gray-600 text-white hover:bg-gray-700"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy from Previous Month
+                    </button>
+                  )}
               </div>
             </div>
           )}
 
           {/* Wallets Grid */}
           {wallets.length === 0 && (
-            <div className="text-center py-8 sm:py-12">
-              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
+            <div className="text-center py-6 sm:py-8 mx-2 sm:mx-4 lg:mx-6">
+              <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <WalletIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                 </div>
@@ -1288,11 +1400,11 @@ const Wallets = () => {
           )}
 
           {wallets.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mx-2 sm:mx-4 lg:mx-6">
               {wallets.map((wallet) => (
                 <div
                   key={wallet._id}
-                  className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-lg transition-all duration-200 border-0 overflow-hidden relative z-20"
+                  className="rounded-xl bg-white text-card-foreground shadow-sm group hover:shadow-lg transition-all duration-200 border-0 overflow-hidden relative z-20"
                 >
                   <div
                     className="h-1.5 w-full"
@@ -1406,10 +1518,10 @@ const Wallets = () => {
       {/* Floating Action Button for Mobile */}
       <button
         onClick={() => setIsCreateModalOpen(true)}
-        className="fixed bottom-20 right-4 sm:hidden z-40 rounded-full p-4 shadow-lg transition-transform hover:scale-110 bg-green-600 text-white hover:bg-green-700"
-        style={{ boxShadow: "0 4px 14px 0 rgba(0, 0, 0, 0.2)" }}
+        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
+        title="Add Wallet"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
       </button>
 
       <WalletForm

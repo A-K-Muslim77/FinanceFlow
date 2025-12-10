@@ -38,7 +38,7 @@ const Reports = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const [showFilters, setShowFilters] = useState(false); // Changed to false for mobile
+  const [showFilters, setShowFilters] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
 
   const currentDate = new Date();
@@ -765,10 +765,10 @@ const Reports = () => {
         <BackgroundCircles />
       </div>
 
-      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
-        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
+      <div className="w-full mx-auto py-3 sm:py-6 relative z-10">
+        <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
           {/* Mobile Header */}
-          <div className="lg:hidden space-y-3 px-2 sm:px-0">
+          <div className="sm:hidden space-y-3 px-2 sm:px-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-bold text-slate-900">Reports</h1>
@@ -817,13 +817,18 @@ const Reports = () => {
             </div>
 
             {/* Mobile Quick Actions */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between gap-1">
               <button
-                onClick={() => setShowFilters(!showFilters)}
-                className="flex-1 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                onClick={handleResetFilters}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <RotateCcw className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={() => setShowFilters(true)}
+                className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 border-green-600 flex-1 flex items-center justify-center"
               >
                 <Filter className="w-4 h-4" />
-                <span>{showFilters ? "Hide Filters" : "Show Filters"}</span>
               </button>
             </div>
 
@@ -881,18 +886,18 @@ const Reports = () => {
           </div>
 
           {/* Desktop Header */}
-          <div className="hidden lg:block px-2 sm:px-0">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="hidden sm:block px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
                   Advanced Reports
                 </h1>
-                <p className="text-sm text-slate-600 mt-0.5 sm:mt-1">
+                <p className="text-sm text-slate-600 mt-0.5">
                   Detailed financial insights and analytics
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
                 <div className="w-28 sm:w-32">
                   <div className="relative">
                     <select
@@ -941,10 +946,12 @@ const Reports = () => {
 
                 <button
                   onClick={() => setShowFilters(!showFilters)}
-                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-green-700"
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-sm bg-green-600 text-white hover:bg-green-700 flex-shrink-0"
                 >
                   <Filter className="w-4 h-4" />
-                  {showFilters ? "Hide Filters" : "Show Filters"}
+                  <span className="hidden sm:inline">
+                    {showFilters ? "Hide Filters" : "Show Filters"}
+                  </span>
                 </button>
               </div>
             </div>
@@ -952,7 +959,7 @@ const Reports = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mx-2 sm:mx-4 lg:mx-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -965,464 +972,399 @@ const Reports = () => {
             </div>
           )}
 
-          {/* Summary Cards - Mobile Optimized */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 px-2 sm:px-0">
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-3 sm:p-4">
-                <p className="text-xs text-green-700 mb-1">Total Income</p>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-900 truncate">
-                  {formatCurrency(reportData.summary.totalIncome)}
-                </p>
-                <p className="text-xs text-green-600 mt-1">
-                  {reportData.summary.incomeTransactions} txns
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-3 sm:p-4">
-                <p className="text-xs text-red-700 mb-1">Total Expense</p>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-900 truncate">
-                  {formatCurrency(reportData.summary.totalExpense)}
-                </p>
-                <p className="text-xs text-red-600 mt-1">
-                  {reportData.summary.expenseTransactions} txns
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-3 sm:p-4">
-                <p className="text-xs text-blue-700 mb-1">Net Amount</p>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-blue-900 truncate">
-                  {formatCurrency(reportData.summary.netAmount)}
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  {reportData.summary.netAmount >= 0 ? "Surplus" : "Deficit"}
-                </p>
-              </div>
-            </div>
-
-            <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-              <div className="p-3 sm:p-4">
-                <p className="text-xs text-purple-700 mb-1">Avg Transaction</p>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-purple-900 truncate">
-                  {formatCurrency(reportData.summary.avgTransaction)}
-                </p>
-                <p className="text-xs text-purple-600 mt-1">
-                  {reportData.summary.totalTransactions} total
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
-            {/* Filters Panel - Mobile Overlay */}
-            {showFilters && (
-              <div className="lg:col-span-1">
-                <div className="fixed inset-0 z-40 bg-black/50 lg:bg-transparent lg:relative lg:inset-auto lg:z-auto">
-                  <div className="fixed inset-y-0 left-0 z-50 w-full max-w-xs bg-white shadow-xl lg:relative lg:inset-auto lg:shadow-none lg:w-full lg:max-w-none lg:bg-transparent">
-                    <div className="h-full overflow-y-auto">
-                      <div className="rounded-xl border bg-card text-card-foreground shadow lg:shadow-none lg:border lg:bg-white">
-                        {/* Mobile Header */}
-                        <div className="flex items-center justify-between p-4 border-b lg:hidden">
-                          <h2 className="text-lg font-semibold">Filters</h2>
-                          <button
-                            onClick={() => setShowFilters(false)}
-                            className="p-2 rounded-lg hover:bg-slate-100"
-                          >
-                            <X className="w-5 h-5 text-slate-600" />
-                          </button>
+          {/* Main Content Grid - FIXED: Added consistent padding for both filter and content */}
+          <div className="px-2 sm:px-4 lg:px-6">
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6">
+              {/* Filters Panel */}
+              {showFilters && (
+                <div className="lg:col-span-1">
+                  <div className="rounded-xl border bg-white text-card-foreground shadow h-full">
+                    <div className="flex flex-col space-y-1.5 p-4 sm:p-6 sm:pb-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Filter className="w-5 h-5 text-blue-600" />
+                          <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
+                            Advanced Filters
+                          </div>
                         </div>
+                        <button
+                          onClick={handleResetFilters}
+                          className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-2 sm:px-3 text-slate-700 hover:bg-slate-100"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
+                          <span className="hidden xs:inline">Reset</span>
+                        </button>
+                      </div>
+                    </div>
 
-                        <div className="flex flex-col space-y-1.5 p-4 sm:p-6 sm:pb-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <Filter className="w-5 h-5 text-blue-600" />
-                              <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
-                                Advanced Filters
-                              </div>
-                            </div>
-                            <button
-                              onClick={handleResetFilters}
-                              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground h-8 px-2 sm:px-3 text-slate-700 hover:bg-slate-100"
+                    <div className="p-4 sm:p-6 sm:pt-0 space-y-4 sm:space-y-6">
+                      {/* Date Range */}
+                      <div>
+                        <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                          Date Range
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
+                          <div>
+                            <label
+                              className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                              htmlFor="startDate"
                             >
-                              <RotateCcw className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" />
-                              <span className="hidden sm:inline">Reset</span>
-                            </button>
+                              Start Date
+                            </label>
+                            <input
+                              type="text"
+                              className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                              id="startDate"
+                              placeholder="dd/mm/yyyy"
+                              value={dateInputs.startDate}
+                              onChange={(e) =>
+                                handleDateInputChange(
+                                  "startDate",
+                                  e.target.value
+                                )
+                              }
+                            />
+                            {dateInputs.startDate &&
+                              !isValidDDMMYYYY(dateInputs.startDate) && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  Invalid format
+                                </p>
+                              )}
+                          </div>
+                          <div>
+                            <label
+                              className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                              htmlFor="endDate"
+                            >
+                              End Date
+                            </label>
+                            <input
+                              type="text"
+                              className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                              id="endDate"
+                              placeholder="dd/mm/yyyy"
+                              value={dateInputs.endDate}
+                              onChange={(e) =>
+                                handleDateInputChange("endDate", e.target.value)
+                              }
+                            />
+                            {dateInputs.endDate &&
+                              !isValidDDMMYYYY(dateInputs.endDate) && (
+                                <p className="text-xs text-red-500 mt-1">
+                                  Invalid format
+                                </p>
+                              )}
                           </div>
                         </div>
+                      </div>
 
-                        <div className="p-4 sm:p-6 sm:pt-0 space-y-4 sm:space-y-6">
-                          {/* Date Range */}
-                          <div>
-                            <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
-                              Date Range
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                              <div>
-                                <label
-                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                                  htmlFor="startDate"
-                                >
-                                  Start Date
-                                </label>
-                                <input
-                                  type="text"
-                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                                  id="startDate"
-                                  placeholder="dd/mm/yyyy"
-                                  value={dateInputs.startDate}
-                                  onChange={(e) =>
-                                    handleDateInputChange(
-                                      "startDate",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                                {dateInputs.startDate &&
-                                  !isValidDDMMYYYY(dateInputs.startDate) && (
-                                    <p className="text-xs text-red-500 mt-1">
-                                      Invalid format
-                                    </p>
-                                  )}
-                              </div>
-                              <div>
-                                <label
-                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                                  htmlFor="endDate"
-                                >
-                                  End Date
-                                </label>
-                                <input
-                                  type="text"
-                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                                  id="endDate"
-                                  placeholder="dd/mm/yyyy"
-                                  value={dateInputs.endDate}
-                                  onChange={(e) =>
-                                    handleDateInputChange(
-                                      "endDate",
-                                      e.target.value
-                                    )
-                                  }
-                                />
-                                {dateInputs.endDate &&
-                                  !isValidDDMMYYYY(dateInputs.endDate) && (
-                                    <p className="text-xs text-red-500 mt-1">
-                                      Invalid format
-                                    </p>
-                                  )}
-                              </div>
-                            </div>
+                      {/* Transaction Type */}
+                      <div>
+                        <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                          Transaction Type
+                        </label>
+                        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                          {["income", "expense", "transfer"].map((type) => (
+                            <button
+                              key={type}
+                              type="button"
+                              onClick={() => toggleTransactionType(type)}
+                              className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none ${
+                                filters.transactionTypes.includes(type)
+                                  ? "bg-green-600 text-white"
+                                  : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                              }`}
+                            >
+                              {type.charAt(0).toUpperCase() + type.slice(1)}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Wallets */}
+                      {originalWallets.length > 0 && (
+                        <div>
+                          <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                            Wallets ({filters.selectedWallets.length})
+                          </label>
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 overflow-y-auto p-1">
+                            {originalWallets.map((wallet) => (
+                              <button
+                                key={wallet._id}
+                                type="button"
+                                onClick={() =>
+                                  toggleWalletSelection(wallet._id)
+                                }
+                                className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
+                                  filters.selectedWallets.includes(wallet._id)
+                                    ? "border-green-600 bg-green-50 text-green-700"
+                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                                }`}
+                              >
+                                {wallet.name}
+                              </button>
+                            ))}
                           </div>
+                        </div>
+                      )}
 
-                          {/* Transaction Type */}
-                          <div>
-                            <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
-                              Transaction Type
-                            </label>
-                            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                              {["income", "expense", "transfer"].map((type) => (
-                                <button
-                                  key={type}
-                                  type="button"
-                                  onClick={() => toggleTransactionType(type)}
-                                  className={`px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all flex-1 sm:flex-none ${
-                                    filters.transactionTypes.includes(type)
-                                      ? "bg-green-600 text-white"
-                                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                                  }`}
-                                >
-                                  {type.charAt(0).toUpperCase() + type.slice(1)}
-                                </button>
-                              ))}
-                            </div>
+                      {/* Categories */}
+                      {originalCategories.length > 0 && (
+                        <div>
+                          <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                            Categories ({filters.selectedCategories.length})
+                          </label>
+                          <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 overflow-y-auto p-1">
+                            {originalCategories.map((category) => (
+                              <button
+                                key={category._id}
+                                type="button"
+                                onClick={() =>
+                                  toggleCategorySelection(category._id)
+                                }
+                                className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border truncate ${
+                                  filters.selectedCategories.includes(
+                                    category._id
+                                  )
+                                    ? "border-green-600 bg-green-50 text-green-700"
+                                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+                                }`}
+                              >
+                                {category.name}
+                              </button>
+                            ))}
                           </div>
+                        </div>
+                      )}
 
-                          {/* Wallets */}
-                          {originalWallets.length > 0 && (
-                            <div>
-                              <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
-                                Wallets ({filters.selectedWallets.length})
-                              </label>
-                              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 overflow-y-auto p-1">
-                                {originalWallets.map((wallet) => (
-                                  <button
-                                    key={wallet._id}
-                                    type="button"
-                                    onClick={() =>
-                                      toggleWalletSelection(wallet._id)
-                                    }
-                                    className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border ${
-                                      filters.selectedWallets.includes(
-                                        wallet._id
-                                      )
-                                        ? "border-green-600 bg-green-50 text-green-700"
-                                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                                    }`}
-                                  >
-                                    {wallet.name}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Categories */}
-                          {originalCategories.length > 0 && (
-                            <div>
-                              <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
-                                Categories ({filters.selectedCategories.length})
-                              </label>
-                              <div className="flex flex-wrap gap-1.5 sm:gap-2 max-h-32 overflow-y-auto p-1">
-                                {originalCategories.map((category) => (
-                                  <button
-                                    key={category._id}
-                                    type="button"
-                                    onClick={() =>
-                                      toggleCategorySelection(category._id)
-                                    }
-                                    className={`px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-lg text-xs sm:text-sm font-medium transition-all border truncate ${
-                                      filters.selectedCategories.includes(
-                                        category._id
-                                      )
-                                        ? "border-green-600 bg-green-50 text-green-700"
-                                        : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
-                                    }`}
-                                  >
-                                    {category.name}
-                                  </button>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Amount Range */}
+                      {/* Amount Range */}
+                      <div>
+                        <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
+                          Amount Range
+                        </label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
                           <div>
-                            <label className="peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs sm:text-sm font-semibold text-slate-700 mb-2 sm:mb-3 block">
-                              Amount Range
+                            <label
+                              className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                              htmlFor="minAmount"
+                            >
+                              Min Amount
                             </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-3">
-                              <div>
-                                <label
-                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                                  htmlFor="minAmount"
-                                >
-                                  Min Amount
-                                </label>
-                                <input
-                                  type="number"
-                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                                  id="minAmount"
-                                  step="0.01"
-                                  placeholder="৳ 0.00"
-                                  value={filters.amountRange.min}
-                                  onChange={(e) =>
-                                    handleAmountChange("min", e.target.value)
-                                  }
-                                />
-                              </div>
-                              <div>
-                                <label
-                                  className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
-                                  htmlFor="maxAmount"
-                                >
-                                  Max Amount
-                                </label>
-                                <input
-                                  type="number"
-                                  className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                                  id="maxAmount"
-                                  step="0.01"
-                                  placeholder="৳ 0.00"
-                                  value={filters.amountRange.max}
-                                  onChange={(e) =>
-                                    handleAmountChange("max", e.target.value)
-                                  }
-                                />
-                              </div>
-                            </div>
+                            <input
+                              type="number"
+                              className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                              id="minAmount"
+                              step="0.01"
+                              placeholder="৳ 0.00"
+                              value={filters.amountRange.min}
+                              onChange={(e) =>
+                                handleAmountChange("min", e.target.value)
+                              }
+                            />
                           </div>
+                          <div>
+                            <label
+                              className="font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-xs text-slate-600"
+                              htmlFor="maxAmount"
+                            >
+                              Max Amount
+                            </label>
+                            <input
+                              type="number"
+                              className="flex h-9 w-full rounded-md border border-slate-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                              id="maxAmount"
+                              step="0.01"
+                              placeholder="৳ 0.00"
+                              value={filters.amountRange.max}
+                              onChange={(e) =>
+                                handleAmountChange("max", e.target.value)
+                              }
+                            />
+                          </div>
+                        </div>
+                      </div>
 
-                          <button
-                            onClick={handleApplyFilters}
-                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 w-full shadow-lg bg-green-600 text-white hover:bg-green-700"
-                          >
-                            Apply Filters
-                          </button>
+                      <button
+                        onClick={handleApplyFilters}
+                        className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 w-full shadow-lg bg-green-600 text-white hover:bg-green-700"
+                      >
+                        Apply Filters
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Charts and Reports Content */}
+              <div
+                className={`${showFilters ? "lg:col-span-3" : "lg:col-span-4"}`}
+              >
+                {/* Summary Cards - Now inside the same grid container */}
+                <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 mb-4 sm:mb-6">
+                  <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                            Total Income
+                          </p>
+                          <p className="text-lg sm:text-xl font-bold text-green-600 truncate">
+                            {formatCurrency(reportData.summary.totalIncome)}
+                          </p>
+                        </div>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-green-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-green-600" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                            Total Expense
+                          </p>
+                          <p className="text-lg sm:text-xl font-bold text-red-600 truncate">
+                            {formatCurrency(reportData.summary.totalExpense)}
+                          </p>
+                        </div>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-red-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                          <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-red-600" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                            Net Amount
+                          </p>
+                          <p className="text-lg sm:text-xl font-bold text-blue-600 truncate">
+                            {formatCurrency(reportData.summary.netAmount)}
+                          </p>
+                        </div>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                          <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-blue-600" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
+                    <div className="p-4 sm:p-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-xs sm:text-sm text-slate-600 mb-1">
+                            Avg Transaction
+                          </p>
+                          <p className="text-lg sm:text-xl font-bold text-purple-600 truncate">
+                            {formatCurrency(reportData.summary.avgTransaction)}
+                          </p>
+                        </div>
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 bg-purple-50 rounded-full flex items-center justify-center flex-shrink-0 ml-2">
+                          <BarChartIcon className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-600" />
                         </div>
                       </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
 
-            {/* Charts and Reports */}
-            <div
-              className={`${showFilters ? "lg:col-span-3" : "lg:col-span-4"}`}
-            >
-              {/* Month Info - Mobile Optimized */}
-              <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm mb-4 sm:mb-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
-                      {getMonthName(selectedMonth)} {selectedYear}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-600">
-                      {reportData.summary.totalTransactions > 0
-                        ? `Showing ${reportData.summary.totalTransactions} transactions`
-                        : "No data available"}
-                    </p>
-                    {(dateInputs.startDate || dateInputs.endDate) && (
-                      <p className="text-xs sm:text-sm text-blue-600 mt-1 truncate">
-                        Date filter: {dateInputs.startDate || "Any start"} to{" "}
-                        {dateInputs.endDate || "Any end"}
+                {/* Month Info - Mobile Optimized */}
+                <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm mb-4 sm:mb-6">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
+                        {getMonthName(selectedMonth)} {selectedYear}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-slate-600">
+                        {reportData.summary.totalTransactions > 0
+                          ? `Showing ${reportData.summary.totalTransactions} transactions`
+                          : "No data available"}
                       </p>
+                      {(dateInputs.startDate || dateInputs.endDate) && (
+                        <p className="text-xs sm:text-sm text-blue-600 mt-1 truncate">
+                          Date filter: {dateInputs.startDate || "Any start"} to{" "}
+                          {dateInputs.endDate || "Any end"}
+                        </p>
+                      )}
+                    </div>
+                    {!showFilters && (
+                      <button
+                        onClick={() => setShowFilters(true)}
+                        className="lg:hidden inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-8 px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 w-full sm:w-auto"
+                      >
+                        <Filter className="w-4 h-4" />
+                        Show Filters
+                      </button>
                     )}
-                  </div>
-                  {!showFilters && (
-                    <button
-                      onClick={() => setShowFilters(true)}
-                      className="lg:hidden inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-8 px-3 py-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 w-full sm:w-auto"
-                    >
-                      <Filter className="w-4 h-4" />
-                      Show Filters
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-4 sm:space-y-6">
-                {/* Tabs - Mobile Optimized */}
-                <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm">
-                  <div className="h-8 sm:h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("overview")}
-                      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                        activeTab === "overview"
-                          ? "bg-green-500 text-white shadow"
-                          : "hover:bg-slate-100"
-                      }`}
-                    >
-                      <span className="truncate">Charts</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab("details")}
-                      className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                        activeTab === "details"
-                          ? "bg-green-500 text-white shadow"
-                          : "hover:bg-slate-100"
-                      }`}
-                    >
-                      <span className="truncate">Details</span>
-                    </button>
                   </div>
                 </div>
 
-                {/* Charts Content */}
-                {activeTab === "overview" && (
-                  <div className="space-y-4 sm:space-y-6">
-                    {/* Income vs Expense Chart */}
-                    {reportData.categoriesData.length > 0 ? (
-                      <div className="rounded-xl border bg-card text-card-foreground shadow">
-                        <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
-                          <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
-                            Income vs Expense by Category
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-600">
-                            Comparison of income and expense per category
-                          </p>
-                        </div>
-                        <div className="p-3 sm:p-6 sm:pt-0">
-                          <div className="h-64 sm:h-72 md:h-80 lg:h-96">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <RechartsBarChart
-                                data={reportData.categoriesData}
-                                margin={{
-                                  top: 20,
-                                  right: 10,
-                                  left: 0,
-                                  bottom: 60,
-                                }}
-                              >
-                                <CartesianGrid
-                                  strokeDasharray="3 3"
-                                  stroke="#f1f5f9"
-                                />
-                                <XAxis
-                                  dataKey="name"
-                                  angle={-45}
-                                  textAnchor="end"
-                                  height={60}
-                                  interval={0}
-                                  tick={{ fontSize: 10 }}
-                                />
-                                <YAxis tick={{ fontSize: 10 }} />
-                                <Tooltip content={<CustomTooltip />} />
-                                <Legend />
-                                <Bar
-                                  dataKey="income"
-                                  name="Income"
-                                  fill="#10b981"
-                                  radius={[4, 4, 0, 0]}
-                                />
-                                <Bar
-                                  dataKey="expense"
-                                  name="Expense"
-                                  fill="#ef4444"
-                                  radius={[4, 4, 0, 0]}
-                                />
-                              </RechartsBarChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="rounded-xl border bg-card text-card-foreground shadow">
-                        <div className="p-4 sm:p-6">
-                          <div className="text-center py-8 sm:py-12">
-                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                              <BarChartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
-                            </div>
-                            <p className="text-slate-500 text-sm sm:text-lg mb-2">
-                              No category data available
-                            </p>
-                            <p className="text-slate-400 text-xs sm:text-sm">
-                              No transactions found for selected filters
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
+                <div className="space-y-4 sm:space-y-6">
+                  {/* Tabs - Mobile Optimized */}
+                  <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm">
+                    <div className="flex h-8 sm:h-9 items-center justify-center rounded-lg p-1 w-full bg-gray-100 gap-1">
+                      {/* Charts Button */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("overview")}
+                        className={`flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md 
+      px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium transition-all cursor-pointer
+      ${
+        activeTab === "overview"
+          ? "bg-green-500 text-white shadow"
+          : "text-gray-700 hover:bg-slate-200"
+      }`}
+                      >
+                        <span className="truncate">Charts</span>
+                      </button>
 
-                    {/* Bottom Charts Grid */}
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                      {/* Wallet Activity */}
-                      {reportData.walletActivity.length > 0 ? (
+                      {/* Details Button */}
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("details")}
+                        className={`flex-1 inline-flex items-center justify-center whitespace-nowrap rounded-md 
+      px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium transition-all cursor-pointer
+      ${
+        activeTab === "details"
+          ? "bg-green-500 text-white shadow"
+          : "text-gray-700 hover:bg-slate-200"
+      }`}
+                      >
+                        <span className="truncate">Details</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Charts Content */}
+                  {activeTab === "overview" && (
+                    <div className="space-y-4 sm:space-y-6">
+                      {/* Income vs Expense Chart */}
+                      {reportData.categoriesData.length > 0 ? (
                         <div className="rounded-xl border bg-card text-card-foreground shadow">
                           <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
                             <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
-                              Wallet Activity
+                              Income vs Expense by Category
                             </div>
                             <p className="text-xs sm:text-sm text-slate-600">
-                              Net balance per wallet
+                              Comparison of income and expense per category
                             </p>
                           </div>
                           <div className="p-3 sm:p-6 sm:pt-0">
-                            <div className="h-56 sm:h-64">
+                            <div className="h-64 sm:h-72 md:h-80 lg:h-96">
                               <ResponsiveContainer width="100%" height="100%">
                                 <RechartsBarChart
-                                  data={reportData.walletActivity}
-                                  layout="vertical"
+                                  data={reportData.categoriesData}
                                   margin={{
-                                    top: 5,
-                                    right: 20,
-                                    left: 60,
-                                    bottom: 5,
+                                    top: 20,
+                                    right: 10,
+                                    left: 0,
+                                    bottom: 60,
                                   }}
                                 >
                                   <CartesianGrid
@@ -1430,25 +1372,27 @@ const Reports = () => {
                                     stroke="#f1f5f9"
                                   />
                                   <XAxis
-                                    type="number"
-                                    tick={{ fontSize: 10 }}
-                                  />
-                                  <YAxis
-                                    type="category"
                                     dataKey="name"
-                                    width={80}
+                                    angle={-45}
+                                    textAnchor="end"
+                                    height={60}
+                                    interval={0}
                                     tick={{ fontSize: 10 }}
                                   />
-                                  <Tooltip
-                                    formatter={(value) => [
-                                      formatCurrency(value),
-                                      "Balance",
-                                    ]}
+                                  <YAxis tick={{ fontSize: 10 }} />
+                                  <Tooltip content={<CustomTooltip />} />
+                                  <Legend />
+                                  <Bar
+                                    dataKey="income"
+                                    name="Income"
+                                    fill="#10b981"
+                                    radius={[4, 4, 0, 0]}
                                   />
                                   <Bar
-                                    dataKey="value"
-                                    fill="#3b82f6"
-                                    radius={[0, 4, 4, 0]}
+                                    dataKey="expense"
+                                    name="Expense"
+                                    fill="#ef4444"
+                                    radius={[4, 4, 0, 0]}
                                   />
                                 </RechartsBarChart>
                               </ResponsiveContainer>
@@ -1460,183 +1404,261 @@ const Reports = () => {
                           <div className="p-4 sm:p-6">
                             <div className="text-center py-8 sm:py-12">
                               <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                                <WalletIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
+                                <BarChartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                               </div>
                               <p className="text-slate-500 text-sm sm:text-lg mb-2">
-                                No wallet activity data
+                                No category data available
                               </p>
                               <p className="text-slate-400 text-xs sm:text-sm">
-                                No transaction data available for wallets
+                                No transactions found for selected filters
                               </p>
                             </div>
                           </div>
                         </div>
                       )}
 
-                      {/* Top Expense Categories */}
-                      {reportData.expenseCategories.length > 0 ? (
-                        <div className="rounded-xl border bg-card text-card-foreground shadow">
-                          <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
-                            <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
-                              Top Expense Categories
+                      {/* Bottom Charts Grid */}
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
+                        {/* Wallet Activity */}
+                        {reportData.walletActivity.length > 0 ? (
+                          <div className="rounded-xl border bg-card text-card-foreground shadow">
+                            <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                              <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
+                                Wallet Activity
+                              </div>
+                              <p className="text-xs sm:text-sm text-slate-600">
+                                Net balance per wallet
+                              </p>
                             </div>
-                            <p className="text-xs sm:text-sm text-slate-600">
-                              Highest spending categories
-                            </p>
-                          </div>
-                          <div className="p-3 sm:p-6 sm:pt-0">
-                            <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-6">
-                              <div className="w-full lg:w-1/2 h-48 sm:h-56">
+                            <div className="p-3 sm:p-6 sm:pt-0">
+                              <div className="h-56 sm:h-64">
                                 <ResponsiveContainer width="100%" height="100%">
-                                  <RechartsPieChart>
-                                    <Pie
-                                      data={reportData.expenseCategories}
-                                      cx="50%"
-                                      cy="50%"
-                                      labelLine={true}
-                                      label={({ name, percentage }) =>
-                                        `${name}: ${percentage.toFixed(1)}%`
-                                      }
-                                      outerRadius={60}
-                                      innerRadius={20}
-                                      fill="#8884d8"
-                                      dataKey="value"
-                                    >
-                                      {reportData.expenseCategories.map(
-                                        (entry, index) => (
-                                          <Cell
-                                            key={`cell-${index}`}
-                                            fill={entry.color}
-                                          />
-                                        )
-                                      )}
-                                    </Pie>
-                                    <Tooltip
-                                      formatter={(value) =>
-                                        formatCurrency(value)
-                                      }
+                                  <RechartsBarChart
+                                    data={reportData.walletActivity}
+                                    layout="vertical"
+                                    margin={{
+                                      top: 5,
+                                      right: 20,
+                                      left: 60,
+                                      bottom: 5,
+                                    }}
+                                  >
+                                    <CartesianGrid
+                                      strokeDasharray="3 3"
+                                      stroke="#f1f5f9"
                                     />
-                                  </RechartsPieChart>
+                                    <XAxis
+                                      type="number"
+                                      tick={{ fontSize: 10 }}
+                                    />
+                                    <YAxis
+                                      type="category"
+                                      dataKey="name"
+                                      width={80}
+                                      tick={{ fontSize: 10 }}
+                                    />
+                                    <Tooltip
+                                      formatter={(value) => [
+                                        formatCurrency(value),
+                                        "Balance",
+                                      ]}
+                                    />
+                                    <Bar
+                                      dataKey="value"
+                                      fill="#3b82f6"
+                                      radius={[0, 4, 4, 0]}
+                                    />
+                                  </RechartsBarChart>
                                 </ResponsiveContainer>
                               </div>
-
-                              <div className="grid grid-cols-1 gap-1.5 sm:gap-2 w-full lg:w-1/2">
-                                {reportData.expenseCategories.map(
-                                  (category) => (
-                                    <div
-                                      key={category.name}
-                                      className="flex items-center gap-2 text-xs sm:text-sm p-2 bg-slate-50 rounded"
-                                    >
-                                      <div
-                                        className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
-                                        style={{
-                                          backgroundColor: category.color,
-                                        }}
-                                      />
-                                      <span className="text-slate-700 truncate flex-1">
-                                        {category.name}
-                                      </span>
-                                      <span className="text-slate-500 ml-2 font-medium flex-shrink-0">
-                                        {formatCurrency(category.value)}
-                                      </span>
-                                    </div>
-                                  )
-                                )}
-                              </div>
                             </div>
                           </div>
-                        </div>
-                      ) : (
-                        <div className="rounded-xl border bg-card text-card-foreground shadow">
-                          <div className="p-4 sm:p-6">
-                            <div className="text-center py-8 sm:py-12">
-                              <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                                <PieChartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
-                              </div>
-                              <p className="text-slate-500 text-sm sm:text-lg mb-2">
-                                No expense category data
-                              </p>
-                              <p className="text-slate-400 text-xs sm:text-sm">
-                                No expense transactions found
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Transaction Details Tab */}
-                {activeTab === "details" && (
-                  <div className="rounded-xl border bg-card text-card-foreground shadow">
-                    <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
-                      <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
-                        Transaction Details
-                      </div>
-                      <p className="text-xs sm:text-sm text-slate-600">
-                        Detailed view of filtered transactions
-                      </p>
-                    </div>
-                    <div className="p-3 sm:p-6 sm:pt-0">
-                      {reportData.transactions.length > 0 ? (
-                        <div className="space-y-2 sm:space-y-3">
-                          {reportData.transactions.map((transaction) => (
-                            <div
-                              key={transaction._id}
-                              className="p-3 sm:p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-                            >
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-slate-900 text-sm sm:text-base truncate">
-                                    {transaction.category_id?.name ||
-                                      "Uncategorized"}
-                                  </p>
-                                  <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
-                                    {formatDateToDDMMYYYY(transaction.date)}
-                                  </p>
+                        ) : (
+                          <div className="rounded-xl border bg-card text-card-foreground shadow">
+                            <div className="p-4 sm:p-6">
+                              <div className="text-center py-8 sm:py-12">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                  <WalletIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                                 </div>
-                                <div className="text-right flex-shrink-0 ml-2">
-                                  <p
-                                    className={`font-bold text-sm sm:text-base ${
-                                      transaction.type === "income"
-                                        ? "text-green-600"
-                                        : transaction.type === "expense"
-                                        ? "text-red-600"
-                                        : "text-blue-600"
-                                    }`}
+                                <p className="text-slate-500 text-sm sm:text-lg mb-2">
+                                  No wallet activity data
+                                </p>
+                                <p className="text-slate-400 text-xs sm:text-sm">
+                                  No transaction data available for wallets
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Top Expense Categories */}
+                        {reportData.expenseCategories.length > 0 ? (
+                          <div className="rounded-xl border bg-card text-card-foreground shadow">
+                            <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                              <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
+                                Top Expense Categories
+                              </div>
+                              <p className="text-xs sm:text-sm text-slate-600">
+                                Highest spending categories
+                              </p>
+                            </div>
+                            <div className="p-3 sm:p-6 sm:pt-0">
+                              <div className="flex flex-col lg:flex-row items-center gap-4 sm:gap-6">
+                                <div className="w-full lg:w-1/2 h-48 sm:h-56">
+                                  <ResponsiveContainer
+                                    width="100%"
+                                    height="100%"
                                   >
-                                    {transaction.type === "income"
-                                      ? "+"
-                                      : transaction.type === "expense"
-                                      ? "-"
-                                      : ""}
-                                    {formatCurrency(transaction.amount)}
-                                  </p>
-                                  <p className="text-xs text-slate-500 capitalize">
-                                    {transaction.type}
-                                  </p>
+                                    <RechartsPieChart>
+                                      <Pie
+                                        data={reportData.expenseCategories}
+                                        cx="50%"
+                                        cy="50%"
+                                        labelLine={true}
+                                        label={({ name, percentage }) =>
+                                          `${name}: ${percentage.toFixed(1)}%`
+                                        }
+                                        outerRadius={60}
+                                        innerRadius={20}
+                                        fill="#8884d8"
+                                        dataKey="value"
+                                      >
+                                        {reportData.expenseCategories.map(
+                                          (entry, index) => (
+                                            <Cell
+                                              key={`cell-${index}`}
+                                              fill={entry.color}
+                                            />
+                                          )
+                                        )}
+                                      </Pie>
+                                      <Tooltip
+                                        formatter={(value) =>
+                                          formatCurrency(value)
+                                        }
+                                      />
+                                    </RechartsPieChart>
+                                  </ResponsiveContainer>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-1.5 sm:gap-2 w-full lg:w-1/2">
+                                  {reportData.expenseCategories.map(
+                                    (category) => (
+                                      <div
+                                        key={category.name}
+                                        className="flex items-center gap-2 text-xs sm:text-sm p-2 bg-slate-50 rounded"
+                                      >
+                                        <div
+                                          className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full flex-shrink-0"
+                                          style={{
+                                            backgroundColor: category.color,
+                                          }}
+                                        />
+                                        <span className="text-slate-700 truncate flex-1">
+                                          {category.name}
+                                        </span>
+                                        <span className="text-slate-500 ml-2 font-medium flex-shrink-0">
+                                          {formatCurrency(category.value)}
+                                        </span>
+                                      </div>
+                                    )
+                                  )}
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
-                        <div className="text-center py-8 sm:py-12">
-                          <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                            <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                           </div>
-                          <p className="text-slate-500 text-sm sm:text-lg mb-2">
-                            No transaction details available
-                          </p>
-                          <p className="text-slate-400 text-xs sm:text-sm">
-                            No transactions found for selected filters
-                          </p>
-                        </div>
-                      )}
+                        ) : (
+                          <div className="rounded-xl border bg-card text-card-foreground shadow">
+                            <div className="p-4 sm:p-6">
+                              <div className="text-center py-8 sm:py-12">
+                                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                                  <PieChartIcon className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
+                                </div>
+                                <p className="text-slate-500 text-sm sm:text-lg mb-2">
+                                  No expense category data
+                                </p>
+                                <p className="text-slate-400 text-xs sm:text-sm">
+                                  No expense transactions found
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                )}
+                  )}
+
+                  {/* Transaction Details Tab */}
+                  {activeTab === "details" && (
+                    <div className="rounded-xl border bg-card text-card-foreground shadow">
+                      <div className="flex flex-col space-y-1.5 p-4 sm:p-6">
+                        <div className="font-semibold leading-none tracking-tight text-sm sm:text-base">
+                          Transaction Details
+                        </div>
+                        <p className="text-xs sm:text-sm text-slate-600">
+                          Detailed view of filtered transactions
+                        </p>
+                      </div>
+                      <div className="p-3 sm:p-6 sm:pt-0">
+                        {reportData.transactions.length > 0 ? (
+                          <div className="space-y-2 sm:space-y-3">
+                            {reportData.transactions.map((transaction) => (
+                              <div
+                                key={transaction._id}
+                                className="p-3 sm:p-4 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+                              >
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-slate-900 text-sm sm:text-base truncate">
+                                      {transaction.category_id?.name ||
+                                        "Uncategorized"}
+                                    </p>
+                                    <p className="text-xs sm:text-sm text-slate-600 mt-0.5">
+                                      {formatDateToDDMMYYYY(transaction.date)}
+                                    </p>
+                                  </div>
+                                  <div className="text-right flex-shrink-0 ml-2">
+                                    <p
+                                      className={`font-bold text-sm sm:text-base ${
+                                        transaction.type === "income"
+                                          ? "text-green-600"
+                                          : transaction.type === "expense"
+                                          ? "text-red-600"
+                                          : "text-blue-600"
+                                      }`}
+                                    >
+                                      {transaction.type === "income"
+                                        ? "+"
+                                        : transaction.type === "expense"
+                                        ? "-"
+                                        : ""}
+                                      {formatCurrency(transaction.amount)}
+                                    </p>
+                                    <p className="text-xs text-slate-500 capitalize">
+                                      {transaction.type}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        ) : (
+                          <div className="text-center py-8 sm:py-12">
+                            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                              <AlertCircle className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
+                            </div>
+                            <p className="text-slate-500 text-sm sm:text-lg mb-2">
+                              No transaction details available
+                            </p>
+                            <p className="text-slate-400 text-xs sm:text-sm">
+                              No transactions found for selected filters
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -1647,9 +1669,10 @@ const Reports = () => {
       {!showFilters && (
         <button
           onClick={() => setShowFilters(true)}
-          className="lg:hidden fixed bottom-6 right-6 w-12 h-12 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center z-40 hover:bg-green-700 transition-colors"
+          className="lg:hidden fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
+          title="Show Filters"
         >
-          <Filter className="w-5 h-5" />
+          <Filter className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
         </button>
       )}
     </div>

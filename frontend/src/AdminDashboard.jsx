@@ -11,8 +11,35 @@ import Due from "./pages/Due";
 import BackgroundCircles from "./components/BackgroundCircles";
 
 const AdminDashboard = () => {
-  // Always start with dashboard, ignore localStorage
-  const [activeView, setActiveView] = useState("dashboard");
+  // Check if this is a fresh login or a page refresh
+  const [activeView, setActiveView] = useState(() => {
+    // Check if we have a saved view in localStorage
+    const savedView = localStorage.getItem("financeActiveView");
+
+    // Check if this is a fresh login (no previous session tracking)
+    const isFreshLogin = !localStorage.getItem("hasBeenLoggedIn");
+
+    if (isFreshLogin) {
+      // First time after login - always show dashboard
+      localStorage.setItem("hasBeenLoggedIn", "true");
+      return "dashboard";
+    }
+
+    // Not a fresh login - use saved view or default to dashboard
+    const validViews = [
+      "dashboard",
+      "transactions",
+      "wallets",
+      "categories",
+      "budgets",
+      "savings",
+      "reports",
+      "due",
+    ];
+    return savedView && validViews.includes(savedView)
+      ? savedView
+      : "dashboard";
+  });
 
   const [notificationCount, setNotificationCount] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -34,10 +61,13 @@ const AdminDashboard = () => {
     return () => window.removeEventListener("resize", checkScreenSize);
   }, []);
 
-  // Save view to localStorage whenever it changes (optional)
+  // Save view to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem("financeActiveView", activeView);
   }, [activeView]);
+
+  // Clear the login flag when user logs out (handled in Sidebar logout)
+  // The flag will be cleared in the logout function
 
   const renderView = () => {
     switch (activeView) {

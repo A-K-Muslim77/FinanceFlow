@@ -136,6 +136,7 @@ const Sidebar = ({
   const confirmLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("hasBeenLoggedIn");
     toast.success("Logout successful!");
     setTimeout(() => {
       navigate("/login", { replace: true });

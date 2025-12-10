@@ -23,6 +23,7 @@ import {
   Menu,
   ChevronLeft,
   ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 
 const DeleteConfirmationModal = ({
@@ -581,6 +582,7 @@ const Budgets = () => {
   const [monthlyData, setMonthlyData] = useState(null);
   const [copying, setCopying] = useState(false);
   const [showMonthSelector, setShowMonthSelector] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const currentDate = new Date();
   const [selectedMonth, setSelectedMonth] = useState(
@@ -973,7 +975,6 @@ const Budgets = () => {
 
   const handleMonthChange = (month) => {
     setSelectedMonth(month);
-    setShowMonthSelector(false);
   };
 
   const handleYearChange = (year) => {
@@ -1019,13 +1020,15 @@ const Budgets = () => {
     setSelectedYear(newYear);
   };
 
+  const handleRefresh = () => {
+    fetchMonthlyBudgets();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen relative">
-        <div className="fixed inset-0 z-0">
-          <BackgroundCircles />
-        </div>
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <BackgroundCircles />
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading budgets...</p>
@@ -1051,20 +1054,225 @@ const Budgets = () => {
         className="!z-50"
       />
 
-      <div className="fixed inset-0 z-0">
-        <BackgroundCircles />
-      </div>
+      <BackgroundCircles />
 
-      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
-        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
+      {/* REMOVED: px-3 sm:px-4 md:px-6 lg:px-8 from the main container */}
+      <div className="w-full mx-auto py-3 sm:py-6 relative z-10">
+        <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
+          {/* Mobile Header */}
+          <div className="sm:hidden space-y-3 px-2 sm:px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">
+                  Monthly Budgets
+                </h1>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Track your spending limits
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-2 rounded-lg bg-white border border-slate-200"
+              >
+                {showMobileFilters ? (
+                  <X className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <Menu className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
+            </div>
+
+            {/* Mobile Quick Actions */}
+            <div className="flex items-center justify-between gap-1">
+              <button
+                onClick={handlePreviousMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={handleRefresh}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <RefreshCw className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 border-green-600 flex-1 flex items-center justify-center"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronRight className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Mobile Filters Dropdown */}
+            {showMobileFilters && (
+              <div className="bg-white rounded-xl p-3 border-0 shadow-lg">
+                <div className="grid grid-cols-2 gap-2 mb-3">
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Month
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={selectedMonth}
+                        onChange={(e) =>
+                          handleMonthChange(parseInt(e.target.value))
+                        }
+                        disabled={loading}
+                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                      >
+                        {Array.from({ length: 12 }, (_, i) => {
+                          const month = i + 1;
+                          return (
+                            <option key={month} value={month}>
+                              {getMonthName(month).substring(0, 3)}
+                            </option>
+                          );
+                        })}
+                      </select>
+                      <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-slate-500 mb-1">
+                      Year
+                    </label>
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+                {(selectedMonth > 1 ||
+                  selectedYear > new Date().getFullYear()) && (
+                  <button
+                    onClick={handleShowCopyModal}
+                    className="w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 py-2 bg-gray-600 text-white hover:bg-gray-700"
+                  >
+                    <Copy className="w-4 h-4 mr-2" />
+                    Copy from Previous Month
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden sm:block px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Monthly Budgets
+                </h1>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  Track your spending limits
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="w-28 sm:w-32">
+                  <div className="relative">
+                    <select
+                      value={selectedMonth}
+                      onChange={(e) =>
+                        handleMonthChange(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 12 }, (_, i) => {
+                        const month = i + 1;
+                        return (
+                          <option key={month} value={month}>
+                            {getMonthName(month)}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <div className="w-24 sm:w-28">
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleRefresh}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex-shrink-0"
+                  title="Refresh data"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 shadow-sm bg-green-600 text-white hover:bg-green-700 flex-shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Set Budget</span>
+                </button>
+
+                {(selectedMonth > 1 ||
+                  selectedYear > new Date().getFullYear()) && (
+                  <button
+                    onClick={handleShowCopyModal}
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 shadow-sm bg-gray-600 text-white hover:bg-gray-700 flex-shrink-0"
+                  >
+                    <Copy className="w-4 h-4" />
+                    <span className="hidden sm:inline">Copy from Previous</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mx-2 sm:mx-4 lg:mx-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
                   onClick={clearError}
-                  className="text-red-500 hover:text-red-700 text-lg font-bold ml-2"
+                  className="text-red-500 hover:text-red-700 text-lg font-bold"
                 >
                   ×
                 </button>
@@ -1072,157 +1280,13 @@ const Budgets = () => {
             </div>
           )}
 
-          {/* Header Section */}
-          <div className="px-2 sm:px-0">
-            <div className="flex items-center justify-between mb-4">
-              <div>
-                <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-slate-900">
-                  Monthly Budgets
-                </h1>
-                <p className="text-slate-600 text-sm sm:text-base mt-0.5 sm:mt-1">
-                  Track your spending limits
-                </p>
-              </div>
-              <button
-                onClick={() => setIsCreateModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-input"
-              >
-                <Plus className="w-4 h-4" />
-                <span className="hidden sm:inline">Set Budget</span>
-                <span className="sm:hidden">Set</span>
-              </button>
-            </div>
-
-            {/* Mobile Month Selector */}
-            <div className="sm:hidden mb-4">
-              <div className="bg-white rounded-xl p-3 border-0 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <button
-                    onClick={handlePreviousMonth}
-                    className="p-2 rounded-lg hover:bg-slate-100"
-                  >
-                    <ChevronLeft className="w-5 h-5 text-slate-600" />
-                  </button>
-
-                  <button
-                    onClick={() => setShowMonthSelector(!showMonthSelector)}
-                    className="flex-1 mx-4 text-center"
-                  >
-                    <p className="font-semibold text-slate-900">
-                      {getMonthName(selectedMonth)} {selectedYear}
-                    </p>
-                    <p className="text-xs text-slate-500">Tap to change</p>
-                  </button>
-
-                  <button
-                    onClick={handleNextMonth}
-                    className="p-2 rounded-lg hover:bg-slate-100"
-                  >
-                    <ChevronRight className="w-5 h-5 text-slate-600" />
-                  </button>
-                </div>
-
-                {/* Mobile Month Dropdown */}
-                {showMonthSelector && (
-                  <div className="mt-3 p-2 bg-slate-50 rounded-lg">
-                    <div className="grid grid-cols-3 gap-2">
-                      {Array.from({ length: 12 }, (_, i) => {
-                        const month = i + 1;
-                        return (
-                          <button
-                            key={month}
-                            onClick={() => handleMonthChange(month)}
-                            className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                              selectedMonth === month
-                                ? "bg-green-500 text-white"
-                                : "bg-white text-slate-700 hover:bg-slate-100"
-                            }`}
-                          >
-                            {getMonthName(month).substring(0, 3)}
-                          </button>
-                        );
-                      })}
-                    </div>
-                    <div className="mt-3">
-                      <select
-                        value={selectedYear}
-                        onChange={(e) =>
-                          handleYearChange(parseInt(e.target.value))
-                        }
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 px-3 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20"
-                      >
-                        {Array.from({ length: 5 }, (_, i) => {
-                          const year = new Date().getFullYear() - 2 + i;
-                          return (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          );
-                        })}
-                      </select>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Desktop Month/Year Selector */}
-            <div className="hidden sm:flex items-center gap-3 mb-4">
-              {/* Month Selector */}
-              <div className="w-32">
-                <div className="relative">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) =>
-                      handleMonthChange(parseInt(e.target.value))
-                    }
-                    disabled={loading}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                  >
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const month = i + 1;
-                      return (
-                        <option key={month} value={month}>
-                          {getMonthName(month)}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-
-              {/* Year Selector */}
-              <div className="w-28">
-                <div className="relative">
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => handleYearChange(parseInt(e.target.value))}
-                    disabled={loading}
-                    className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                  >
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - 2 + i;
-                      return (
-                        <option key={year} value={year}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                </div>
-              </div>
-            </div>
-          </div>
-
           {/* Available Months */}
           {availableMonths.length > 0 && (
-            <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm mx-2 sm:mx-0">
-              <h3 className="text-xs sm:text-sm font-semibold text-slate-900 mb-2 sm:mb-3">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">
                 Available Months
               </h3>
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
+              <div className="flex flex-wrap gap-2">
                 {availableMonths
                   .map((monthData) => {
                     let month, year, monthName, budgetCount;
@@ -1252,17 +1316,15 @@ const Budgets = () => {
                           setSelectedMonth(month);
                           setSelectedYear(year);
                         }}
-                        className={`px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm border transition-colors flex items-center gap-1 ${
+                        className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm border transition-colors ${
                           selectedMonth === month && selectedYear === year
                             ? "bg-green-100 text-green-800 border-green-300"
                             : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
                         }`}
                       >
-                        <span className="truncate max-w-[80px] sm:max-w-none">
-                          {monthName.substring(0, 3)} {year}
-                        </span>
+                        {monthName.substring(0, 3)} {year}
                         {budgetCount > 0 && (
-                          <span className="text-xs bg-slate-200 px-1 py-0.5 rounded flex-shrink-0">
+                          <span className="ml-1 sm:ml-2 text-xs bg-slate-200 px-1 sm:px-1.5 py-0.5 rounded">
                             {budgetCount}
                           </span>
                         )}
@@ -1276,7 +1338,7 @@ const Budgets = () => {
 
           {/* Monthly Summary Cards */}
           {monthlyData && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-0">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mx-2 sm:mx-4 lg:mx-6">
               <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
                 <div className="p-4 sm:p-6">
                   <div className="flex items-center justify-between mb-2">
@@ -1285,7 +1347,7 @@ const Budgets = () => {
                     </p>
                     <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
                   </div>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-green-900 truncate">
+                  <p className="text-xl sm:text-2xl font-bold text-green-900 truncate">
                     {formatCurrency(monthlyData.totals?.totalBudget || 0)}
                   </p>
                 </div>
@@ -1299,7 +1361,7 @@ const Budgets = () => {
                     </p>
                     <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
                   </div>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-red-900 truncate">
+                  <p className="text-xl sm:text-2xl font-bold text-red-900 truncate">
                     {formatCurrency(monthlyData.totals?.totalSpent || 0)}
                   </p>
                 </div>
@@ -1313,7 +1375,7 @@ const Budgets = () => {
                     </p>
                     <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
                   </div>
-                  <p className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900 truncate">
+                  <p className="text-xl sm:text-2xl font-bold text-blue-900 truncate">
                     {formatCurrency(monthlyData.totals?.totalRemaining || 0)}
                   </p>
                 </div>
@@ -1323,8 +1385,8 @@ const Budgets = () => {
 
           {/* Empty State */}
           {budgets.length === 0 && (
-            <div className="text-center py-8 sm:py-12 px-4">
-              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
+            <div className="text-center py-6 sm:py-8 mx-2 sm:mx-4 lg:mx-6">
+              <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Calendar className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                 </div>
@@ -1337,7 +1399,7 @@ const Budgets = () => {
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-input w-full sm:w-auto"
+                    className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 sm:h-10 px-3 sm:px-4 py-2 shadow bg-green-600 text-white hover:bg-green-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create New Budget
@@ -1346,7 +1408,7 @@ const Budgets = () => {
                     selectedYear > new Date().getFullYear()) && (
                     <button
                       onClick={handleShowCopyModal}
-                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-gray-600 text-white hover:bg-white hover:text-gray-600 border border-input w-full sm:w-auto"
+                      className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 sm:h-10 px-3 sm:px-4 py-2 shadow bg-gray-600 text-white hover:bg-gray-700"
                     >
                       <Copy className="w-4 h-4 mr-2" />
                       Copy from Previous Month
@@ -1359,7 +1421,7 @@ const Budgets = () => {
 
           {/* Budgets Grid */}
           {budgets.length > 0 && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-0">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mx-2 sm:mx-4 lg:mx-6">
               {budgets.map((budget) => {
                 const category = budget.category_id;
                 const spent = budget.spent || 0;
@@ -1372,7 +1434,7 @@ const Budgets = () => {
                 return (
                   <div
                     key={budget._id}
-                    className={`rounded-xl border text-card-foreground shadow group hover:shadow-lg transition-all duration-200 ${getCardBorderColor(
+                    className={`rounded-xl border text-card-foreground shadow-sm group hover:shadow-lg transition-all duration-200 ${getCardBorderColor(
                       isOverBudget
                     )}`}
                   >
@@ -1531,9 +1593,10 @@ const Budgets = () => {
       {/* Floating Action Button for Mobile */}
       <button
         onClick={() => setIsCreateModalOpen(true)}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center z-40 hover:bg-green-700 transition-colors"
+        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
+        title="Set Budget"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
       </button>
     </div>
   );

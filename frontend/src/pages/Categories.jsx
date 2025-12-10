@@ -27,6 +27,9 @@ import {
   AlertTriangle,
   Menu,
   X,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 
 // Delete Confirmation Modal Component
@@ -98,7 +101,7 @@ const Categories = () => {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -346,12 +349,14 @@ const Categories = () => {
     setError(null);
   };
 
+  const handleRefresh = () => {
+    fetchCategories();
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen relative">
-        <div className="fixed inset-0 z-0">
-          <BackgroundCircles />
-        </div>
+        <BackgroundCircles />
         <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
@@ -379,21 +384,153 @@ const Categories = () => {
         className="!z-50"
       />
 
-      {/* BackgroundCircles with lower z-index so it doesn't overlay text */}
-      <div className="fixed inset-0 z-0">
-        <BackgroundCircles />
-      </div>
+      <BackgroundCircles />
 
-      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
-        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
+      {/* REMOVED: px-3 sm:px-4 md:px-6 lg:px-8 from the main container */}
+      <div className="w-full mx-auto py-3 sm:py-6 relative z-10">
+        <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
+          {/* Mobile Header */}
+          <div className="sm:hidden space-y-3 px-2 sm:px-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-xl font-bold text-slate-900">Categories</h1>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Organize your transactions
+                </p>
+              </div>
+              <button
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-2 rounded-lg bg-white border border-slate-200"
+              >
+                {showMobileFilters ? (
+                  <X className="w-5 h-5 text-slate-600" />
+                ) : (
+                  <Menu className="w-5 h-5 text-slate-600" />
+                )}
+              </button>
+            </div>
+
+            {/* Mobile Quick Actions */}
+            <div className="flex items-center justify-between gap-1">
+              <button
+                onClick={() => setActiveTab("all")}
+                className={`p-2 rounded-lg border flex-1 flex items-center justify-center ${
+                  activeTab === "all"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white border-slate-200"
+                }`}
+              >
+                <span className="text-xs">All</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("income")}
+                className={`p-2 rounded-lg border flex-1 flex items-center justify-center ${
+                  activeTab === "income"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white border-slate-200"
+                }`}
+              >
+                <span className="text-xs">Income</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("expense")}
+                className={`p-2 rounded-lg border flex-1 flex items-center justify-center ${
+                  activeTab === "expense"
+                    ? "bg-green-600 text-white border-green-600"
+                    : "bg-white border-slate-200"
+                }`}
+              >
+                <span className="text-xs">Expense</span>
+              </button>
+              <button
+                onClick={handleRefresh}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <RefreshCw className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="p-2 rounded-lg bg-green-600 text-white hover:bg-green-700 border-green-600 flex-1 flex items-center justify-center"
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Mobile Stats */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="bg-white rounded-lg p-3 border-0 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-green-700 text-xs font-medium mb-1">
+                      Income
+                    </p>
+                    <p className="text-lg font-bold text-green-900">
+                      {incomeCount}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <TrendingUp className="w-4 h-4 text-green-600" />
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-lg p-3 border-0 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-red-700 text-xs font-medium mb-1">
+                      Expense
+                    </p>
+                    <p className="text-lg font-bold text-red-900">
+                      {expenseCount}
+                    </p>
+                  </div>
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <ShoppingCart className="w-4 h-4 text-red-600" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desktop Header */}
+          <div className="hidden sm:block px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Categories
+                </h1>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  Organize your transactions
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <button
+                  onClick={handleRefresh}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex-shrink-0"
+                  title="Refresh data"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                </button>
+
+                <button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 shadow-sm bg-green-600 text-white hover:bg-green-700 flex-shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Category</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mx-2 sm:mx-4 lg:mx-6">
               <div className="flex justify-between items-center">
-                <span className="text-sm sm:text-base">{error}</span>
+                <span className="text-sm">{error}</span>
                 <button
                   onClick={clearError}
-                  className="text-red-500 hover:text-red-700 text-lg font-bold ml-2"
+                  className="text-red-500 hover:text-red-700 text-lg font-bold"
                 >
                   ×
                 </button>
@@ -401,88 +538,9 @@ const Categories = () => {
             </div>
           )}
 
-          {/* Header */}
-          <div className="flex items-center justify-between gap-3 px-2 sm:px-0">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="sm:hidden inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 h-9 w-9 bg-white border border-slate-200 shadow-sm"
-              >
-                {isMobileMenuOpen ? (
-                  <X className="w-5 h-5" />
-                ) : (
-                  <Menu className="w-5 h-5" />
-                )}
-              </button>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
-                  Categories
-                </h1>
-                <p className="text-slate-600 text-sm sm:text-base mt-0.5">
-                  Organize your transactions
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-3 sm:px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add Category</span>
-              <span className="sm:hidden">Add</span>
-            </button>
-          </div>
-
-          {/* Mobile Navigation Menu */}
-          {isMobileMenuOpen && (
-            <div className="sm:hidden bg-white rounded-xl p-4 border-0 shadow-lg mx-2">
-              <div className="space-y-2">
-                <button
-                  onClick={() => {
-                    setActiveTab("all");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === "all"
-                      ? "bg-green-500 text-white"
-                      : "hover:bg-slate-100"
-                  }`}
-                >
-                  All Categories
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("income");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === "income"
-                      ? "bg-green-500 text-white"
-                      : "hover:bg-slate-100"
-                  }`}
-                >
-                  Income Categories
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("expense");
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className={`w-full text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                    activeTab === "expense"
-                      ? "bg-green-500 text-white"
-                      : "hover:bg-slate-100"
-                  }`}
-                >
-                  Expense Categories
-                </button>
-              </div>
-            </div>
-          )}
-
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 px-2 sm:px-0">
-            <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
+          {/* Desktop Stats Cards */}
+          <div className="hidden sm:grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mx-2 sm:mx-4 lg:mx-6">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-green-700 text-sm font-medium mb-1">
@@ -497,7 +555,7 @@ const Categories = () => {
                 </div>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-red-700 text-sm font-medium mb-1">
@@ -514,59 +572,57 @@ const Categories = () => {
             </div>
           </div>
 
-          {/* Tabs - Hidden on mobile when menu is open */}
-          {!isMobileMenuOpen && (
-            <div className="bg-white rounded-xl p-3 sm:p-4 border-0 shadow-sm mx-2 sm:mx-0">
-              <div
-                role="tablist"
-                className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-slate-100"
+          {/* Desktop Tabs */}
+          <div className="hidden sm:block bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
+            <div
+              role="tablist"
+              className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-3 bg-slate-100"
+            >
+              <button
+                type="button"
+                role="tab"
+                onClick={() => setActiveTab("all")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTab === "all"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-200"
+                }`}
               >
-                <button
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab("all")}
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                    activeTab === "all"
-                      ? "bg-green-500 text-white shadow"
-                      : "hover:bg-slate-200"
-                  }`}
-                >
-                  All
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab("income")}
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                    activeTab === "income"
-                      ? "bg-green-500 text-white shadow"
-                      : "hover:bg-slate-200"
-                  }`}
-                >
-                  Income
-                </button>
-                <button
-                  type="button"
-                  role="tab"
-                  onClick={() => setActiveTab("expense")}
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
-                    activeTab === "expense"
-                      ? "bg-green-500 text-white shadow"
-                      : "hover:bg-slate-200"
-                  }`}
-                >
-                  Expense
-                </button>
-              </div>
+                All
+              </button>
+              <button
+                type="button"
+                role="tab"
+                onClick={() => setActiveTab("income")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTab === "income"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-200"
+                }`}
+              >
+                Income
+              </button>
+              <button
+                type="button"
+                role="tab"
+                onClick={() => setActiveTab("expense")}
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                  activeTab === "expense"
+                    ? "bg-green-500 text-white shadow"
+                    : "hover:bg-slate-200"
+                }`}
+              >
+                Expense
+              </button>
             </div>
-          )}
+          </div>
 
-          {/* Categories Grid */}
-          <div className="space-y-2 sm:space-y-3 px-2 sm:px-0">
+          {/* Categories List */}
+          <div className="space-y-2 sm:space-y-3 mx-2 sm:mx-4 lg:mx-6">
             {filteredCategories.map((category) => (
               <div
                 key={category._id}
-                className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-md transition-all duration-200 border-0 overflow-hidden"
+                className="rounded-xl bg-white text-card-foreground shadow-sm group hover:shadow-md transition-all duration-200 border-0 overflow-hidden"
               >
                 {/* Color bar */}
                 <div
@@ -630,15 +686,15 @@ const Categories = () => {
 
           {/* Empty State */}
           {filteredCategories.length === 0 && (
-            <div className="text-center py-8 sm:py-12 px-4">
-              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
-                <div className="w-16 h-16 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
-                  <Tag className="w-8 h-8 text-slate-400" />
+            <div className="text-center py-6 sm:py-8 mx-2 sm:mx-4 lg:mx-6">
+              <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Tag className="w-6 h-6 sm:w-8 sm:h-8 text-slate-400" />
                 </div>
                 <p className="text-slate-500 text-base sm:text-lg">
                   No categories found
                 </p>
-                <p className="text-slate-400 mt-2 text-sm sm:text-base">
+                <p className="text-slate-400 mt-1 text-sm">
                   {activeTab === "all"
                     ? "Get started by creating your first category"
                     : `No ${activeTab} categories found`}
@@ -646,7 +702,7 @@ const Categories = () => {
                 {activeTab === "all" && (
                   <button
                     onClick={() => setIsCreateModalOpen(true)}
-                    className="mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg bg-green-600 text-white hover:bg-white hover:text-green-600 border border-transparent hover:border-green-600 w-full sm:w-auto"
+                    className="mt-3 sm:mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 sm:h-10 px-3 sm:px-4 py-2 shadow bg-green-600 text-white hover:bg-green-700"
                   >
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Category
@@ -686,9 +742,10 @@ const Categories = () => {
       {/* Floating Action Button for Mobile */}
       <button
         onClick={() => setIsCreateModalOpen(true)}
-        className="sm:hidden fixed bottom-6 right-6 w-14 h-14 rounded-full bg-green-600 text-white shadow-lg flex items-center justify-center z-40 hover:bg-green-700 transition-colors"
+        className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
+        title="Add Category"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-5 h-5 sm:w-7 sm:h-7 text-white" />
       </button>
     </div>
   );

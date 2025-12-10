@@ -667,8 +667,8 @@ const Dashboard = ({ setActiveView }) => {
 
       <BackgroundCircles />
 
-      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 relative z-10">
-        <div className="space-y-4 sm:space-y-6 pb-16 sm:pb-20">
+      <div className="w-full mx-auto relative z-10">
+        <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
           {/* Mobile Header */}
           <div className="sm:hidden space-y-3 px-2">
             <div className="flex items-center justify-between">
@@ -691,7 +691,7 @@ const Dashboard = ({ setActiveView }) => {
             </div>
 
             {/* Mobile Quick Actions */}
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center justify-between gap-1">
               <button
                 onClick={handlePreviousMonth}
                 className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
@@ -729,8 +729,8 @@ const Dashboard = ({ setActiveView }) => {
 
             {/* Mobile Filters Dropdown */}
             {showMobileFilters && (
-              <div className="bg-white rounded-xl p-4 border-0 shadow-lg">
-                <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-white rounded-xl p-3 border-0 shadow-lg mx-2">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <div>
                     <label className="block text-xs text-slate-500 mb-1">
                       Month
@@ -772,13 +772,13 @@ const Dashboard = ({ setActiveView }) => {
           </div>
 
           {/* Desktop Header */}
-          <div className="hidden sm:block px-2 sm:px-0">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="hidden sm:block px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
                 <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
                   Dashboard
                 </h1>
-                <p className="text-sm text-slate-600 mt-0.5 sm:mt-0.5">
+                <p className="text-sm text-slate-600 mt-0.5">
                   Financial overview for {getMonthName(selectedMonth)}{" "}
                   {selectedYear}
                 </p>
@@ -846,7 +846,7 @@ const Dashboard = ({ setActiveView }) => {
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mx-2 sm:mx-0">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mx-2 sm:mx-4 lg:mx-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -860,7 +860,7 @@ const Dashboard = ({ setActiveView }) => {
           )}
 
           {/* Main Financial Summary Card */}
-          <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm mx-2 sm:mx-0">
+          <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
             <div className="mb-3 sm:mb-4">
               <h3 className="text-base sm:text-lg font-semibold text-slate-900">
                 Financial Summary
@@ -870,7 +870,7 @@ const Dashboard = ({ setActiveView }) => {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4">
               {/* Total Income */}
               <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
                 <div className="flex items-start justify-between">
@@ -995,7 +995,7 @@ const Dashboard = ({ setActiveView }) => {
           </div>
 
           {/* Other Stats Grid - 3 Cards per row */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 px-2 sm:px-0">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4 mx-2 sm:mx-4 lg:mx-6">
             <StatCard
               title="Today's Income"
               value={formatCurrency(dashboardData.dailyIncome.today)}
@@ -1021,7 +1021,7 @@ const Dashboard = ({ setActiveView }) => {
 
           {/* My Wallets Section */}
           {dashboardData.wallets.length > 0 && (
-            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm mx-2 sm:mx-0">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
               <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-slate-900">
@@ -1032,7 +1032,7 @@ const Dashboard = ({ setActiveView }) => {
                   </p>
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
                 {dashboardData.wallets.map((wallet) => (
                   <div
                     key={wallet._id}
@@ -1091,7 +1091,7 @@ const Dashboard = ({ setActiveView }) => {
           )}
 
           {/* Expenses Section */}
-          <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm mx-2 sm:mx-0">
+          <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
             <div className="flex items-center justify-between mb-4 sm:mb-5">
               <div>
                 <h3 className="text-base sm:text-lg font-semibold text-slate-900">
@@ -1108,11 +1108,11 @@ const Dashboard = ({ setActiveView }) => {
                 dashboardData.topExpenses.map((expense, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg transition-colors"
+                    className="flex items-center justify-between p-2 sm:p-3 hover:bg-slate-50 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center gap-3 flex-1 min-w-0">
-                      <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
-                        <TrendingDown className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-red-600" />
+                    <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                      <div className="w-6 h-6 sm:w-9 sm:h-9 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+                        <TrendingDown className="w-3 h-3 sm:w-4 sm:h-4 text-red-600" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="font-medium text-slate-900 text-sm truncate">
@@ -1128,7 +1128,7 @@ const Dashboard = ({ setActiveView }) => {
                         {formatCurrency(expense.amount)}
                       </span>
                       {expense.notes && (
-                        <p className="text-xs text-slate-400 mt-0.5 sm:mt-1 truncate max-w-[100px] sm:max-w-[150px]">
+                        <p className="text-xs text-slate-400 mt-0.5 sm:mt-1 truncate max-w-[80px] sm:max-w-[150px]">
                           {expense.notes}
                         </p>
                       )}
@@ -1144,9 +1144,9 @@ const Dashboard = ({ setActiveView }) => {
           </div>
 
           {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 px-2 sm:px-0">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6 mx-2 sm:mx-4 lg:mx-6">
             {/* Monthly Trend Chart */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm">
               <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div className="flex-1 min-w-0">
                   <h3 className="text-base sm:text-lg font-semibold text-slate-900 truncate">
@@ -1211,7 +1211,7 @@ const Dashboard = ({ setActiveView }) => {
             </div>
 
             {/* Weekly Performance */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm">
               <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-slate-900">
@@ -1261,7 +1261,7 @@ const Dashboard = ({ setActiveView }) => {
             </div>
 
             {/* Expenses by Category */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm">
               <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-slate-900">
@@ -1314,7 +1314,7 @@ const Dashboard = ({ setActiveView }) => {
             </div>
 
             {/* Wallet Distribution */}
-            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm">
               <div className="flex items-center justify-between mb-4 sm:mb-5">
                 <div>
                   <h3 className="text-base sm:text-lg font-semibold text-slate-900">
@@ -1325,7 +1325,7 @@ const Dashboard = ({ setActiveView }) => {
                   </p>
                 </div>
               </div>
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {dashboardData.walletDistribution.length > 0 ? (
                   dashboardData.walletDistribution.map((wallet, index) => (
                     <div key={index} className="space-y-1.5 sm:space-y-2">

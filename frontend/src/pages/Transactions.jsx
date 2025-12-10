@@ -24,6 +24,9 @@ import {
   AlertCircle,
   Menu,
   X,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
 } from "lucide-react";
 
 const DeleteConfirmationModal = ({
@@ -89,6 +92,7 @@ const MonthYearSelector = ({
   onMonthChange,
   onYearChange,
   isLoading,
+  isMobile = false,
 }) => {
   const months = [
     { value: 1, label: "Jan" },
@@ -107,6 +111,26 @@ const MonthYearSelector = ({
 
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
+
+  if (isMobile) {
+    return (
+      <div className="relative w-full">
+        <select
+          value={selectedMonth}
+          onChange={(e) => onMonthChange(parseInt(e.target.value))}
+          disabled={isLoading}
+          className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+        >
+          {months.map((month) => (
+            <option key={month.value} value={month.value}>
+              {month.label}
+            </option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
+      </div>
+    );
+  }
 
   return (
     <div className="relative">
@@ -140,12 +164,13 @@ const Transactions = () => {
   const [wallets, setWallets] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [availableMonths, setAvailableMonths] = useState([]);
   const [monthlyData, setMonthlyData] = useState(null);
   const [showNoWalletWarning, setShowNoWalletWarning] = useState(false);
   const [autoOpenChecked, setAutoOpenChecked] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showMobileFilters, setShowMobileFilters] = useState(false);
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -175,12 +200,14 @@ const Transactions = () => {
   const fetchMonthlyTransactions = async () => {
     try {
       setLoading(true);
+      setRefreshing(true);
       setError(null);
       const token = getAuthToken();
 
       if (!token) {
         setError("No authentication token found. Please login again.");
         setLoading(false);
+        setRefreshing(false);
         return;
       }
 
@@ -216,6 +243,7 @@ const Transactions = () => {
       toast.error(error.message || "Failed to load transactions");
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -387,6 +415,24 @@ const Transactions = () => {
     return months[monthNumber - 1];
   };
 
+  const getShortMonthName = (monthNumber) => {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    return months[monthNumber - 1] || "";
+  };
+
   const handleCreateTransaction = async (transactionData) => {
     try {
       const token = getAuthToken();
@@ -556,13 +602,41 @@ const Transactions = () => {
     setIsCreateModalOpen(true);
   };
 
-  if (loading) {
+  const handleRefresh = () => {
+    fetchMonthlyTransactions();
+  };
+
+  const handlePreviousMonth = () => {
+    let newMonth = selectedMonth - 1;
+    let newYear = selectedYear;
+
+    if (newMonth < 1) {
+      newMonth = 12;
+      newYear = selectedYear - 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
+  const handleNextMonth = () => {
+    let newMonth = selectedMonth + 1;
+    let newYear = selectedYear;
+
+    if (newMonth > 12) {
+      newMonth = 1;
+      newYear = selectedYear + 1;
+    }
+
+    setSelectedMonth(newMonth);
+    setSelectedYear(newYear);
+  };
+
+  if (loading && !refreshing) {
     return (
       <div className="min-h-screen relative">
-        <div className="fixed inset-0 z-0">
-          <BackgroundCircles />
-        </div>
-        <div className="flex items-center justify-center min-h-screen relative z-10">
+        <BackgroundCircles />
+        <div className="flex items-center justify-center min-h-screen relative z-10 px-4">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
             <p className="mt-4 text-slate-600">Loading transactions...</p>
@@ -585,16 +659,16 @@ const Transactions = () => {
         draggable
         pauseOnHover
         theme="light"
+        className="!z-50"
       />
 
-      <div className="fixed inset-0 z-0">
-        <BackgroundCircles />
-      </div>
+      <BackgroundCircles />
 
-      <div className="w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 relative z-10">
-        <div className="space-y-4 pb-20">
+      {/* REMOVED: px-2 sm:px-2 md:px-4 lg:px-6 from the main container */}
+      <div className="w-full mx-auto py-3 sm:py-6 relative z-10">
+        <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
           {/* Mobile Header */}
-          <div className="block sm:hidden bg-white rounded-xl p-4 shadow-sm mb-4">
+          <div className="sm:hidden space-y-3 px-2 sm:px-4">
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-xl font-bold text-slate-900">
@@ -605,23 +679,61 @@ const Transactions = () => {
                 </p>
               </div>
               <button
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                className="p-2 rounded-lg bg-slate-100 hover:bg-slate-200"
+                onClick={() => setShowMobileFilters(!showMobileFilters)}
+                className="p-2 rounded-lg bg-white border border-slate-200"
               >
-                {isMobileMenuOpen ? (
-                  <X className="w-5 h-5" />
+                {showMobileFilters ? (
+                  <X className="w-5 h-5 text-slate-600" />
                 ) : (
-                  <Menu className="w-5 h-5" />
+                  <Menu className="w-5 h-5 text-slate-600" />
                 )}
               </button>
             </div>
 
-            {/* Mobile Menu Dropdown */}
-            {isMobileMenuOpen && (
-              <div className="mt-4 pt-4 border-t border-slate-200 space-y-3">
-                <div className="grid grid-cols-2 gap-3">
+            {/* Mobile Quick Actions */}
+            <div className="flex items-center justify-between gap-1">
+              <button
+                onClick={handlePreviousMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronLeft className="w-4 h-4 text-slate-600" />
+              </button>
+              <button
+                onClick={handleRefresh}
+                disabled={refreshing}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <RefreshCw
+                  className={`w-4 h-4 ${
+                    refreshing ? "animate-spin" : "text-slate-600"
+                  }`}
+                />
+              </button>
+              <button
+                onClick={handleCreateTransactionClick}
+                disabled={wallets.length === 0}
+                className={`p-2 rounded-lg flex-1 flex items-center justify-center ${
+                  wallets.length === 0
+                    ? "bg-gray-400 text-white cursor-not-allowed border-gray-400"
+                    : "bg-green-600 text-white hover:bg-green-700 border-green-600"
+                }`}
+              >
+                <Plus className="w-4 h-4" />
+              </button>
+              <button
+                onClick={handleNextMonth}
+                className="p-2 rounded-lg bg-white border border-slate-200 flex-1 flex items-center justify-center"
+              >
+                <ChevronRight className="w-4 h-4 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Mobile Filters Dropdown */}
+            {showMobileFilters && (
+              <div className="bg-white rounded-xl p-3 border-0 shadow-lg mx-2">
+                <div className="grid grid-cols-2 gap-2 mb-3">
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                    <label className="block text-xs text-slate-500 mb-1">
                       Month
                     </label>
                     <MonthYearSelector
@@ -630,85 +742,20 @@ const Transactions = () => {
                       onMonthChange={handleMonthChange}
                       onYearChange={handleYearChange}
                       isLoading={loading}
+                      isMobile={true}
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">
+                    <label className="block text-xs text-slate-500 mb-1">
                       Year
                     </label>
-                    <div className="relative">
-                      <select
-                        value={selectedYear}
-                        onChange={(e) =>
-                          setSelectedYear(parseInt(e.target.value))
-                        }
-                        disabled={loading}
-                        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
-                      >
-                        {Array.from({ length: 5 }, (_, i) => {
-                          const year = new Date().getFullYear() - 2 + i;
-                          return (
-                            <option key={year} value={year}>
-                              {year}
-                            </option>
-                          );
-                        })}
-                      </select>
-                      <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-                    </div>
-                  </div>
-                </div>
-                <button
-                  onClick={handleCreateTransactionClick}
-                  disabled={wallets.length === 0}
-                  className={`w-full inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 shadow-lg ${
-                    wallets.length === 0
-                      ? "bg-gray-400 text-white cursor-not-allowed"
-                      : "bg-green-600 text-white hover:bg-green-700"
-                  }`}
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Transaction
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Desktop Header */}
-          <div className="hidden sm:flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                Transactions
-              </h1>
-              <p className="text-sm text-slate-600 mt-0.5">
-                Financial transactions for {getMonthName(selectedMonth)}{" "}
-                {selectedYear}
-              </p>
-            </div>
-
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full lg:w-auto">
-              <div className="flex gap-3 flex-1 lg:flex-none">
-                {/* Month Selector */}
-                <div className="w-32">
-                  <MonthYearSelector
-                    selectedMonth={selectedMonth}
-                    selectedYear={selectedYear}
-                    onMonthChange={handleMonthChange}
-                    onYearChange={handleYearChange}
-                    isLoading={loading}
-                  />
-                </div>
-
-                {/* Year Selector */}
-                <div className="w-28">
-                  <div className="relative">
                     <select
                       value={selectedYear}
                       onChange={(e) =>
                         setSelectedYear(parseInt(e.target.value))
                       }
                       disabled={loading}
-                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
                     >
                       {Array.from({ length: 5 }, (_, i) => {
                         const year = new Date().getFullYear() - 2 + i;
@@ -719,30 +766,89 @@ const Transactions = () => {
                         );
                       })}
                     </select>
-                    <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
                   </div>
                 </div>
               </div>
+            )}
+          </div>
 
-              {/* Add Transaction Button */}
-              <button
-                onClick={handleCreateTransactionClick}
-                disabled={wallets.length === 0}
-                className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-4 py-2 shadow-lg ${
-                  wallets.length === 0
-                    ? "bg-gray-400 text-white cursor-not-allowed"
-                    : "bg-green-600 text-white hover:bg-green-700"
-                }`}
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add Transaction
-              </button>
+          {/* Desktop Header */}
+          <div className="hidden sm:block px-4 lg:px-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-slate-900">
+                  Transactions
+                </h1>
+                <p className="text-sm text-slate-600 mt-0.5">
+                  Financial transactions for {getMonthName(selectedMonth)}{" "}
+                  {selectedYear}
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                <div className="w-28 sm:w-32">
+                  <MonthYearSelector
+                    selectedMonth={selectedMonth}
+                    selectedYear={selectedYear}
+                    onMonthChange={handleMonthChange}
+                    onYearChange={handleYearChange}
+                    isLoading={loading}
+                  />
+                </div>
+
+                <div className="w-24 sm:w-28">
+                  <div className="relative">
+                    <select
+                      value={selectedYear}
+                      onChange={(e) =>
+                        setSelectedYear(parseInt(e.target.value))
+                      }
+                      disabled={loading}
+                      className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 sm:pl-4 pr-8 sm:pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+                    >
+                      {Array.from({ length: 5 }, (_, i) => {
+                        const year = new Date().getFullYear() - 2 + i;
+                        return (
+                          <option key={year} value={year}>
+                            {year}
+                          </option>
+                        );
+                      })}
+                    </select>
+                    <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
+                  </div>
+                </div>
+
+                <button
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 flex-shrink-0"
+                  title="Refresh data"
+                >
+                  <RefreshCw
+                    className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
+                  />
+                </button>
+
+                <button
+                  onClick={handleCreateTransactionClick}
+                  disabled={wallets.length === 0}
+                  className={`inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 px-2.5 sm:px-3 py-2 shadow-sm ${
+                    wallets.length === 0
+                      ? "bg-gray-400 text-white cursor-not-allowed"
+                      : "bg-green-600 text-white hover:bg-green-700"
+                  } flex-shrink-0`}
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Transaction</span>
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Error Message */}
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mx-2 sm:mx-4 lg:mx-6">
               <div className="flex justify-between items-center">
                 <span className="text-sm">{error}</span>
                 <button
@@ -755,34 +861,28 @@ const Transactions = () => {
             </div>
           )}
 
+          {/* No Wallet Warning */}
           {showNoWalletWarning && (
-            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
+            <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-3 py-2 sm:px-4 sm:py-3 rounded-lg mx-2 sm:mx-4 lg:mx-6">
+              <div className="flex items-start gap-2 sm:gap-3">
+                <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0" />
                 <div className="flex-1">
-                  <p className="font-medium">
+                  <p className="text-sm sm:text-base font-medium">
                     No wallets found for {getMonthName(selectedMonth)}{" "}
                     {selectedYear}
                   </p>
-                  <p className="text-sm mt-1">
+                  <p className="text-xs sm:text-sm mt-1">
                     You need to create wallets for this month before adding
-                    transactions. Go to the{" "}
-                    <a
-                      href="/wallets"
-                      className="text-blue-600 hover:underline font-medium"
-                    >
-                      Wallets page
-                    </a>{" "}
-                    to create wallets first.
+                    transactions.
                   </p>
                 </div>
               </div>
             </div>
           )}
 
-          {/* Available Months */}
+          {/* Available Months - Mobile */}
           {availableMonths.length > 0 && (
-            <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">
                 Available Months
               </h3>
@@ -816,7 +916,7 @@ const Transactions = () => {
                           setSelectedMonth(month);
                           setSelectedYear(year);
                         }}
-                        className={`px-3 py-1.5 rounded-lg text-sm border transition-colors ${
+                        className={`px-2 py-1 sm:px-3 sm:py-1.5 rounded-lg text-xs sm:text-sm border transition-colors ${
                           selectedMonth === month && selectedYear === year
                             ? "bg-green-100 text-green-800 border-green-300"
                             : "bg-slate-100 text-slate-700 border-slate-300 hover:bg-slate-200"
@@ -824,7 +924,7 @@ const Transactions = () => {
                       >
                         {monthName} {year}
                         {transactionCount > 0 && (
-                          <span className="ml-2 text-xs bg-slate-200 px-1.5 py-0.5 rounded">
+                          <span className="ml-1 sm:ml-2 text-xs bg-slate-200 px-1 sm:px-1.5 py-0.5 rounded">
                             {transactionCount}
                           </span>
                         )}
@@ -836,92 +936,108 @@ const Transactions = () => {
             </div>
           )}
 
-          {/* Monthly Summary Cards - Mobile Stack */}
+          {/* Monthly Summary Cards */}
           {monthlyData && (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs sm:text-sm font-medium text-green-700">
-                      Income
-                    </p>
-                    <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+            <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
+              <div className="mb-3 sm:mb-4">
+                <h3 className="text-base sm:text-lg font-semibold text-slate-900">
+                  Monthly Summary
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-500">
+                  {getMonthName(selectedMonth)} {selectedYear}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4">
+                {/* Income Card */}
+                <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-green-300 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2">
+                        Income
+                      </p>
+                      {loading ? (
+                        <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                      ) : (
+                        <p className="text-xl sm:text-2xl font-bold text-green-600 truncate">
+                          {formatCurrency(monthlyData.totals?.income || 0)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="p-2 sm:p-2.5 rounded-lg text-green-600 bg-green-50 flex-shrink-0 ml-2">
+                      <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
                   </div>
-                  <p className="text-xl sm:text-2xl font-bold text-green-900">
-                    {formatCurrency(monthlyData.totals?.income || 0)}
-                  </p>
+                </div>
+
+                {/* Expense Card */}
+                <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-red-300 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2">
+                        Expense
+                      </p>
+                      {loading ? (
+                        <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                      ) : (
+                        <p className="text-xl sm:text-2xl font-bold text-red-600 truncate">
+                          {formatCurrency(monthlyData.totals?.expense || 0)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="p-2 sm:p-2.5 rounded-lg text-red-600 bg-red-50 flex-shrink-0 ml-2">
+                      <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Net Balance Card */}
+                <div className="border border-slate-200 rounded-lg p-3 sm:p-4 hover:border-blue-300 transition-colors">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2">
+                        Net Balance
+                      </p>
+                      {loading ? (
+                        <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                      ) : (
+                        <p
+                          className={`text-xl sm:text-2xl font-bold truncate ${
+                            (monthlyData.totals?.netBalance || 0) >= 0
+                              ? "text-blue-600"
+                              : "text-red-600"
+                          }`}
+                        >
+                          {formatCurrency(monthlyData.totals?.netBalance || 0)}
+                        </p>
+                      )}
+                    </div>
+                    <div className="p-2 sm:p-2.5 rounded-lg text-blue-600 bg-blue-50 flex-shrink-0 ml-2">
+                      <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs sm:text-sm font-medium text-red-700">
-                      Expense
-                    </p>
-                    <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5 text-red-600" />
-                  </div>
-                  <p className="text-xl sm:text-2xl font-bold text-red-900">
-                    {formatCurrency(monthlyData.totals?.expense || 0)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="rounded-xl text-card-foreground bg-white border-0 shadow-sm">
-                <div className="p-4 sm:p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <p className="text-xs sm:text-sm font-medium text-blue-700">
-                      Net Balance
-                    </p>
-                    <ArrowLeftRight className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
-                  </div>
-                  <p
-                    className={`text-xl sm:text-2xl font-bold ${
-                      (monthlyData.totals?.netBalance || 0) >= 0
-                        ? "text-blue-900"
-                        : "text-red-900"
-                    }`}
-                  >
-                    {formatCurrency(monthlyData.totals?.netBalance || 0)}
-                  </p>
-                </div>
+              <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200">
+                <p className="text-xs sm:text-sm text-slate-500">
+                  {transactions.length === 0
+                    ? "No transactions for this month"
+                    : `Showing ${transactions.length} transaction${
+                        transactions.length !== 1 ? "s" : ""
+                      }`}
+                </p>
               </div>
             </div>
           )}
 
-          {/* Month Info */}
-          {monthlyData && (
-            <div className="bg-white rounded-xl p-4 border-0 shadow-sm">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div>
-                  <h3 className="text-base sm:text-lg font-semibold text-slate-900">
-                    {monthlyData.monthName} {monthlyData.year}
-                  </h3>
-                  <p className="text-xs sm:text-sm text-slate-600">
-                    {transactions.length === 0
-                      ? "No transactions for this month"
-                      : `Showing ${transactions.length} transaction${
-                          transactions.length !== 1 ? "s" : ""
-                        }`}
-                  </p>
-                </div>
-                {wallets.length === 0 && (
-                  <div className="text-xs sm:text-sm text-yellow-600 mt-1 sm:mt-0">
-                    <AlertCircle className="w-3 h-3 sm:w-4 sm:h-4 inline mr-1" />
-                    No wallets for this month
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Type Tabs - Mobile Scrollable */}
-          <div className="bg-white rounded-xl p-4 border-0 shadow-sm overflow-hidden">
-            <div className="flex sm:grid sm:grid-cols-4 gap-1 sm:h-9 items-center sm:justify-center rounded-lg p-1 text-muted-foreground overflow-x-auto scrollbar-hide">
+          {/* Type Tabs */}
+          <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
+            <div className="flex gap-1 sm:h-9 items-center justify-center rounded-lg p-1 text-muted-foreground">
               <button
                 type="button"
                 onClick={() => handleTypeTabClick("all")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-shrink-0 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
                   activeTypeTab === "all"
                     ? "bg-green-500 text-white shadow"
                     : "hover:bg-slate-100"
@@ -932,7 +1048,7 @@ const Transactions = () => {
               <button
                 type="button"
                 onClick={() => handleTypeTabClick("income")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-shrink-0 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
                   activeTypeTab === "income"
                     ? "bg-green-500 text-white shadow"
                     : "hover:bg-slate-100"
@@ -943,7 +1059,7 @@ const Transactions = () => {
               <button
                 type="button"
                 onClick={() => handleTypeTabClick("expense")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-shrink-0 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
                   activeTypeTab === "expense"
                     ? "bg-green-500 text-white shadow"
                     : "hover:bg-slate-100"
@@ -954,7 +1070,7 @@ const Transactions = () => {
               <button
                 type="button"
                 onClick={() => handleTypeTabClick("transfer")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-shrink-0 ${
+                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
                   activeTypeTab === "transfer"
                     ? "bg-green-500 text-white shadow"
                     : "hover:bg-slate-100"
@@ -966,7 +1082,7 @@ const Transactions = () => {
           </div>
 
           {/* Transactions List */}
-          <div className="space-y-3">
+          <div className="space-y-2 sm:space-y-3 mx-2 sm:mx-4 lg:mx-6">
             {transactions.map((transaction) => {
               const category = transaction.category_id;
               const fromWallet = transaction.from_wallet_id;
@@ -981,10 +1097,10 @@ const Transactions = () => {
               return (
                 <div
                   key={transaction._id}
-                  className="rounded-xl bg-white text-card-foreground shadow group hover:shadow-md transition-all duration-200 border-0"
+                  className="rounded-xl bg-white text-card-foreground shadow-sm group hover:shadow-md transition-all duration-200 border-0"
                 >
-                  <div className="p-4">
-                    <div className="flex items-start gap-3 sm:gap-4">
+                  <div className="p-3 sm:p-4">
+                    <div className="flex items-start gap-3">
                       <div
                         className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center shadow-sm flex-shrink-0"
                         style={{
@@ -996,7 +1112,7 @@ const Transactions = () => {
                         }}
                       >
                         {isTransfer ? (
-                          <ArrowRightLeft className="w-5 h-5 sm:w-6 sm:h-6 text-slate-500" />
+                          <ArrowRightLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
                         ) : (
                           getIconComponent(category)
                         )}
@@ -1033,7 +1149,7 @@ const Transactions = () => {
                           </div>
                         </div>
                         {transaction.notes && (
-                          <p className="text-xs text-slate-600 mt-1.5 line-clamp-1">
+                          <p className="text-xs text-slate-600 mt-1.5 line-clamp-1 sm:line-clamp-2">
                             {transaction.notes}
                           </p>
                         )}
@@ -1069,27 +1185,33 @@ const Transactions = () => {
                         {/* Mobile Info */}
                         <div className="sm:hidden flex flex-col gap-1 text-xs text-slate-500 py-2">
                           <span>{formatDateMobile(transaction.date)}</span>
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-2">
                             {isTransfer ? (
                               <>
-                                <span className="flex items-center gap-1">
-                                  <WalletIcon className="w-3 h-3" />
-                                  {fromWallet?.name || "Wallet"}
+                                <span className="flex items-center gap-1 truncate">
+                                  <WalletIcon className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {fromWallet?.name || "Wallet"}
+                                  </span>
                                 </span>
                                 <span>→</span>
-                                <span className="flex items-center gap-1">
-                                  <WalletIcon className="w-3 h-3" />
-                                  {toWallet?.name || "Wallet"}
+                                <span className="flex items-center gap-1 truncate">
+                                  <WalletIcon className="w-3 h-3 flex-shrink-0" />
+                                  <span className="truncate">
+                                    {toWallet?.name || "Wallet"}
+                                  </span>
                                 </span>
                               </>
                             ) : (
-                              <span className="flex items-center gap-1">
-                                <WalletIcon className="w-3 h-3" />
-                                {fromWallet?.name || "Wallet"}
+                              <span className="flex items-center gap-1 truncate">
+                                <WalletIcon className="w-3 h-3 flex-shrink-0" />
+                                <span className="truncate">
+                                  {fromWallet?.name || "Wallet"}
+                                </span>
                               </span>
                             )}
                             {transaction.attachment && (
-                              <Paperclip className="w-3 h-3 text-blue-600" />
+                              <Paperclip className="w-3 h-3 text-blue-600 flex-shrink-0" />
                             )}
                           </div>
                         </div>
@@ -1098,7 +1220,7 @@ const Transactions = () => {
                       <div className="flex flex-col items-end gap-2">
                         <div className="text-right">
                           <p
-                            className={`text-base sm:text-lg font-bold ${
+                            className={`text-sm sm:text-base font-bold ${
                               displayType === "income"
                                 ? "text-green-600"
                                 : displayType === "expense"
@@ -1114,19 +1236,18 @@ const Transactions = () => {
                             {formatCurrency(transaction.amount)}
                           </p>
                         </div>
-                        {/* FIXED: Always show action buttons on mobile, show on hover only on desktop */}
                         <div className="flex gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => handleEditTransaction(transaction)}
-                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
                           >
-                            <SquarePen className="w-4 h-4 text-slate-600" />
+                            <SquarePen className="w-3 h-3 sm:w-4 sm:h-4 text-slate-600" />
                           </button>
                           <button
                             onClick={() => handleDeleteClick(transaction)}
-                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-8 w-8"
+                            className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent hover:text-accent-foreground h-7 w-7 sm:h-8 sm:w-8"
                           >
-                            <Trash2 className="w-4 h-4 text-red-500" />
+                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 text-red-500" />
                           </button>
                         </div>
                       </div>
@@ -1138,12 +1259,12 @@ const Transactions = () => {
           </div>
 
           {transactions.length === 0 && (
-            <div className="text-center py-8 sm:py-12">
-              <div className="bg-white rounded-xl p-6 sm:p-8 border-0 shadow-sm">
+            <div className="text-center py-6 sm:py-8 mx-2 sm:mx-4 lg:mx-6">
+              <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
                 <p className="text-slate-500 text-base sm:text-lg">
                   No transactions found
                 </p>
-                <p className="text-slate-400 mt-2 text-sm">
+                <p className="text-slate-400 mt-1 text-sm">
                   {activeTypeTab === "all"
                     ? `No transactions for ${getMonthName(
                         selectedMonth
@@ -1155,7 +1276,7 @@ const Transactions = () => {
                 <button
                   onClick={handleCreateTransactionClick}
                   disabled={wallets.length === 0}
-                  className={`mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-10 px-4 py-2 shadow-lg ${
+                  className={`mt-3 sm:mt-4 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 h-9 sm:h-10 px-3 sm:px-4 py-2 shadow ${
                     wallets.length === 0
                       ? "bg-gray-400 text-white cursor-not-allowed"
                       : "bg-green-600 text-white hover:bg-green-700"
@@ -1179,14 +1300,14 @@ const Transactions = () => {
       <button
         onClick={handleCreateTransactionClick}
         disabled={wallets.length === 0}
-        className={`fixed bottom-20 right-4 sm:hidden z-40 rounded-full p-4 shadow-lg transition-transform hover:scale-110 ${
+        className={`fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer ${
           wallets.length === 0
             ? "bg-gray-400 text-white cursor-not-allowed"
-            : "bg-green-600 text-white hover:bg-green-700"
+            : "bg-green-600 hover:bg-green-700 text-white"
         }`}
-        style={{ boxShadow: "0 4px 14px 0 rgba(0, 0, 0, 0.2)" }}
+        title="Add Transaction"
       >
-        <Plus className="w-6 h-6" />
+        <Plus className="w-5 h-5 sm:w-7 sm:h-7" />
       </button>
 
       <TransactionForm
