@@ -1,43 +1,79 @@
 const mongoose = require("mongoose");
 
-const dueReceivableSchema = new mongoose.Schema(
+const dueTransactionSchema = new mongoose.Schema(
   {
     type: {
       type: String,
-      required: [true, "Type is required"],
-      enum: ["due", "receivable"],
+      required: true,
+      enum: ["due", "payment"],
       default: "due",
+    },
+    amount: {
+      type: Number,
+      required: true,
+      min: [0.01, "Amount must be greater than 0"],
+    },
+    date: {
+      type: Date,
+      required: true,
+      default: Date.now,
+    },
+    description: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: [500, "Description cannot exceed 500 characters"],
+    },
+    transactionId: {
+      type: String,
+      default: () => new mongoose.Types.ObjectId().toString(),
+    },
+  },
+  { _id: true }
+);
+
+const dueReceivablesSchema = new mongoose.Schema(
+  {
+    name: {
+      type: String,
+      required: [true, "Name is required"],
+      trim: true,
+      maxlength: [100, "Name cannot exceed 100 characters"],
     },
     amount: {
       type: Number,
       required: [true, "Amount is required"],
       min: [0.01, "Amount must be greater than 0"],
     },
-    person: {
-      type: String,
-      required: [true, "Person/Entity name is required"],
-      trim: true,
-      maxlength: [200, "Name cannot exceed 200 characters"],
-    },
-    due_date: {
+    date: {
       type: Date,
-      required: [true, "Due date is required"],
+      required: [true, "Date is required"],
+      default: Date.now,
     },
     status: {
       type: String,
-      enum: ["pending", "paid"],
-      default: "pending",
+      enum: ["Due", "Received", "Partially Paid"],
+      default: "Due",
     },
-    notes: {
+    description: {
       type: String,
       default: "",
       trim: true,
-      maxlength: [500, "Notes cannot exceed 500 characters"],
+      maxlength: [500, "Description cannot exceed 500 characters"],
     },
+    transactions: [dueTransactionSchema],
     userId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    totalDue: {
+      type: Number,
+      default: 0,
+    },
+    totalPaid: {
+      type: Number,
+      default: 0,
     },
   },
   {
@@ -46,10 +82,10 @@ const dueReceivableSchema = new mongoose.Schema(
 );
 
 // Index for better query performance
-dueReceivableSchema.index({ userId: 1, status: 1 });
-dueReceivableSchema.index({ userId: 1, due_date: 1 });
-dueReceivableSchema.index({ userId: 1, type: 1 });
+dueReceivablesSchema.index({ userId: 1, status: 1 });
+dueReceivablesSchema.index({ userId: 1, createdAt: -1 });
+dueReceivablesSchema.index({ userId: 1, name: 1 });
 
-const DueReceivable = mongoose.model("DueReceivable", dueReceivableSchema);
+const DueReceivables = mongoose.model("DueReceivables", dueReceivablesSchema);
 
-module.exports = DueReceivable;
+module.exports = DueReceivables;

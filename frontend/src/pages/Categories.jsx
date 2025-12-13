@@ -398,7 +398,7 @@ const Categories = () => {
                   Organize your transactions
                 </p>
               </div>
-              <button
+              {/* <button
                 onClick={() => setShowMobileFilters(!showMobileFilters)}
                 className="p-2 rounded-lg bg-white border border-slate-200"
               >
@@ -407,7 +407,7 @@ const Categories = () => {
                 ) : (
                   <Menu className="w-5 h-5 text-slate-600" />
                 )}
-              </button>
+              </button> */}
             </div>
 
             {/* Mobile Quick Actions */}

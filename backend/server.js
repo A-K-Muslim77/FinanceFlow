@@ -26,7 +26,7 @@ app.use("/api/wallets", walletRoutes);
 app.use("/api/transactions", transactionRoutes);
 app.use("/api/budgets", budgetRoutes);
 app.use("/api/savings", savingsRoutes);
-app.use("/api/due-receivables", dueReceivablesRoutes);
+app.use("/api/dues", dueReceivablesRoutes);
 // Health check route
 app.get("/api/health", (req, res) => {
   res.status(200).json({

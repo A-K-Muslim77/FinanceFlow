@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { toast, ToastContainer } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 import "react-toastify/dist/ReactToastify.css";
 import {
   BarChart,
@@ -192,13 +193,24 @@ const CustomTooltip = ({ active, payload, label, currency = "৳" }) => {
   return null;
 };
 
-const Dashboard = ({ setActiveView }) => {
+const Dashboard = () => {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login", { replace: true });
+      return; // Stop component from continuing
+    }
+  }, [navigate]);
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  const [showBalance, setShowBalance] = useState(true);
+  const [showBalance, setShowBalance] = useState(() => {
+    const saved = localStorage.getItem("dashboard_showBalance");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
   const [showMobileFilters, setShowMobileFilters] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     monthlySummary: {
@@ -211,6 +223,11 @@ const Dashboard = ({ setActiveView }) => {
       today: 0,
       yesterday: 0,
       change: 0,
+    },
+    budgetStats: {
+      totalBudget: 0,
+      totalSpent: 0,
+      totalRemaining: 0,
     },
     wallets: [],
     categoryExpenses: [],
@@ -227,7 +244,10 @@ const Dashboard = ({ setActiveView }) => {
   };
 
   const toggleBalanceVisibility = () => {
-    setShowBalance(!showBalance);
+    const newValue = !showBalance;
+    setShowBalance(newValue);
+    // Save to localStorage
+    localStorage.setItem("dashboard_showBalance", JSON.stringify(newValue));
   };
 
   const getMonthName = (monthNumber) => {
@@ -281,6 +301,7 @@ const Dashboard = ({ setActiveView }) => {
         setError("No authentication token found. Please login again.");
         setLoading(false);
         setRefreshing(false);
+        navigate("/login", { replace: true });
         return;
       }
 
@@ -290,6 +311,7 @@ const Dashboard = ({ setActiveView }) => {
         allTransactionsRes,
         categoriesRes,
         transactionMonthsRes,
+        budgetRes,
       ] = await Promise.all([
         fetch(
           `${BASE_URL}/transactions/monthly?month=${selectedMonth}&year=${selectedYear}`,
@@ -312,6 +334,13 @@ const Dashboard = ({ setActiveView }) => {
         fetch(`${BASE_URL}/transactions/months`, {
           headers: { Authorization: `Bearer ${token}` },
         }),
+        // Add budget fetch
+        fetch(
+          `${BASE_URL}/budgets/monthly?month=${selectedMonth}&year=${selectedYear}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        ),
       ]);
 
       const [
@@ -320,12 +349,14 @@ const Dashboard = ({ setActiveView }) => {
         allTransactions,
         categories,
         transactionMonths,
+        budgetData,
       ] = await Promise.all([
         monthlyTransactionsRes.json(),
         monthlyWalletsRes.json(),
         allTransactionsRes.json(),
         categoriesRes.json(),
         transactionMonthsRes.json(),
+        budgetRes.json(),
       ]);
 
       if (!monthlyTransactions.success || !monthlyWallets.success) {
@@ -375,6 +406,19 @@ const Dashboard = ({ setActiveView }) => {
         monthlyWallets.data?.wallets || []
       );
 
+      // Add budget stats calculation
+      const budgetStats = {
+        totalBudget: budgetData.success
+          ? budgetData.data?.totals?.totalBudget || 0
+          : 0,
+        totalSpent: budgetData.success
+          ? budgetData.data?.totals?.totalSpent || 0
+          : 0,
+        totalRemaining: budgetData.success
+          ? budgetData.data?.totals?.totalRemaining || 0
+          : 0,
+      };
+
       setDashboardData({
         monthlySummary: {
           income: monthlyTransactions.data?.totals?.income || 0,
@@ -387,6 +431,7 @@ const Dashboard = ({ setActiveView }) => {
           yesterday: yesterdayIncome,
           change: dailyChange,
         },
+        budgetStats,
         wallets: monthlyWallets.data?.wallets || [],
         categoryExpenses,
         monthlyTrend,
@@ -1019,6 +1064,90 @@ const Dashboard = ({ setActiveView }) => {
             />
           </div>
 
+          {/* Budget Stats Grid - New Row for Budget Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4 mx-2 sm:mx-4 lg:mx-6">
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2 truncate">
+                    Total Budget
+                  </p>
+                  {loading ? (
+                    <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                  ) : (
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-green-900 truncate">
+                      {formatCurrency(
+                        dashboardData.budgetStats?.totalBudget || 0
+                      )}
+                    </p>
+                  )}
+                </div>
+                <div className="p-2 sm:p-2.5 rounded-lg text-green-600 bg-green-50 flex-shrink-0 ml-2">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+              </div>
+              <div className="mt-2 sm:mt-3 flex items-center gap-1 text-xs sm:text-sm">
+                <span className="text-slate-400">Monthly limit</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2 truncate">
+                    Total Spent
+                  </p>
+                  {loading ? (
+                    <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                  ) : (
+                    <p className="text-lg sm:text-xl md:text-2xl font-bold text-red-900 truncate">
+                      {formatCurrency(
+                        dashboardData.budgetStats?.totalSpent || 0
+                      )}
+                    </p>
+                  )}
+                </div>
+                <div className="p-2 sm:p-2.5 rounded-lg text-red-600 bg-red-50 flex-shrink-0 ml-2">
+                  <TrendingDown className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+              </div>
+              <div className="mt-2 sm:mt-3 flex items-center gap-1 text-xs sm:text-sm">
+                <span className="text-slate-400">This month</span>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-xl p-4 sm:p-5 border-0 shadow-sm hover:shadow-md transition-shadow">
+              <div className="flex items-start justify-between">
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs sm:text-sm text-slate-500 mb-1 sm:mb-2 truncate">
+                    Budget Remaining
+                  </p>
+                  {loading ? (
+                    <div className="h-7 sm:h-8 bg-slate-200 rounded animate-pulse w-3/4"></div>
+                  ) : (
+                    <p
+                      className={`text-lg sm:text-xl md:text-2xl font-bold truncate ${
+                        (dashboardData.budgetStats?.totalRemaining || 0) >= 0
+                          ? "text-blue-600"
+                          : "text-red-600"
+                      }`}
+                    >
+                      {formatCurrency(
+                        dashboardData.budgetStats?.totalRemaining || 0
+                      )}
+                    </p>
+                  )}
+                </div>
+                <div className="p-2 sm:p-2.5 rounded-lg text-blue-600 bg-blue-50 flex-shrink-0 ml-2">
+                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                </div>
+              </div>
+              <div className="mt-2 sm:mt-3 flex items-center gap-1 text-xs sm:text-sm">
+                <span className="text-slate-400">Available balance</span>
+              </div>
+            </div>
+          </div>
+
           {/* My Wallets Section */}
           {dashboardData.wallets.length > 0 && (
             <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
@@ -1374,7 +1503,7 @@ const Dashboard = ({ setActiveView }) => {
       <button
         onClick={() => {
           sessionStorage.setItem("autoOpenTransactionForm", "true");
-          setActiveView("transactions");
+          navigate("/transactions");
         }}
         className="fixed bottom-20 sm:bottom-6 right-4 sm:right-6 z-40 w-12 h-12 sm:w-14 sm:h-14 bg-green-600 hover:bg-green-700 rounded-full flex items-center justify-center shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 cursor-pointer"
         title="Go to Transactions"

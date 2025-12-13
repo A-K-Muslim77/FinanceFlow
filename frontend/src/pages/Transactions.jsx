@@ -27,6 +27,7 @@ import {
   ChevronLeft,
   ChevronRight,
   RefreshCw,
+  Clock,
 } from "lucide-react";
 
 const DeleteConfirmationModal = ({
@@ -151,6 +152,24 @@ const MonthYearSelector = ({
   );
 };
 
+const TimeFilterDropdown = ({ timeFilter, setTimeFilter, isLoading }) => {
+  return (
+    <div className="relative">
+      <select
+        value={timeFilter}
+        onChange={(e) => setTimeFilter(e.target.value)}
+        disabled={isLoading}
+        className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-4 pr-10 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+      >
+        <option value="all">All Time</option>
+        <option value="today">Today</option>
+        <option value="yesterday">Yesterday</option>
+      </select>
+      <Clock className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+    </div>
+  );
+};
+
 const Transactions = () => {
   const [activeTypeTab, setActiveTypeTab] = useState("all");
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
@@ -171,6 +190,7 @@ const Transactions = () => {
   const [showNoWalletWarning, setShowNoWalletWarning] = useState(false);
   const [autoOpenChecked, setAutoOpenChecked] = useState(false);
   const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [timeFilter, setTimeFilter] = useState("all");
 
   const BASE_URL = import.meta.env.VITE_BASE_URL;
 
@@ -433,6 +453,34 @@ const Transactions = () => {
     return months[monthNumber - 1] || "";
   };
 
+  const getFilteredTransactions = () => {
+    if (timeFilter === "all") {
+      return transactions;
+    }
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    return transactions.filter((transaction) => {
+      const transactionDate = new Date(transaction.date);
+      const transactionDay = new Date(
+        transactionDate.getFullYear(),
+        transactionDate.getMonth(),
+        transactionDate.getDate()
+      );
+
+      if (timeFilter === "today") {
+        return transactionDay.getTime() === today.getTime();
+      } else if (timeFilter === "yesterday") {
+        return transactionDay.getTime() === yesterday.getTime();
+      }
+
+      return true;
+    });
+  };
+
   const handleCreateTransaction = async (transactionData) => {
     try {
       const token = getAuthToken();
@@ -646,6 +694,8 @@ const Transactions = () => {
     );
   }
 
+  const filteredTransactions = getFilteredTransactions();
+
   return (
     <div className="min-h-screen relative">
       <ToastContainer
@@ -664,7 +714,6 @@ const Transactions = () => {
 
       <BackgroundCircles />
 
-      {/* REMOVED: px-2 sm:px-2 md:px-4 lg:px-6 from the main container */}
       <div className="w-full mx-auto py-3 sm:py-6 relative z-10">
         <div className="space-y-3 sm:space-y-6 pb-16 sm:pb-20">
           {/* Mobile Header */}
@@ -726,6 +775,69 @@ const Transactions = () => {
               >
                 <ChevronRight className="w-4 h-4 text-slate-600" />
               </button>
+            </div>
+
+            {/* Mobile Type Tabs - Now at top like in image */}
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("all")}
+                className={`flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-all duration-200 flex-1 ${
+                  activeTypeTab === "all"
+                    ? "bg-green-600 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <span>All</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("income")}
+                className={`flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-all duration-200 flex-1 ${
+                  activeTypeTab === "income"
+                    ? "bg-green-600 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <span>Income</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("expense")}
+                className={`flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-all duration-200 flex-1 ${
+                  activeTypeTab === "expense"
+                    ? "bg-green-600 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <span>Expense</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTypeTabClick("transfer")}
+                className={`flex items-center justify-center gap-2 whitespace-nowrap rounded-md px-3 py-2 text-xs font-medium transition-all duration-200 flex-1 ${
+                  activeTypeTab === "transfer"
+                    ? "bg-green-600 text-white shadow-sm"
+                    : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+                }`}
+              >
+                <span>Transfer</span>
+              </button>
+            </div>
+
+            {/* Time Filter for Mobile */}
+            <div className="relative">
+              <select
+                value={timeFilter}
+                onChange={(e) => setTimeFilter(e.target.value)}
+                disabled={loading}
+                className="w-full appearance-none rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-slate-900 focus:border-green-500 focus:outline-none focus:ring-2 focus:ring-green-500/20 disabled:opacity-50"
+              >
+                <option value="all">All Time</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+              </select>
+              <Clock className="absolute right-2 top-1/2 transform -translate-y-1/2 w-3 h-3 text-slate-400 pointer-events-none" />
             </div>
 
             {/* Mobile Filters Dropdown */}
@@ -817,6 +929,14 @@ const Transactions = () => {
                     </select>
                     <ChevronDown className="absolute right-2 sm:right-3 top-1/2 transform -translate-y-1/2 w-3 sm:w-4 h-3 sm:h-4 text-slate-400 pointer-events-none" />
                   </div>
+                </div>
+
+                <div className="w-28 sm:w-36">
+                  <TimeFilterDropdown
+                    timeFilter={timeFilter}
+                    setTimeFilter={setTimeFilter}
+                    isLoading={loading}
+                  />
                 </div>
 
                 <button
@@ -945,6 +1065,12 @@ const Transactions = () => {
                 </h3>
                 <p className="text-xs sm:text-sm text-slate-500">
                   {getMonthName(selectedMonth)} {selectedYear}
+                  {timeFilter !== "all" && (
+                    <span className="ml-2 text-green-600 font-medium">
+                      • Filtered:{" "}
+                      {timeFilter === "today" ? "Today" : "Yesterday"}
+                    </span>
+                  )}
                 </p>
               </div>
 
@@ -1021,69 +1147,86 @@ const Transactions = () => {
 
               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-slate-200">
                 <p className="text-xs sm:text-sm text-slate-500">
-                  {transactions.length === 0
-                    ? "No transactions for this month"
-                    : `Showing ${transactions.length} transaction${
-                        transactions.length !== 1 ? "s" : ""
+                  {filteredTransactions.length === 0
+                    ? "No transactions found"
+                    : `Showing ${filteredTransactions.length} transaction${
+                        filteredTransactions.length !== 1 ? "s" : ""
                       }`}
+                  {timeFilter !== "all" &&
+                    transactions.length > filteredTransactions.length && (
+                      <span className="text-slate-400">
+                        {" "}
+                        (filtered from {transactions.length})
+                      </span>
+                    )}
                 </p>
               </div>
             </div>
           )}
 
-          {/* Type Tabs */}
-          <div className="bg-white rounded-xl p-3 sm:p-5 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
-            <div className="flex gap-1 sm:h-9 items-center justify-center rounded-lg p-1 text-muted-foreground">
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("all")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
-                  activeTypeTab === "all"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
+          {/* Type Tabs - Desktop Only */}
+          <div className="bg-white rounded-xl p-2 sm:p-3 border-0 shadow-sm mx-2 sm:mx-4 lg:mx-6">
+            {/* Only show on desktop */}
+            <div className="hidden sm:block">
+              <div
+                role="tablist"
+                className="h-9 items-center justify-center rounded-lg p-1 text-muted-foreground grid w-full grid-cols-4 bg-slate-100"
               >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("income")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
-                  activeTypeTab === "income"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                Income
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("expense")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
-                  activeTypeTab === "expense"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                Expense
-              </button>
-              <button
-                type="button"
-                onClick={() => handleTypeTabClick("transfer")}
-                className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-2 sm:py-1 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer flex-1 sm:flex-none ${
-                  activeTypeTab === "transfer"
-                    ? "bg-green-500 text-white shadow"
-                    : "hover:bg-slate-100"
-                }`}
-              >
-                Transfer
-              </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => handleTypeTabClick("all")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTypeTab === "all"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => handleTypeTabClick("income")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTypeTab === "income"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  Income
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => handleTypeTabClick("expense")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTypeTab === "expense"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  Expense
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  onClick={() => handleTypeTabClick("transfer")}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-2 sm:px-3 py-1 text-xs sm:text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 cursor-pointer ${
+                    activeTypeTab === "transfer"
+                      ? "bg-green-500 text-white shadow"
+                      : "hover:bg-slate-200"
+                  }`}
+                >
+                  Transfer
+                </button>
+              </div>
             </div>
           </div>
 
           {/* Transactions List */}
           <div className="space-y-2 sm:space-y-3 mx-2 sm:mx-4 lg:mx-6">
-            {transactions.map((transaction) => {
+            {filteredTransactions.map((transaction) => {
               const category = transaction.category_id;
               const fromWallet = transaction.from_wallet_id;
               const toWallet = transaction.to_wallet_id;
@@ -1258,15 +1401,25 @@ const Transactions = () => {
             })}
           </div>
 
-          {transactions.length === 0 && (
+          {filteredTransactions.length === 0 && (
             <div className="text-center py-6 sm:py-8 mx-2 sm:mx-4 lg:mx-6">
               <div className="bg-white rounded-xl p-4 sm:p-6 border-0 shadow-sm">
                 <p className="text-slate-500 text-base sm:text-lg">
-                  No transactions found
+                  {timeFilter !== "all"
+                    ? `No ${timeFilter} transactions found`
+                    : "No transactions found"}
                 </p>
                 <p className="text-slate-400 mt-1 text-sm">
                   {activeTypeTab === "all"
-                    ? `No transactions for ${getMonthName(
+                    ? timeFilter !== "all"
+                      ? `No ${timeFilter} transactions for ${getMonthName(
+                          selectedMonth
+                        )} ${selectedYear}`
+                      : `No transactions for ${getMonthName(
+                          selectedMonth
+                        )} ${selectedYear}`
+                    : timeFilter !== "all"
+                    ? `No ${activeTypeTab} ${timeFilter} transactions found for ${getMonthName(
                         selectedMonth
                       )} ${selectedYear}`
                     : `No ${activeTypeTab} transactions found for ${getMonthName(

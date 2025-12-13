@@ -10,6 +10,8 @@ import {
   Coins,
   Banknote,
   Tag,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "react-toastify";
 
@@ -62,32 +64,14 @@ const WalletForm = ({
   ];
 
   const icons = [
-    { name: "wallet", component: <Wallet className="w-5 h-5 sm:w-6 sm:h-6" /> },
-    {
-      name: "banknote",
-      component: <Banknote className="w-5 h-5 sm:w-6 sm:h-6" />,
-    },
-    {
-      name: "building2",
-      component: <Building className="w-5 h-5 sm:w-6 sm:h-6" />,
-    },
-    {
-      name: "smartphone",
-      component: <Smartphone className="w-5 h-5 sm:w-6 sm:h-6" />,
-    },
-    {
-      name: "credit-card",
-      component: <CreditCard className="w-5 h-5 sm:w-6 sm:h-6" />,
-    },
-    {
-      name: "landmark",
-      component: <Landmark className="w-5 h-5 sm:w-6 sm:h-6" />,
-    },
-    {
-      name: "piggy-bank",
-      component: <PiggyBank className="w-5 h-5 sm:w-6 sm:h-6" />,
-    },
-    { name: "coins", component: <Coins className="w-5 h-5 sm:w-6 sm:h-6" /> },
+    { name: "wallet", component: <Wallet className="w-4 h-4" /> },
+    { name: "banknote", component: <Banknote className="w-4 h-4" /> },
+    { name: "building2", component: <Building className="w-4 h-4" /> },
+    { name: "smartphone", component: <Smartphone className="w-4 h-4" /> },
+    { name: "credit-card", component: <CreditCard className="w-4 h-4" /> },
+    { name: "landmark", component: <Landmark className="w-4 h-4" /> },
+    { name: "piggy-bank", component: <PiggyBank className="w-4 h-4" /> },
+    { name: "coins", component: <Coins className="w-4 h-4" /> },
   ];
 
   const colors = [
@@ -105,6 +89,9 @@ const WalletForm = ({
     "#d946ef", // fuchsia-500
     "#f43f5e", // rose-500
   ];
+
+  const [iconStartIndex, setIconStartIndex] = useState(0);
+  const [colorStartIndex, setColorStartIndex] = useState(0);
 
   useEffect(() => {
     if (isEdit && editData) {
@@ -174,109 +161,115 @@ const WalletForm = ({
     onClose();
   };
 
+  const nextIcons = () => {
+    if (iconStartIndex + 4 < icons.length) {
+      setIconStartIndex(iconStartIndex + 4);
+    }
+  };
+
+  const prevIcons = () => {
+    if (iconStartIndex > 0) {
+      setIconStartIndex(iconStartIndex - 4);
+    }
+  };
+
+  const nextColors = () => {
+    if (colorStartIndex + 6 < colors.length) {
+      setColorStartIndex(colorStartIndex + 6);
+    }
+  };
+
+  const prevColors = () => {
+    if (colorStartIndex > 0) {
+      setColorStartIndex(colorStartIndex - 6);
+    }
+  };
+
   if (!isOpen) return null;
 
+  const visibleIcons = icons.slice(iconStartIndex, iconStartIndex + 4);
+  const visibleColors = colors.slice(colorStartIndex, colorStartIndex + 6);
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-3 sm:p-4">
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-2 sm:p-4">
       <div
-        className="relative w-full max-w-md sm:max-w-lg bg-white rounded-lg sm:rounded-xl shadow-lg p-4 sm:p-6 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-y-auto"
+        className="relative w-full max-w-sm sm:max-w-md bg-white rounded-lg sm:rounded-xl shadow-lg p-3 sm:p-4 animate-in fade-in-0 zoom-in-95 max-h-[90vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute right-3 top-3 sm:right-4 sm:top-4 rounded-full p-1.5 sm:p-1 bg-slate-100 hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
+          className="absolute right-2 top-2 sm:right-3 sm:top-3 rounded-full p-1 bg-slate-100 hover:bg-slate-200 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
           aria-label="Close"
         >
-          <X className="h-4 w-4 sm:h-5 sm:w-5 text-slate-600" />
+          <X className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-600" />
         </button>
 
         {/* Header */}
-        <div className="flex flex-col space-y-2 sm:space-y-1.5 text-center sm:text-left mb-4 sm:mb-6">
-          <h2 className="text-lg sm:text-xl font-semibold leading-none tracking-tight text-slate-900">
-            {isEdit ? "Edit Wallet" : "Create New Wallet"}
+        <div className="mb-3 sm:mb-4">
+          <h2 className="text-sm sm:text-lg font-semibold text-slate-900">
+            {isEdit ? "Edit Wallet" : "New Wallet"}
           </h2>
-          <p className="text-xs sm:text-sm text-slate-500">
-            {isEdit
-              ? "Update your wallet details"
-              : "Add a new wallet to track your finances"}
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+            {isEdit ? "Update wallet details" : "Add a new wallet"}
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 sm:space-y-6"
+          className="space-y-3 sm:space-y-4"
           noValidate
         >
           {/* Wallet Name */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <label
               htmlFor="name"
-              className="text-sm font-medium leading-none text-slate-700 block"
+              className="text-xs sm:text-sm font-medium text-slate-700"
             >
-              Wallet Name
-              <span className="text-red-500 ml-1">*</span>
+              Wallet Name <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               id="name"
-              placeholder="e.g. Main Cash, Salary Account, Personal bKash"
+              placeholder="e.g. Main Cash, bKash"
               value={formData.name}
               onChange={(e) => handleInputChange("name", e.target.value)}
-              className={`flex h-10 sm:h-11 w-full rounded-lg border ${
+              className={`w-full rounded border px-3 py-2 text-xs sm:text-sm ${
                 error ? "border-red-500" : "border-slate-300"
-              } bg-white px-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
+              } focus:outline-none focus:ring-1 focus:ring-blue-500`}
               autoFocus
             />
-            {error && <p className="text-xs text-red-500 mt-1">{error}</p>}
+            {error && <p className="text-xs text-red-500">{error}</p>}
           </div>
 
           {/* Wallet Type */}
-          <div className="space-y-2">
-            <label className="text-sm font-medium leading-none text-slate-700 block">
+          <div className="space-y-1">
+            <label className="text-xs sm:text-sm font-medium text-slate-700">
               Wallet Type
             </label>
-            <div className="relative">
-              <select
-                value={formData.type}
-                onChange={(e) => handleInputChange("type", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white px-3 pr-10 py-2 text-sm sm:text-base shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 appearance-none"
-              >
-                {walletTypes.map((type) => (
-                  <option key={type.value} value={type.value}>
-                    {type.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-slate-500"
-                >
-                  <path d="m6 9 6 6 6-6" />
-                </svg>
-              </div>
-            </div>
+            <select
+              value={formData.type}
+              onChange={(e) => handleInputChange("type", e.target.value)}
+              className="w-full rounded border border-slate-300 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+            >
+              {walletTypes.map((type) => (
+                <option key={type.value} value={type.value}>
+                  {type.label}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Initial Balance */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <label
               htmlFor="balance"
-              className="text-sm font-medium leading-none text-slate-700 block"
+              className="text-xs sm:text-sm font-medium text-slate-700"
             >
               Initial Balance (৳)
             </label>
             <div className="relative">
-              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 font-medium">
+              <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 text-xs">
                 ৳
               </span>
               <input
@@ -287,32 +280,75 @@ const WalletForm = ({
                 placeholder="0.00"
                 value={formData.balance}
                 onChange={(e) => handleInputChange("balance", e.target.value)}
-                className="flex h-10 sm:h-11 w-full rounded-lg border border-slate-300 bg-white pl-9 pr-3 py-2 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full rounded border border-slate-300 pl-7 pr-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
-            <p className="text-xs text-slate-500">
-              Starting balance for this wallet
-            </p>
           </div>
 
           {/* Icon Selection */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium leading-none text-slate-700 block">
+          <div className="space-y-1">
+            <label className="text-xs sm:text-sm font-medium text-slate-700">
               Icon
             </label>
-            <div className="grid grid-cols-4 sm:grid-cols-8 gap-2 sm:gap-3">
+
+            {/* Mobile - Single row with arrows */}
+            <div className="sm:hidden flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={prevIcons}
+                disabled={iconStartIndex === 0}
+                className="h-9 w-6 flex items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-30"
+              >
+                <ChevronLeft className="w-3 h-3 text-slate-600" />
+              </button>
+
+              <div className="flex-1 grid grid-cols-4 gap-1">
+                {visibleIcons.map((icon) => (
+                  <button
+                    key={icon.name}
+                    type="button"
+                    onClick={() => handleInputChange("icon", icon.name)}
+                    className={`h-9 w-9 flex items-center justify-center border rounded ${
+                      formData.icon === icon.name
+                        ? "border-blue-500 bg-blue-50"
+                        : "border-slate-200 hover:border-slate-300"
+                    }`}
+                  >
+                    <span
+                      className={
+                        formData.icon === icon.name
+                          ? "text-blue-600"
+                          : "text-slate-700"
+                      }
+                    >
+                      {icon.component}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={nextIcons}
+                disabled={iconStartIndex + 4 >= icons.length}
+                className="h-9 w-6 flex items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-30"
+              >
+                <ChevronRight className="w-3 h-3 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Desktop - 6 icons per row */}
+            <div className="hidden sm:grid sm:grid-cols-6 gap-2">
               {icons.map((icon) => (
                 <button
                   key={icon.name}
                   type="button"
                   onClick={() => handleInputChange("icon", icon.name)}
-                  className={`flex items-center justify-center p-2.5 sm:p-3 rounded-lg border-2 transition-all hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+                  className={`h-9 w-9 flex items-center justify-center border rounded ${
                     formData.icon === icon.name
-                      ? "border-blue-500 bg-blue-50 scale-105"
-                      : "border-slate-200 bg-white"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-slate-200 hover:border-slate-300"
                   }`}
-                  title={icon.name.replace("-", " ")}
-                  aria-label={`Select ${icon.name} icon`}
                 >
                   <span
                     className={
@@ -329,83 +365,134 @@ const WalletForm = ({
           </div>
 
           {/* Color Selection */}
-          <div className="space-y-3">
-            <label className="text-sm font-medium leading-none text-slate-700 block">
+          <div className="space-y-1">
+            <label className="text-xs sm:text-sm font-medium text-slate-700">
               Color
             </label>
-            <div className="grid grid-cols-6 sm:grid-cols-8 gap-2 sm:gap-3">
-              {colors.map((color) => (
-                <button
-                  key={color}
-                  type="button"
-                  onClick={() => handleInputChange("color", color)}
-                  className={`w-8 h-8 sm:w-10 sm:h-10 rounded-lg transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-slate-400 ${
-                    formData.color === color
-                      ? "ring-2 ring-offset-2 ring-blue-500 scale-110 shadow-md"
-                      : ""
-                  }`}
-                  style={{ backgroundColor: color }}
-                  title={`Color ${color}`}
-                  aria-label={`Select ${color} color`}
-                >
-                  {formData.color === color && (
-                    <div className="flex items-center justify-center h-full">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="white"
-                        strokeWidth="3"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        className="w-3 h-3 sm:w-4 sm:h-4"
-                      >
-                        <polyline points="20 6 9 17 4 12"></polyline>
-                      </svg>
-                    </div>
-                  )}
-                </button>
-              ))}
+
+            {/* Mobile - Single row with arrows */}
+            <div className="sm:hidden flex items-center space-x-1">
+              <button
+                type="button"
+                onClick={prevColors}
+                disabled={colorStartIndex === 0}
+                className="h-9 w-6 flex items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-30"
+              >
+                <ChevronLeft className="w-3 h-3 text-slate-600" />
+              </button>
+
+              <div className="flex-1 grid grid-cols-6 gap-1">
+                {visibleColors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => handleInputChange("color", color)}
+                    className={`h-9 w-9 rounded ${
+                      formData.color === color
+                        ? "ring-2 ring-blue-500 ring-offset-1"
+                        : ""
+                    }`}
+                    style={{ backgroundColor: color }}
+                  >
+                    {formData.color === color && (
+                      <div className="flex items-center justify-center h-full">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="3"
+                          className="w-3 h-3"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                onClick={nextColors}
+                disabled={colorStartIndex + 6 >= colors.length}
+                className="h-9 w-6 flex items-center justify-center rounded border border-slate-300 bg-white disabled:opacity-30"
+              >
+                <ChevronRight className="w-3 h-3 text-slate-600" />
+              </button>
+            </div>
+
+            {/* Desktop - 6 colors per row */}
+            <div className="hidden sm:block">
+              <div className="grid grid-cols-6 gap-2">
+                {colors.map((color) => (
+                  <button
+                    key={color}
+                    type="button"
+                    onClick={() => handleInputChange("color", color)}
+                    className={`h-9 w-9 rounded ${
+                      formData.color === color
+                        ? "ring-2 ring-blue-500 ring-offset-1"
+                        : ""
+                    }`}
+                    style={{ backgroundColor: color }}
+                  >
+                    {formData.color === color && (
+                      <div className="flex items-center justify-center h-full">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="12"
+                          height="12"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="white"
+                          strokeWidth="3"
+                          className="w-3 h-3"
+                        >
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
           {/* Description */}
-          <div className="space-y-2">
+          <div className="space-y-1">
             <label
               htmlFor="description"
-              className="text-sm font-medium leading-none text-slate-700 block"
+              className="text-xs sm:text-sm font-medium text-slate-700"
             >
               Description (Optional)
             </label>
             <textarea
               id="description"
-              placeholder="Add notes about this wallet (e.g., account number, bank name, purpose)"
-              rows="3"
+              placeholder="Account number, bank name, purpose..."
+              rows="2"
               value={formData.description}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className="flex min-h-[100px] w-full rounded-lg border border-slate-300 bg-white px-3 py-3 text-sm sm:text-base shadow-sm transition-colors placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+              className="w-full rounded border border-slate-300 px-3 py-2 text-xs sm:text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-none"
             />
-            <p className="text-xs text-slate-500">
-              Additional information to help you identify this wallet
-            </p>
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-4 sm:pt-6 border-t border-slate-200">
+          <div className="flex space-x-2 pt-3 border-t border-slate-200">
             <button
               type="button"
               onClick={handleClose}
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 disabled:pointer-events-none disabled:opacity-50 border border-slate-300 bg-white text-slate-700 shadow-sm hover:bg-slate-50 h-11 sm:h-10 px-4 py-3 sm:py-2 w-full sm:w-auto"
+              className="flex-1 py-2 text-xs sm:text-sm font-medium rounded border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 disabled:pointer-events-none disabled:opacity-50 bg-blue-600 text-white shadow hover:bg-blue-700 h-11 sm:h-10 px-4 py-3 sm:py-2 w-full sm:w-auto"
+              className="flex-1 py-2 text-xs sm:text-sm font-medium rounded bg-green-600 text-white hover:bg-green-700"
             >
-              {isEdit ? "Update Wallet" : "Create Wallet"}
+              {isEdit ? "Update" : "Create"}
             </button>
           </div>
         </form>

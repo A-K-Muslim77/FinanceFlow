@@ -3,31 +3,40 @@ const router = express.Router();
 const dueReceivablesController = require("../controllers/dueReceivablesController");
 const { authMiddleware } = require("../middleware/authMiddleware");
 
-// Apply auth middleware to all routes
-router.use(authMiddleware);
+// GET /api/dues - Get all dues/receivables
+router.get("/", authMiddleware, dueReceivablesController.getAllDues);
 
-// GET /api/due-receivables - Get all due/receivables
-router.get("/", dueReceivablesController.getAllDueReceivables);
+// GET /api/dues/:id - Get single due/receivable
+router.get("/:id", authMiddleware, dueReceivablesController.getDueById);
 
-// GET /api/due-receivables/:id - Get single due/receivable
-router.get("/:id", dueReceivablesController.getDueReceivableById);
+// POST /api/dues - Create new due/receivable
+router.post("/", authMiddleware, dueReceivablesController.createDue);
 
-// POST /api/due-receivables - Create new due/receivable
-router.post("/", dueReceivablesController.createDueReceivable);
+// PUT /api/dues/:id - Update due/receivable
+router.put("/:id", authMiddleware, dueReceivablesController.updateDue);
 
-// PUT /api/due-receivables/:id - Update due/receivable
-router.put("/:id", dueReceivablesController.updateDueReceivable);
+// DELETE /api/dues/:id - Delete due/receivable
+router.delete("/:id", authMiddleware, dueReceivablesController.deleteDue);
 
-// DELETE /api/due-receivables/:id - Delete due/receivable
-router.delete("/:id", dueReceivablesController.deleteDueReceivable);
+// POST /api/dues/:id/transactions - Add due/payment transaction
+router.post(
+  "/:id/transactions",
+  authMiddleware,
+  dueReceivablesController.addTransaction
+);
 
-// GET /api/due-receivables/type/:type - Get due/receivables by type
-router.get("/type/:type", dueReceivablesController.getDueReceivablesByType);
+// GET /api/dues/:id/transactions - Get all transactions for a due
+router.get(
+  "/:id/transactions",
+  authMiddleware,
+  dueReceivablesController.getTransactions
+);
 
-// GET /api/due-receivables/status/:status - Get due/receivables by status
+// GET /api/dues/status/:status - Get dues by status
 router.get(
   "/status/:status",
-  dueReceivablesController.getDueReceivablesByStatus
+  authMiddleware,
+  dueReceivablesController.getDuesByStatus
 );
 
 module.exports = router;

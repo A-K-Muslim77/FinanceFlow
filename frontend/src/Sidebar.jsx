@@ -2,25 +2,20 @@
 import React, { useState, useEffect } from "react";
 import {
   FiHome,
-  FiSettings,
   FiChevronLeft,
   FiChevronRight,
-  FiBell,
-  FiChevronDown,
-  FiChevronUp,
-  FiLogOut,
-  FiUser,
   FiX,
   FiCreditCard,
   FiDollarSign,
   FiPieChart,
   FiTarget,
   FiTrendingUp,
-  FiCalendar,
   FiFileText,
+  FiCalendar,
+  FiLogOut,
 } from "react-icons/fi";
-import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 const Sidebar = ({
@@ -30,14 +25,15 @@ const Sidebar = ({
   setNotificationCount,
   isMobileOpen,
   setIsMobileOpen,
+  showLogoutConfirm,
+  setShowLogoutConfirm,
 }) => {
   const [isOpen, setIsOpen] = useState(true);
-  const [expandedMenus, setExpandedMenus] = useState({});
-  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isTabletOrMobile, setIsTabletOrMobile] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
   // Check if screen is tablet or mobile (<= 1024px)
@@ -61,76 +57,36 @@ const Sidebar = ({
   }, [isTabletOrMobile]);
 
   const financeNavItems = [
-    { name: "Dashboard", icon: <FiHome />, component: "dashboard" },
-    { name: "Transactions", icon: <FiCreditCard />, component: "transactions" },
-    {
-      name: "Wallets",
-      icon: <FiDollarSign />,
-      component: "wallets",
-    },
-    {
-      name: "Categories",
-      icon: <FiPieChart />,
-      component: "categories",
-    },
-    {
-      name: "Budgets",
-      icon: <FiTarget />,
-      component: "budgets",
-    },
-    {
-      name: "Savings",
-      icon: <FiTrendingUp />,
-      component: "savings",
-    },
-    {
-      name: "Reports",
-      icon: <FiFileText />,
-      component: "reports",
-    },
-    {
-      name: "Due/Receivable",
-      icon: <FiCalendar />,
-      component: "due",
-    },
+    { name: "Dashboard", icon: <FiHome />, path: "/dashboard" },
+    { name: "Transactions", icon: <FiCreditCard />, path: "/transactions" },
+    { name: "Wallets", icon: <FiDollarSign />, path: "/wallets" },
+    { name: "Categories", icon: <FiPieChart />, path: "/categories" },
+    { name: "Budgets", icon: <FiTarget />, path: "/budgets" },
+    { name: "Savings", icon: <FiTrendingUp />, path: "/savings" },
+    { name: "Reports", icon: <FiFileText />, path: "/reports" },
+    { name: "Due/Receivable", icon: <FiCalendar />, path: "/due" },
   ];
-
-  const toggleMenu = (menuName) => {
-    setExpandedMenus((prev) => ({
-      ...prev,
-      [menuName]: !prev[menuName],
-    }));
-  };
 
   const handleToggleSidebar = () => {
     if (isTabletOrMobile) {
       setIsMobileOpen(!isMobileOpen);
     } else {
       if (isOpen) {
-        setExpandedMenus({});
+        // Close all expanded menus
       }
       setIsOpen(!isOpen);
     }
   };
 
   const handleItemClick = (item) => {
-    if (!sidebarOpen && !isTabletOrMobile) {
-      setIsOpen(true);
-      setTimeout(() => {
-        setActiveView(item.component);
-      }, 100);
-      return;
-    }
-    setActiveView(item.component);
+    navigate(item.path);
+    setActiveView(item.path.substring(1)); // Remove the leading slash
+
     if (isTabletOrMobile) {
       setTimeout(() => {
         setIsMobileOpen(false);
       }, 150);
     }
-  };
-
-  const handleLogout = () => {
-    setShowLogoutConfirm(true);
   };
 
   const confirmLogout = () => {
@@ -154,7 +110,8 @@ const Sidebar = ({
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0  bg-opacity-50 z-40 lg:hidden"
+          transition={{ duration: 0.2 }}
+          className="fixed inset-0 bg-opacity-50 z-40 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -173,36 +130,40 @@ const Sidebar = ({
       >
         {/* Header */}
         <div
-          className="cursor-pointer flex items-center justify-between p-3 ml-2 border-b border-gray-200 h-16"
+          className="flex items-center justify-between p-3 ml-2 border-b border-gray-200 h-16"
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
-          onClick={handleToggleSidebar}
         >
-          {sidebarOpen ? (
-            <motion.div
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col"
-            >
-              <h1 className="text-xl font-bold text-gray-800">FinanceFlow</h1>
-              <p className="text-xs text-gray-600">Financial Management</p>
-            </motion.div>
-          ) : (
-            <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
-              F
-            </div>
-          )}
+          {/* Logo/Icon area - clickable for toggling */}
+          <div className="cursor-pointer" onClick={handleToggleSidebar}>
+            {sidebarOpen ? (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col"
+              >
+                <h1 className="text-xl font-bold text-gray-800">FinanceFlow</h1>
+                <p className="text-xs text-gray-600">Financial Management</p>
+              </motion.div>
+            ) : (
+              <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
+                F
+              </div>
+            )}
+          </div>
 
+          {/* Toggle Button */}
           {isTabletOrMobile ? (
             <button
-              onClick={() => setIsMobileOpen(false)}
+              onClick={handleToggleSidebar}
               className="cursor-pointer rounded-lg text-gray-600 hover:text-gray-900 transition-colors duration-200"
             >
               <FiX className="w-5 h-5" />
             </button>
           ) : (
             <motion.button
+              onClick={handleToggleSidebar}
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               className="cursor-pointer rounded-lg text-gray-600 hover:text-gray-900 transition-colors duration-200"
@@ -216,7 +177,7 @@ const Sidebar = ({
         <nav className="flex-1 overflow-y-auto py-4 px-4 sidebar-scrollbar">
           <ul className="space-y-2">
             {financeNavItems.map((item) => {
-              const isActive = item.component === activeView;
+              const isActive = location.pathname === item.path;
 
               return (
                 <li key={item.name}>
@@ -282,99 +243,69 @@ const Sidebar = ({
 
         {/* Footer */}
         <div className="p-4 border-t border-gray-200">
-          <motion.div
-            className="flex items-center"
-            whileHover={sidebarOpen ? { scale: 1.005 } : {}}
-          >
-            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
-              {user?.name?.charAt(0)?.toUpperCase() || "F"}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center flex-1 min-w-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
+                {user?.name?.charAt(0)?.toUpperCase() || "F"}
+              </div>
+
+              {sidebarOpen && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="flex-1 min-w-0 ml-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-[700] text-gray-800 truncate">
+                      {user?.name || "User"}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-500 font-[600] truncate mt-0.5">
+                    {user?.email || "user@financeflow.com"}
+                  </p>
+                </motion.div>
+              )}
             </div>
 
-            {sidebarOpen && (
-              <motion.div
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 0.2 }}
-                className="flex-1 min-w-0 ml-3"
+            {/* Show logout button only on desktop when sidebar is open */}
+            {!isTabletOrMobile && sidebarOpen && (
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowLogoutConfirm(true)}
+                className="p-2 rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200 flex-shrink-0"
+                title="Logout"
               >
-                <div className="flex items-center justify-between">
-                  <p className="text-sm font-[700] text-gray-800 truncate">
-                    {user?.name || "User"}
-                  </p>
-                  <div className="flex gap-1">
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleLogout}
-                      className="p-1 rounded-md hover:bg-gray-100 cursor-pointer transition-colors duration-200"
-                      title="Logout"
-                    >
-                      <FiLogOut className="w-4 h-4 text-gray-500 hover:text-red-500" />
-                    </motion.button>
-                  </div>
-                </div>
-                <p className="text-xs text-gray-500 font-[600] truncate mt-0.5">
-                  {user?.email || "user@financeflow.com"}
-                </p>
-              </motion.div>
+                <FiLogOut className="w-5 h-5 text-gray-500 hover:text-red-500" />
+              </motion.button>
             )}
-          </motion.div>
+          </div>
+
+          {/* Mobile: Show logout button as a full-width button */}
+          {isTabletOrMobile && sidebarOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
+              className="mt-3"
+            >
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => {
+                  setShowLogoutConfirm(true);
+                  setIsMobileOpen(false);
+                }}
+                className="w-full flex items-center justify-center p-3 rounded-lg border border-gray-300 hover:bg-gray-50 text-gray-700 hover:text-gray-900 cursor-pointer transition-all duration-200"
+              >
+                <FiLogOut className="w-5 h-5 mr-2" />
+                <span className="font-medium">Logout</span>
+              </motion.button>
+            </motion.div>
+          )}
         </div>
       </motion.aside>
-
-      {/* Logout Confirmation Modal */}
-      <AnimatePresence>
-        {showLogoutConfirm && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              transition={{ type: "spring", damping: 25 }}
-              className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md"
-            >
-              <div className="p-8 text-center">
-                <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500 mb-4">
-                  <FiLogOut className="h-5 w-5 text-white" />
-                </div>
-
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Ready to leave?
-                </h3>
-                <p className="text-sm text-gray-700 mb-6">
-                  Are you sure you want to sign out of your account?
-                </p>
-
-                <div className="flex justify-center space-x-3">
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowLogoutConfirm(false)}
-                    className="px-5 py-2.5 text-sm font-medium rounded-lg cursor-pointer bg-gray-500 text-white hover:bg-gray-600 transition-all duration-200 shadow-sm"
-                  >
-                    Cancel
-                  </motion.button>
-
-                  <motion.button
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={confirmLogout}
-                    className="px-5 py-2.5 text-sm font-medium rounded-lg bg-red-500 cursor-pointer text-white hover:bg-red-600 transition-all duration-200 shadow-sm"
-                  >
-                    Logout
-                  </motion.button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </>
   );
 };

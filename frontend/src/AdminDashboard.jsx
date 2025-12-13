@@ -1,49 +1,46 @@
 import React, { useState, useEffect } from "react";
 import Sidebar from "./Sidebar";
-import Dashboard from "./pages/Dashboard";
-import Transactions from "./pages/Transactions";
-import Wallets from "./pages/Wallets";
-import Categories from "./pages/Categories";
-import Budgets from "./pages/Budgets";
-import Savings from "./pages/Savings";
-import Reports from "./pages/Reports";
-import Due from "./pages/Due";
 import BackgroundCircles from "./components/BackgroundCircles";
+import { FiLogOut } from "react-icons/fi";
+import { useNavigate, Outlet, useLocation, Navigate } from "react-router-dom";
+import { toast } from "react-hot-toast";
 
 const AdminDashboard = () => {
-  // Check if this is a fresh login or a page refresh
-  const [activeView, setActiveView] = useState(() => {
-    // Check if we have a saved view in localStorage
-    const savedView = localStorage.getItem("financeActiveView");
+  const navigate = useNavigate();
+  const location = useLocation();
 
-    // Check if this is a fresh login (no previous session tracking)
-    const isFreshLogin = !localStorage.getItem("hasBeenLoggedIn");
-
-    if (isFreshLogin) {
-      // First time after login - always show dashboard
-      localStorage.setItem("hasBeenLoggedIn", "true");
-      return "dashboard";
+  // Check authentication on component mount
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      navigate("/login", { replace: true });
     }
+  }, [navigate]);
 
-    // Not a fresh login - use saved view or default to dashboard
-    const validViews = [
-      "dashboard",
-      "transactions",
-      "wallets",
-      "categories",
-      "budgets",
-      "savings",
-      "reports",
-      "due",
-    ];
-    return savedView && validViews.includes(savedView)
-      ? savedView
-      : "dashboard";
-  });
+  // Get current view from route path
+  const getCurrentView = () => {
+    const path = location.pathname;
+    if (path === "/dashboard") return "dashboard";
+    if (path === "/transactions") return "transactions";
+    if (path === "/wallets") return "wallets";
+    if (path === "/categories") return "categories";
+    if (path === "/budgets") return "budgets";
+    if (path === "/savings") return "savings";
+    if (path === "/reports") return "reports";
+    if (path === "/due") return "due";
+    return "dashboard";
+  };
 
+  const [activeView, setActiveView] = useState(getCurrentView());
   const [notificationCount, setNotificationCount] = useState(0);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isTabletOrMobile, setIsTabletOrMobile] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  // Update active view when route changes
+  useEffect(() => {
+    setActiveView(getCurrentView());
+  }, [location.pathname]);
 
   // Check screen size on mount and resize
   useEffect(() => {
@@ -66,31 +63,21 @@ const AdminDashboard = () => {
     localStorage.setItem("financeActiveView", activeView);
   }, [activeView]);
 
-  // Clear the login flag when user logs out (handled in Sidebar logout)
-  // The flag will be cleared in the logout function
-
-  const renderView = () => {
-    switch (activeView) {
-      case "dashboard":
-        return <Dashboard setActiveView={setActiveView} />;
-      case "transactions":
-        return <Transactions openFormOnLoad={true} />;
-      case "wallets":
-        return <Wallets />;
-      case "categories":
-        return <Categories />;
-      case "budgets":
-        return <Budgets />;
-      case "savings":
-        return <Savings />;
-      case "reports":
-        return <Reports />;
-      case "due":
-        return <Due />;
-      default:
-        return <Dashboard setActiveView={setActiveView} />;
-    }
+  const confirmLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    localStorage.removeItem("hasBeenLoggedIn");
+    toast.success("Logout successful!");
+    setTimeout(() => {
+      navigate("/login", { replace: true });
+    }, 800);
   };
+
+  // Check if user is authenticated
+  const token = localStorage.getItem("token");
+  if (!token) {
+    return null; // Or a loading spinner, but App.js will redirect anyway
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen flex items-center justify-center p-2 md:p-4 relative">
@@ -101,7 +88,7 @@ const AdminDashboard = () => {
       {isTabletOrMobile && (
         <div className="fixed top-0 left-0 right-0 h-16 bg-white/80 backdrop-blur-xl border-b border-gray-200 flex items-center justify-between px-4 z-40 lg:hidden">
           <button
-            onClick={() => setIsMobileOpen(true)}
+            onClick={() => setIsMobileOpen(!isMobileOpen)}
             className="p-2 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 shadow-md active:scale-90 border border-gray-300"
           >
             <svg
@@ -121,9 +108,13 @@ const AdminDashboard = () => {
 
           <h1 className="text-lg font-bold text-gray-800">FinanceFlow</h1>
 
-          <div className="w-8 h-8 rounded-full bg-gradient-to-r from-red-500 to-green-600 text-white flex items-center justify-center font-bold shadow-md">
-            F
-          </div>
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="p-2 rounded-2xl text-gray-600 hover:text-gray-900 hover:bg-gray-100 transition-all duration-300 shadow-md active:scale-90 border border-gray-300"
+            title="Logout"
+          >
+            <FiLogOut className="w-5 h-5" />
+          </button>
         </div>
       )}
 
@@ -144,6 +135,8 @@ const AdminDashboard = () => {
               setIsMobileOpen={setIsMobileOpen}
               notificationCount={notificationCount}
               setNotificationCount={setNotificationCount}
+              showLogoutConfirm={showLogoutConfirm}
+              setShowLogoutConfirm={setShowLogoutConfirm}
             />
           </div>
         ) : (
@@ -156,15 +149,55 @@ const AdminDashboard = () => {
               setIsMobileOpen={setIsMobileOpen}
               notificationCount={notificationCount}
               setNotificationCount={setNotificationCount}
+              showLogoutConfirm={showLogoutConfirm}
+              setShowLogoutConfirm={setShowLogoutConfirm}
             />
           </div>
         )}
 
         {/* Main Content Area */}
         <div className="flex-1 h-full overflow-auto relative bg-transparent">
-          <div className="p-6">{renderView()}</div>
+          <div className="p-6">
+            <Outlet />
+          </div>
         </div>
       </div>
+
+      {/* Logout Confirmation Modal - Now moved here for mobile header */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-70 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl overflow-hidden w-full max-w-md">
+            <div className="p-8 text-center">
+              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-500 mb-4">
+                <FiLogOut className="h-5 w-5 text-white" />
+              </div>
+
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Ready to leave?
+              </h3>
+              <p className="text-sm text-gray-700 mb-6">
+                Are you sure you want to sign out of your account?
+              </p>
+
+              <div className="flex justify-center space-x-3">
+                <button
+                  onClick={() => setShowLogoutConfirm(false)}
+                  className="px-5 py-2.5 text-sm font-medium rounded-lg cursor-pointer bg-gray-500 text-white hover:bg-gray-600 transition-all duration-200 shadow-sm"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={confirmLogout}
+                  className="px-5 py-2.5 text-sm font-medium rounded-lg bg-red-500 cursor-pointer text-white hover:bg-red-600 transition-all duration-200 shadow-sm"
+                >
+                  Logout
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -104,9 +104,6 @@ const savingsSchema = new mongoose.Schema(
   }
 );
 
-// Remove the problematic pre-save middleware and handle calculations in controller
-// We'll calculate balance directly from transactions in the controller
-
 const Savings = mongoose.model("Savings", savingsSchema);
 
 module.exports = Savings;

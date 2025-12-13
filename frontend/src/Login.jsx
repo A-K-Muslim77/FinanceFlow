@@ -85,7 +85,7 @@ const Login = () => {
       if (response.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        toast.success("Login successful! Welcome back.");
+        // toast.success("Login successful! Welcome back.");
         navigate("/dashboard");
       } else {
         // Show server error message above the form
